@@ -1,4 +1,4 @@
-namespace bds {
+namespace ds {
 
 template <typename T>
 const T& visitor<T>::get_instance() {
@@ -6,4 +6,4 @@ const T& visitor<T>::get_instance() {
 	return instance;
 }
 
-} /* namespace bds */
+} /* namespace ds */

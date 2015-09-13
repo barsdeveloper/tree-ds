@@ -6,10 +6,10 @@
 #include <type_traits>
 
 #include "tree_base.hpp"
-#include "iterator/algorithm/visitor/pre_order.hpp"
+#include "iterator/algorithm/pre_order.hpp"
 #include "iterator/element/tree_iterator.hpp"
 
-namespace bds {
+namespace ds {
 
 template <typename> class node;
 
@@ -88,7 +88,7 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
 #include "tree.tpp"
 

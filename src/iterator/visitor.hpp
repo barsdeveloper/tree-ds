@@ -1,7 +1,7 @@
-#ifndef ALGORITHM_HPP_
-#define ALGORITHM_HPP_
+#ifndef VISITOR_HPP_
+#define VISITOR_HPP_
 
-namespace bds {
+namespace ds {
 
 //This is just a level of indirection to not repeat the get_instance() method for every concrete visitor class
 template <typename T>
@@ -20,8 +20,8 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
-#include "algorithm.tpp"
+#include "visitor.tpp"
 
-#endif /* ALGORITHM_HPP_ */
+#endif /* VISITOR_HPP_ */

@@ -2,7 +2,7 @@
 #include <stdexcept> // std::invalid_argument
 #include <type_traits> // std::is_same
 
-namespace bds {
+namespace ds {
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It> typename tree<T, Alg, Alloc>::node_type* tree<T, Alg, Alloc>::extract_node(It it) {
@@ -232,4 +232,4 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 	return iterator<typename It::algorithm_type>(*this, *n);
 }
 
-} /* namespace bds */
+} /* namespace ds */

@@ -1,4 +1,4 @@
-namespace bds {
+namespace ds {
 
 template <typename T>
 T* pre_order::increment(T &node) const {
@@ -51,4 +51,4 @@ T* pre_order::go_last(T &root) const {
 	return result;
 }
 
-} /* namespace bds */
+} /* namespace ds */

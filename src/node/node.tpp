@@ -1,6 +1,6 @@
 #include <utility> // std::move()
 
-namespace bds {
+namespace ds {
 
 template <typename T>
 node<T>::node(const T &argument) :
@@ -116,4 +116,4 @@ node<T>::~node() {
 	if (_first_child) delete _first_child;
 }
 
-} /* namespace bds */
+} /* namespace ds */

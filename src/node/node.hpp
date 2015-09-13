@@ -1,7 +1,7 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
-namespace bds {
+namespace ds {
 
 template <typename, typename, typename> class tree;
 
@@ -37,7 +37,7 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
 #include "node.tpp"
 

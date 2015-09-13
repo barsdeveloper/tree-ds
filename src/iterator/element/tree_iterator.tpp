@@ -1,7 +1,7 @@
 #include "../../node/node.hpp"
-#include "../algorithm/algorithm.hpp"
+#include "../visitor.hpp"
 
-namespace bds {
+namespace ds {
 
 template <typename T, typename A, bool C>
 constexpr tree_iterator<T, A, C>::tree_iterator() :
@@ -106,4 +106,4 @@ tree_iterator<T, A, C> tree_iterator<T, A, C>::operator --(int) {
 	return it;
 }
 
-} /* namespace bds */
+} /* namespace ds */

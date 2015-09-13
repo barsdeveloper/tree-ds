@@ -4,7 +4,7 @@
 #include <iterator>    // std::iterator
 #include <type_traits> // std::conditional, std::enable_if
 
-namespace bds {
+namespace ds {
 
 template <typename> class tree_base;
 template <typename, typename, typename > class tree;
@@ -58,7 +58,7 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
 #include "tree_iterator.tpp"
 

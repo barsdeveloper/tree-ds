@@ -3,7 +3,7 @@
 
 #include "../visitor.hpp"
 
-namespace bds {
+namespace ds {
 
 class pre_order final : public visitor<pre_order> {
 
@@ -17,8 +17,8 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
-#include "../visitor/pre_order.tpp"
+#include "../algorithm/pre_order.tpp"
 
 #endif /* PRE_ORDER_HPP_ */

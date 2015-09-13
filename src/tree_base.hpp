@@ -3,7 +3,7 @@
 
 #include <cstddef> // std::size_t, std::ptrdiff_t
 
-namespace bds {
+namespace ds {
 
 template <typename> class node;
 template <typename, typename, bool> class tree_iterator;
@@ -48,7 +48,7 @@ public:
 
 };
 
-} /* namespace bds */
+} /* namespace ds */
 
 #include "tree_base.tpp"
 

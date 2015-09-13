@@ -1,4 +1,4 @@
-namespace bds {
+namespace ds {
 
 template <typename T>
 tree_base<T>::tree_base(node<T> *root, size_type size) :
@@ -31,4 +31,4 @@ tree_base<T>::~tree_base() {
 	delete _root;
 }
 
-} /* namespace bds */
+} /* namespace ds */
