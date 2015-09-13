@@ -39,12 +39,12 @@ public:
 	 * tree_base<T> not to tree<T, Allocator> and consequently depend only on the parameter T, not both T and Allocator.
 	 * The copy semantics is implemented in the sublacc tree<T>.
 	 */
-	tree_base();										// Default constructor
-	tree_base(const tree_base&) = delete;				// Copy constructor
-	tree_base& operator =(const tree_base&) = delete;	// Copy assignment operator
-	tree_base(tree_base&&);								// Move constructor
-	tree_base& operator =(tree_base&&);					// Move assignment operator
-	virtual ~tree_base();								// Destructor
+	tree_base();                                      // Default constructor
+	tree_base(const tree_base&) = delete;             // Copy constructor
+	tree_base& operator =(const tree_base&) = delete; // Copy assignment operator
+	tree_base(tree_base&&);                           // Move constructor
+	tree_base& operator =(tree_base&&);               // Move assignment operator
+	virtual ~tree_base();                             // Destructor
 
 };
 

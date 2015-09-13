@@ -1,8 +1,8 @@
 #ifndef TREE_HPP_
 #define TREE_HPP_
 
-#include <memory>	// std::allocator, std::allocator_traits
-#include <iterator>	// std::reverse_iterator
+#include <memory>   // std::allocator, std::allocator_traits
+#include <iterator> // std::reverse_iterator
 #include <type_traits>
 
 #include "tree_base.hpp"
@@ -38,12 +38,12 @@ protected:
 	template <typename It> node_type* extract_node(It it);
 
 public:
-	tree() = default;					// Default constructor
-	tree(const tree&);					// Copy constructor
-	tree(tree&&) = default;			// Move constructor
-	tree& operator =(const tree&);		// Copy assignment operator
-	tree& operator =(tree&) = default;	// Move assignment operator
-	~tree() = default;					// Destructor
+	tree() = default;                  // Default constructor
+	tree(const tree&);                 // Copy constructor
+	tree(tree&&) = default;            // Move constructor
+	tree& operator =(const tree&);     // Copy assignment operator
+	tree& operator =(tree&) = default; // Move assignment operator
+	~tree() = default;                 // Destructor
 	tree(node<T> &root);
 
 	/*   ---   Iterators   ---   *

@@ -3,7 +3,7 @@
 
 namespace bds {
 
-template <typename, typename, typename > class tree;
+template <typename, typename, typename> class tree;
 
 template <typename T>
 class node {

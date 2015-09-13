@@ -1,11 +1,11 @@
 #ifndef PRE_ORDER_HPP_
 #define PRE_ORDER_HPP_
 
-#include "../algorithm.hpp"
+#include "../visitor.hpp"
 
 namespace bds {
 
-class pre_order final : public algorithm<pre_order> {
+class pre_order final : public visitor<pre_order> {
 
 public:
 	constexpr pre_order() = default;

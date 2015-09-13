@@ -1,7 +1,7 @@
 #ifndef TREE_ITERATOR_HPP_
 #define TREE_ITERATOR_HPP_
 
-#include <iterator> // std::iterator
+#include <iterator>    // std::iterator
 #include <type_traits> // std::conditional, std::enable_if
 
 namespace bds {
@@ -29,14 +29,14 @@ public:
 
 protected:
 	algorithm_type &_algorithm;
-	tree_type *_tree;	// nullptr => no container associated (default iterator)
-	node_type *_node;	// nullptr => end()
+	tree_type *_tree; // nullptr => no container associated (default iterator)
+	node_type *_node; // nullptr => end()
 
 public:
-	constexpr tree_iterator();							// Default constructor
-	tree_iterator(const tree_iterator&);				// Copy constructor
-	tree_iterator& operator =(const tree_iterator&);	// Copy assignment operator
-	~tree_iterator() = default;							// Destructor
+	constexpr tree_iterator();                       // Default constructor
+	tree_iterator(const tree_iterator&);             // Copy constructor
+	tree_iterator& operator =(const tree_iterator&); // Copy assignment operator
+	~tree_iterator() = default;                      // Destructor
 	tree_iterator(tree_type &tree);
 	tree_iterator(tree_type &tree, node_type &current);
 	/*
