@@ -45,6 +45,7 @@ public:
 	tree& operator =(tree&) = default;	// Move assignment operator
 	~tree() = default;					// Destructor
 	tree(node<T> &root);
+
 	/*   ---   Iterators   ---   *
 	 * r => reverse
 	 * c => constant

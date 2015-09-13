@@ -10,10 +10,10 @@ template <typename, typename, bool> class tree_iterator;
 
 /*
  * tree_base<T>
- * The purpose of this class is to have a type that depends only on the value_type template parameter. As iterators
- * need to keep a pointer to the tree<T> class (to obtain the root node), all the iterators of this container can
- * depend only on value_type (scary iterator). Doing so allows to assign iterators of different container type (but
- * with the same value_type, e.g.: different allocator) to each other.
+ * The purpose of this class is to have a type that depends only on the value_type template parameter. As iterators need
+ * to keep a pointer to the tree<T> class (to obtain the root node), all the iterators of this container can depend only
+ * on value_type (scary iterator) and, eventually other types not related to the container. Doing so you can assign
+ * iterators of different container type (but with the same value_type, e.g.: different allocator) to each other.
  * REMEMBER: this is not required by the standard: you shouldn't rely on this behavior for STL containers.
  */
 
