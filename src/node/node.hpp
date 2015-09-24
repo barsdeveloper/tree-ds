@@ -3,12 +3,12 @@
 
 namespace ds {
 
-template <typename, typename, typename> class tree;
+template <typename, typename, typename > class tree;
 
 template <typename T>
 class node {
 
-	template <typename, typename, typename> friend class tree;
+	template <typename, typename, typename > friend class tree;
 	template <typename, typename, bool> friend class tree_iterator;
 	friend class pre_order;
 
@@ -20,17 +20,24 @@ protected:
 	node *_first_child;
 	node *_last_child;
 
-	node(const node&) = default;
+	node(const node&) = delete;
 	node(node&&);
 
 	node(const T &argument);
 	node(T &&argument);
 	template <typename ...Args> node(Args&& ...args);
 
+	node(tree&&);
+
 	void release_node();
 	void insert(node&);
 	void append_child(node&);
 	void prepend_child(node&);
+
+	constexpr node& operator ()(node) {
+
+	}
+	constexpr node& operator ,(node);
 
 public:
 	~node();

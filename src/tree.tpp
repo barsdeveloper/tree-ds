@@ -188,6 +188,19 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos,
+		const tree &value) {
+	return emplace_append_child(pos, tree);
+}
+
+template <typename T, typename Alg, typename Alloc>
+template <typename It>
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos, tree &&tree) {
+	return emplace_append_child(pos, std::move(tree._root));
+}
+
+template <typename T, typename Alg, typename Alloc>
+template <typename It>
 tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::prepend_child(It pos,
 		const value_type &value) {
 	return emplace_prepend_child(pos, value);

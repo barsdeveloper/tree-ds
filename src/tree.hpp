@@ -11,7 +11,7 @@
 
 namespace ds {
 
-template <typename> class node;
+template <typename > class node;
 
 template <typename T, typename Algorithm = pre_order, typename Allocator = std::allocator<T>>
 class tree final : public tree_base<T> {
@@ -74,12 +74,16 @@ public:
 
 	/*   ---   Modifiers   ---   */
 	void clear();
-	template <typename It> iterator<typename It::algorithm_type> insert(It position, const value_type& value);
-	template <typename It> iterator<typename It::algorithm_type> insert(It position, value_type&& value);
-	template <typename It> iterator<typename It::algorithm_type> append_child(It position, const value_type& value);
-	template <typename It> iterator<typename It::algorithm_type> append_child(It position, value_type&& value);
-	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const value_type& value);
-	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, value_type&& value);
+	template <typename It> iterator<typename It::algorithm_type> insert(It position, const value_type&);
+	template <typename It> iterator<typename It::algorithm_type> insert(It position, value_type&&);
+	template <typename It> iterator<typename It::algorithm_type> append_child(It position, const value_type&);
+	template <typename It> iterator<typename It::algorithm_type> append_child(It position, value_type&&);
+	template <typename It> iterator<typename It::algorithm_type> append_child(It position, const tree&);
+	template <typename It> iterator<typename It::algorithm_type> append_child(It position, tree&&);
+	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const value_type&);
+	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, value_type&&);
+	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const tree&);
+	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, tree&&);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace(It position, Args&&...);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_append_child(It position,
 			Args&&...);
