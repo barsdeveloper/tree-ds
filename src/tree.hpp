@@ -7,7 +7,7 @@
 
 #include "tree_base.hpp"
 #include "iterator/algorithm/pre_order.hpp"
-#include "iterator/element/tree_iterator.hpp"
+#include "iterator/tree_iterator/tree_iterator.hpp"
 
 namespace ds {
 
@@ -78,17 +78,13 @@ public:
 	template <typename It> iterator<typename It::algorithm_type> insert(It position, value_type&&);
 	template <typename It> iterator<typename It::algorithm_type> append_child(It position, const value_type&);
 	template <typename It> iterator<typename It::algorithm_type> append_child(It position, value_type&&);
-	template <typename It> iterator<typename It::algorithm_type> append_child(It position, const tree&);
-	template <typename It> iterator<typename It::algorithm_type> append_child(It position, tree&&);
 	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const value_type&);
 	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, value_type&&);
-	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const tree&);
-	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, tree&&);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace(It position, Args&&...);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_append_child(It position,
-			Args&&...);
+	        Args&&...);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_prepend_child(It position,
-			Args&&...);
+	        Args&&...);
 
 };
 

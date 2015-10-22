@@ -1,5 +1,5 @@
-#include <limits> // std::numeric_limits
-#include <stdexcept> // std::invalid_argument
+#include <limits>      // std::numeric_limits
+#include <stdexcept>   // std::invalid_argument
 #include <type_traits> // std::is_same
 
 namespace ds {
@@ -16,7 +16,8 @@ template <typename It> typename tree<T, Alg, Alloc>::node_type* tree<T, Alg, All
 	static_assert(
 			!std::is_same<It, iterator<typename It::algorithm_type>>::value &&
 			!std::is_same<It, const_iterator<typename It::algorithm_type>>::value,
-			"Expected tree::iterator or tree::reverse_iterator type");
+			"Expected tree::iterator or tree::reverse_iterator type"
+	);
 	if (this != it._tree) throw std::invalid_argument("iterator does not refer to this tree");
 	// Iterator refers to not empty tree but points to the end.
 	if (!it._node && static_cast<const tree*>(it._tree)->_root) {
@@ -184,19 +185,6 @@ template <typename It>
 tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos,
 		value_type &&value) {
 	return emplace_append_child(pos, std::move(value));
-}
-
-template <typename T, typename Alg, typename Alloc>
-template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos,
-		const tree &value) {
-	return emplace_append_child(pos, tree);
-}
-
-template <typename T, typename Alg, typename Alloc>
-template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos, tree &&tree) {
-	return emplace_append_child(pos, std::move(tree._root));
 }
 
 template <typename T, typename Alg, typename Alloc>
