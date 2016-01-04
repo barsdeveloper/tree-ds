@@ -5,13 +5,13 @@
 #include <iterator> // std::reverse_iterator
 #include <type_traits>
 
-#include "../include/TreeDS/iterator/traverse_algorithms/pre_order.hpp"
-#include "../include/TreeDS/iterator/tree_iterator/tree_iterator.hpp"
-#include "../include/TreeDS/tree_base.hpp"
+#include "iterator/traverse_algorithm/pre_order.hpp"
+#include "iterator/tree_iterator/tree_iterator.hpp"
+#include "tree_base.hpp"
 
 namespace ds {
 
-template <typename > class node;
+template <typename> class node;
 
 template <typename T, typename Algorithm = pre_order, typename Allocator = std::allocator<T>>
 class tree final : public tree_base<T> {
@@ -88,6 +88,6 @@ public:
 
 } /* namespace ds */
 
-#include "../include/TreeDS/tree.tpp"
+#include "tree.tpp"
 
 #endif /* TREE_HPP_ */

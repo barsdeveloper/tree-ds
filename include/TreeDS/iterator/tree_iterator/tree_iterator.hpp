@@ -7,11 +7,11 @@
 namespace ds {
 
 template <typename> class tree_base;
-template <typename, typename, typename > class tree;
+template <typename, typename, typename> class tree;
 template <typename> class node;
 
 template <typename T, typename Algorithm, bool Is_Const = false>
-class tree_iterator : public std::iterator<std::bidirectional_iterator_tag, T> {
+class tree_iterator: public std::iterator<std::bidirectional_iterator_tag, T> {
 
 	friend class tree_iterator<T, Algorithm, !Is_Const> ; // const and non const are each other friends
 	template <typename, typename, typename> friend class tree;
@@ -60,6 +60,6 @@ public:
 
 } /* namespace ds */
 
-#include "../../../include/TreeDS/iterator/tree_iterator/tree_iterator.tpp"
+#include "tree_iterator.tpp"
 
 #endif /* TREE_ITERATOR_HPP_ */

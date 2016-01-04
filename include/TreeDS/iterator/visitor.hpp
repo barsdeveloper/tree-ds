@@ -22,6 +22,6 @@ public:
 
 } /* namespace ds */
 
-#include "../../include/TreeDS/iterator/visitor.tpp"
+#include "visitor.tpp"
 
 #endif /* VISITOR_HPP_ */

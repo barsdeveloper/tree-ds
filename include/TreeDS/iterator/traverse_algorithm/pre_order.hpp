@@ -1,7 +1,7 @@
 #ifndef PRE_ORDER_HPP_
 #define PRE_ORDER_HPP_
 
-#include "../../../include/TreeDS/iterator/visitor.hpp"
+#include "../visitor.hpp"
 
 namespace ds {
 
@@ -19,6 +19,6 @@ public:
 
 } /* namespace ds */
 
-#include "../../../include/TreeDS/iterator/traverse_algorithms/pre_order.tpp"
+#include "pre_order.tpp"
 
 #endif /* PRE_ORDER_HPP_ */

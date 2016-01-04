@@ -1,4 +1,4 @@
-#include "../../../include/TreeDS/node/node.hpp"
+#include "../../node/node.hpp"
 #include "../visitor.hpp"
 
 namespace ds {
@@ -31,7 +31,7 @@ tree_iterator<T, A, C>::tree_iterator(tree_type &tree, node_type &current) :
 }
 
 template <typename T, typename A, bool C>
-template <typename, typename> tree_iterator<T, A, C>::tree_iterator(const tree_iterator<T, A, false> &iterator) :
+template <typename, typename > tree_iterator<T, A, C>::tree_iterator(const tree_iterator<T, A, false> &iterator) :
 		_algorithm(A::get_instance()), _tree(iterator._tree), _node(iterator._node) {
 }
 
@@ -64,9 +64,9 @@ bool tree_iterator<T, A, C>::operator !=(const tree_iterator& other) const {
 
 template <typename T, typename A, bool C>
 tree_iterator<T, A, C> & tree_iterator<T, A, C>::operator ++() {
-	if (_node) {
+	if(_node) {
 		_node = static_cast<node_type*>(_algorithm.increment(*_node));
-	} else if (_tree && _tree->_root) { // If iterator is at the end() (REMEMBER: end()._node == nullptr)
+	} else if(_tree && _tree->_root) { // If iterator is at the end() (REMEMBER: end()._node == nullptr)
 		// normal iterator  => incremented from end() => go to its first element (rewind)
 		// reverse iterator	=> decremented from end() => go to its last element (before end())
 		// REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
@@ -84,13 +84,13 @@ tree_iterator<T, A, C> tree_iterator<T, A, C>::operator ++(int) {
 
 template <typename T, typename A, bool C>
 tree_iterator<T, A, C>& tree_iterator<T, A, C>::operator --() {
-	if (_node) {
+	if(_node) {
 		node_type *temp = _node;
 		_node = static_cast<node_type*>(_algorithm.decrement(*_node));
-		if (!_node) { // if decrementation caused past the begin() ...
+		if(!_node) { // if decrementation caused past the begin() ...
 			_node = temp; // ... then leave _node as it was
 		}
-	} else if (_tree && _tree->_root) { // if iterator is at the end() (REMEMBER: end() => _node == nullptr)
+	} else if(_tree && _tree->_root) { // if iterator is at the end() (REMEMBER: end() => _node == nullptr)
 		// normal iterator  => decremented from end() => go to its last element (before end())
 		// reverse iterator => incremented from end() => go to its first element (rewind)
 		// REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
