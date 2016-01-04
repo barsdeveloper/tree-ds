@@ -8,20 +8,20 @@ template <typename T>
 class visitor {
 
 protected:
-	constexpr visitor() = default;                  // Default constructor
+	constexpr visitor() = default;                // Default constructor
 	visitor(const visitor&) = delete;             // Copy constructor
 	visitor& operator =(const visitor&) = delete; // Copy assignment operator
 	visitor(visitor&&) = delete;                  // Move constructor
 	visitor& operator =(visitor&&) = delete;      // Move assignment operator
 
 public:
-	~visitor() = default;                           // Destructor
+	~visitor() = default;                         // Destructor
 	static const T& get_instance();
 
 };
 
 } /* namespace ds */
 
-#include "visitor.tpp"
+#include "../../include/TreeDS/iterator/visitor.tpp"
 
 #endif /* VISITOR_HPP_ */

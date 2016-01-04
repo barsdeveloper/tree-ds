@@ -18,9 +18,9 @@ template <typename It> typename tree<T, Alg, Alloc>::node_type* tree<T, Alg, All
 			!std::is_same<It, const_iterator<typename It::algorithm_type>>::value,
 			"Expected tree::iterator or tree::reverse_iterator type"
 	);
-	if (this != it._tree) throw std::invalid_argument("iterator does not refer to this tree");
+	if(this != it._tree) throw std::invalid_argument("iterator does not refer to this tree");
 	// Iterator refers to not empty tree but points to the end.
-	if (!it._node && static_cast<const tree*>(it._tree)->_root) {
+	if(!it._node && static_cast<const tree*>(it._tree)->_root) {
 		/*
 		 * Static cast is needed as sub classes cannot access protected members of its superclass through another
 		 * instance than itself (this). Casting to this type is safe as it is proved that this == it._tree.
@@ -154,7 +154,7 @@ typename tree<T, Alg, Alloc>::size_type tree<T, Alg, Alloc>::max_size() const {
 
 template <typename T, typename Alg, typename Alloc>
 void tree<T, Alg, Alloc>::clear() {
-	if (this->_root) {
+	if(this->_root) {
 		delete this->_root;
 		this->_root = nullptr;
 	}
@@ -162,8 +162,7 @@ void tree<T, Alg, Alloc>::clear() {
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::insert(It pos,
-		const value_type &value) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::insert(It pos, const value_type &value) {
 	return emplace(pos, value);
 }
 
@@ -175,29 +174,25 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos,
-		const value_type &value) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos, const value_type &value) {
 	return emplace_append_child(pos, value);
 }
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos,
-		value_type &&value) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::append_child(It pos, value_type &&value) {
 	return emplace_append_child(pos, std::move(value));
 }
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::prepend_child(It pos,
-		const value_type &value) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::prepend_child(It pos, const value_type &value) {
 	return emplace_prepend_child(pos, value);
 }
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::prepend_child(It pos,
-		value_type &&value) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::prepend_child(It pos, value_type &&value) {
 	return emplace_prepend_child(pos, std::move(value));
 }
 
@@ -206,29 +201,27 @@ template <typename It, typename ...Args>
 tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::emplace(It pos, Args&& ...args) {
 	node_type *n = new node_type(args...);
 	node_type *p = extract_node(pos);
-	if (p) p->insert(*n);
+	if(p) p->insert(*n);
 	else this->_root = n;
 	return iterator<typename It::algorithm_type>(*this, *n);
 }
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It, typename ...Args>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::emplace_append_child(It pos,
-		Args&& ...args) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::emplace_append_child(It pos, Args&& ...args) {
 	node_type *n = new node_type(args...);
 	node_type *p = extract_node(pos);
-	if (p) p->append_child(*n);
+	if(p) p->append_child(*n);
 	else this->_root = n;
 	return iterator<typename It::algorithm_type>(*this, *n);
 }
 
 template <typename T, typename Alg, typename Alloc>
 template <typename It, typename ...Args>
-tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::emplace_prepend_child(It pos,
-		Args&& ...args) {
+tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::emplace_prepend_child(It pos, Args&& ...args) {
 	node_type *n = new node_type(args...);
 	node_type *p = extract_node(pos);
-	if (p) p->prepend_child(*n);
+	if(p) p->prepend_child(*n);
 	else this->_root = n;
 	return iterator<typename It::algorithm_type>(*this, *n);
 }

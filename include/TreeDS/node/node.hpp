@@ -46,6 +46,6 @@ public:
 
 } /* namespace ds */
 
-#include "node.tpp"
+#include "../../include/TreeDS/node/node.tpp"
 
 #endif /* NODE_HPP_ */

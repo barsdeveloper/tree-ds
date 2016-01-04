@@ -5,9 +5,9 @@
 #include <iterator> // std::reverse_iterator
 #include <type_traits>
 
-#include "tree_base.hpp"
-#include "iterator/algorithm/pre_order.hpp"
-#include "iterator/tree_iterator/tree_iterator.hpp"
+#include "../include/TreeDS/iterator/traverse_algorithms/pre_order.hpp"
+#include "../include/TreeDS/iterator/tree_iterator/tree_iterator.hpp"
+#include "../include/TreeDS/tree_base.hpp"
 
 namespace ds {
 
@@ -81,15 +81,13 @@ public:
 	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, const value_type&);
 	template <typename It> iterator<typename It::algorithm_type> prepend_child(It position, value_type&&);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace(It position, Args&&...);
-	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_append_child(It position,
-	        Args&&...);
-	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_prepend_child(It position,
-	        Args&&...);
+	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_append_child(It position, Args&&...);
+	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_prepend_child(It position, Args&&...);
 
 };
 
 } /* namespace ds */
 
-#include "tree.tpp"
+#include "../include/TreeDS/tree.tpp"
 
 #endif /* TREE_HPP_ */

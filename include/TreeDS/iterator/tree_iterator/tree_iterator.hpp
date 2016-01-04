@@ -60,6 +60,6 @@ public:
 
 } /* namespace ds */
 
-#include "tree_iterator.tpp"
+#include "../../../include/TreeDS/iterator/tree_iterator/tree_iterator.tpp"
 
 #endif /* TREE_ITERATOR_HPP_ */

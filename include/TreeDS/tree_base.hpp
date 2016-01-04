@@ -50,6 +50,6 @@ public:
 
 } /* namespace ds */
 
-#include "tree_base.tpp"
+#include "../include/TreeDS/tree_base.tpp"
 
 #endif /* TREE_BASE_HPP_ */
