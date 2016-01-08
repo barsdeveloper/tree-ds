@@ -1,5 +1,5 @@
-#ifndef TREE_ITERATOR_HPP_
-#define TREE_ITERATOR_HPP_
+#ifndef H3B68D6D4_220A_4EFE_8556_D06377C8C61C
+#define H3B68D6D4_220A_4EFE_8556_D06377C8C61C
 
 #include <iterator>    // std::iterator
 #include <type_traits> // std::conditional, std::enable_if
@@ -62,4 +62,4 @@ public:
 
 #include "tree_iterator.tpp"
 
-#endif /* TREE_ITERATOR_HPP_ */
+#endif /* H3B68D6D4_220A_4EFE_8556_D06377C8C61C */

@@ -1,5 +1,7 @@
-#ifndef NODE_HPP_
-#define NODE_HPP_
+#ifndef HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1
+#define HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1
+
+#include <utility> // std::pair
 
 namespace ds {
 
@@ -9,12 +11,14 @@ template <typename, typename, typename> class tree;
 template <typename T>
 class node {
 
-	template <typename, typename, typename> friend class tree;
-	template <typename, typename, bool> friend class tree_iterator;
-	friend class pre_order;
+public:
+	struct info {
+		bool next_sibling;
+		bool has_children;
+	};
 
 protected:
-	T _argument;
+	T _value;
 	node *_parent;
 	node *_prev_sibling;
 	node *_next_sibling;
@@ -39,9 +43,20 @@ protected:
 	// void prepend_sibling(node&); // not needed
 
 public:
+	node();									// Default constructor
 	~node();
+	//   ---   Getters   ---   */
+	const node* parent() const;
+	const node* prev_sibling() const;
+	const node* next_sibling() const;
+	const node* first_child() const;
+	const node* last_child() const;
 
-	// Parameters for these methods are passed by copy to allow both l-values and r-values and not modify their trees
+	//   ---   Serialization   ---   */
+	template <typename Archive> void save(Archive&) const;
+	template <typename Archive> info load(Archive&);
+
+	//   ---   Tree construction   ---   */
 	node& operator ()(const node&);
 	node& operator ,(const node&);
 
@@ -51,4 +66,4 @@ public:
 
 #include "node.tpp"
 
-#endif /* NODE_HPP_ */
+#endif /* HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1 */

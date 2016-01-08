@@ -1,5 +1,5 @@
-#ifndef VISITOR_HPP_
-#define VISITOR_HPP_
+#ifndef H2E052275_35DB_4435_99C1_48D834F3941D
+#define H2E052275_35DB_4435_99C1_48D834F3941D
 
 namespace ds {
 
@@ -24,4 +24,4 @@ public:
 
 #include "visitor.tpp"
 
-#endif /* VISITOR_HPP_ */
+#endif /* H2E052275_35DB_4435_99C1_48D834F3941D */

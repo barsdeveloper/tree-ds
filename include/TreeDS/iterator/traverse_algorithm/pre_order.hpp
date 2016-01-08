@@ -1,5 +1,5 @@
-#ifndef PRE_ORDER_HPP_
-#define PRE_ORDER_HPP_
+#ifndef H40F7331A_27AB_4B81_A85D_B370D0054AD8
+#define H40F7331A_27AB_4B81_A85D_B370D0054AD8
 
 #include "../visitor.hpp"
 
@@ -21,4 +21,4 @@ public:
 
 #include "pre_order.tpp"
 
-#endif /* PRE_ORDER_HPP_ */
+#endif /* H40F7331A_27AB_4B81_A85D_B370D0054AD8 */

@@ -1,5 +1,5 @@
-#ifndef TREE_HPP_
-#define TREE_HPP_
+#ifndef H3702CC99_74F1_4C8D_9B1A_954EB6E53330
+#define H3702CC99_74F1_4C8D_9B1A_954EB6E53330
 
 #include <memory>   // std::allocator, std::allocator_traits
 #include <iterator> // std::reverse_iterator
@@ -44,7 +44,6 @@ public:
 	tree& operator =(const tree&);     // Copy assignment operator
 	tree& operator =(tree&) = default; // Move assignment operator
 	~tree() = default;                 // Destructor
-	tree(node<T> &root);
 
 	/*   ---   Iterators   ---   *
 	 * r => reverse
@@ -84,10 +83,14 @@ public:
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_append_child(It position, Args&&...);
 	template <typename It, typename ...Args> iterator<typename It::algorithm_type> emplace_prepend_child(It position, Args&&...);
 
+	/*   ---   Serialization   ---   */// (compatible with boost)
+	template <typename Archive> void save(Archive&) const;
+	template <typename Archive> void load(Archive&);
+
 };
 
 } /* namespace ds */
 
 #include "tree.tpp"
 
-#endif /* TREE_HPP_ */
+#endif /* H3702CC99_74F1_4C8D_9B1A_954EB6E53330 */
