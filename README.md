@@ -8,6 +8,7 @@ have an arbitrary number of children).
 * Permissive licence
 * Iterators provided: pre-order, post-order, ...
 * Expandable with custom iterator types
+* Boost compatibile serialization.
 
 ## Overview
-The data structure is based on the node class. Every node has a memory overhead of 5 pointers size (40 bytes on 64 bit systems) and the size of the stored object of course.
+The data structure is based on the node class. Every node has a memory overhead of 5 pointers size (40 bytes on 64 bit systems) plus the size of the stored object, of course.
