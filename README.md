@@ -9,5 +9,10 @@ TreeDS (tree data structure) is an STL-like tree container type for C++11. It is
 * Expandable with custom iterator types.
 * Boost compatibile serialization.
 
-## Overview
-The data structure is based on the node class. Every node has a memory overhead of 5 pointers size (40 bytes on 64 bit systems) plus the size of the stored object, of course.
+## Getting started
+The library is header only, to start using it you just have to add the "include" directory to the include paths and then include it in your C++ file:
+
+    #include <TreeDS/tree.hpp>
+
+## Documentation
+Available at the wiki: https://github.com/barsan-ds/TreeDS/wiki
