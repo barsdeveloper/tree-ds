@@ -1,9 +1,11 @@
 # TreeDS - work in progress
 TreeDS (tree data structure) is an STL-like tree container type for C++11. It is a header only library that provides the most generic type of tree where every node can have an arbitrary number of children (and the maximum number of children can't be set). It provides a double interface: a container-centric (STL-like) one and a node-centric (classic) one.
 
+Please feel free to modify it and contribute to the code if you want.
+
 ## Features
 * STL compatible.
-* No exernal dependecies.
+* No external dependecies.
 * Permissive licence.
 * Iterators provided: pre-order, ...
 * Expandable with custom iterator types.
