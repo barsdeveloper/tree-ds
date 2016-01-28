@@ -2,7 +2,9 @@
 #include <limits>
 #include <stdexcept>   // std::invalid_argument, std::runtime_error
 #include <type_traits> // std::is_same
-#include "iterator/traverse_algorithm/pre_order.hpp"
+
+#include "iterator/traversal_algorithm/pre_order.hpp"
+#include "node/node.hpp"
 
 namespace ds {
 
@@ -30,7 +32,7 @@ template <typename It> typename tree<T, Alg, Alloc>::node_type* tree<T, Alg, All
 		throw std::invalid_argument("iterator points to the end (not allowed for this type of container)");
 	}
 	/*
-	 * I dislike const_cast, but have to use it as STL specify to take const_iterator as input for every method of
+	 * I have const_cast, but have to use it as STL specify to take const_iterator as input for every method of
 	 * container that need to take a position. Anyway, it can be used safely in this context because iterator refers
 	 * to this tree (which is NOT const).
 	 */
@@ -141,7 +143,7 @@ template <typename A> tree<T, Alg, Alloc>::const_reverse_iterator<A> tree<T, Alg
 
 template <typename T, typename Alg, typename Alloc>
 bool tree<T, Alg, Alloc>::empty() const {
-	return this->_root != nullptr;
+	return this->_root == nullptr;
 }
 
 template <typename T, typename Alg, typename Alloc>
@@ -210,7 +212,8 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 	node_type *p = extract_node(pos); // position
 	if (p) p->insert(*n);
 	else this->_root = n;
-	return iterator<typename It::algorithm_type>(*this, *n);
+	++this->_size;
+	return iterator<typename It::algorithm_type>(this, n);
 }
 
 template <typename T, typename Alg, typename Alloc>
@@ -221,7 +224,8 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 	node_type *p = extract_node(pos); // position
 	if (p) p->append_child(*n);
 	else this->_root = n;
-	return iterator<typename It::algorithm_type>(*this, *n);
+	++this->_size;
+	return iterator<typename It::algorithm_type>(this, n);
 }
 
 template <typename T, typename Alg, typename Alloc>
@@ -232,7 +236,8 @@ tree<T, Alg, Alloc>::iterator<typename It::algorithm_type> tree<T, Alg, Alloc>::
 	node_type *p = extract_node(pos); // position
 	if (p) p->prepend_child(*n);
 	else this->_root = n;
-	return iterator<typename It::algorithm_type>(*this, *n);
+	++this->_size;
+	return iterator<typename It::algorithm_type>(this, n);
 }
 
 template <typename T, typename Alg, typename Alloc>
@@ -246,12 +251,12 @@ void tree<T, Alg, Alloc>::save(Archive &ar) const {
 template <typename T, typename Alg, typename Alloc>
 template <typename Archive>
 void tree<T, Alg, Alloc>::load(Archive &ar) {
-	if (_root) throw std::runtime_error("The tree must be empty to load the archive into it");
+	if (this->_root) throw std::runtime_error("The tree must be empty to load the archive into it");
 	node_type *n, *p = new node_type();
 	auto info = p->load(ar);
 	std::stack<bool> next_sibling;
 	next_sibling.push(info.next_sibling);
-	_root = p;
+	this->_root = p;
 	while (!next_sibling.empty()) {
 		n = new node_type();
 		info = n->load(ar);
@@ -259,8 +264,8 @@ void tree<T, Alg, Alloc>::load(Archive &ar) {
 			p->append_child(*n);
 			next_sibling.push(info.next_sibling);
 		} else {
-			while(!next_sibling.empty() && !next_sibling.top()) { // until it finds the first node that has siblings
-				p = p->parent();
+			while (!next_sibling.empty() && !next_sibling.top()) { // until it finds the first node that has siblings
+				p = p->parent;
 				next_sibling.pop();
 			}
 			if (!next_sibling.empty()) {

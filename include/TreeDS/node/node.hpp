@@ -1,5 +1,5 @@
-#ifndef HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1
-#define HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1
+#ifndef HF6C78AAD_6105_42J9_93D7_FBAE73CF69D1
+#define HF6C78AAD_6105_42J9_93D7_FBAE73CF69D1
 
 #include <utility> // std::pair
 
@@ -7,9 +7,14 @@ namespace ds {
 
 template <typename> class tree_base;
 template <typename, typename, typename> class tree;
+template <typename> class visitor;
 
 template <typename T>
 class node {
+
+	template <typename> friend class tree_base;
+	template <typename, typename, typename> friend class tree;
+	template <typename> friend class visitor;
 
 public:
 	struct info {
@@ -25,12 +30,14 @@ protected:
 	node *_first_child;
 	node *_last_child;
 
+	node();									// Default constructor
 	node(const node&) = delete;             // Copy constructor
 	node(node&&);                           // Move constructor
 	node(const T &argument);
 	node(T &&argument);
 	template <typename ...Args> node(Args&& ...args);
 	node(tree_base<T> &&);
+	~node();                                // Destructor
 	node& operator =(const node&) = delete; // Copy assignment operator
 	node& operator =(node&&);               // Move assignment operator
 
@@ -43,8 +50,6 @@ protected:
 	// void prepend_sibling(node&); // not needed
 
 public:
-	node();									// Default constructor
-	~node();
 	//   ---   Getters   ---   */
 	const node* parent() const;
 	const node* prev_sibling() const;
@@ -66,4 +71,4 @@ public:
 
 #include "node.tpp"
 
-#endif /* HF6C78AAD_6105_42F9_93D7_FBAE73CF69D1 */
+#endif /* HF6C78AAD_6105_42J9_93D7_FBAE73CF69D1 */

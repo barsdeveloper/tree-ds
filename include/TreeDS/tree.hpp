@@ -5,7 +5,7 @@
 #include <iterator> // std::reverse_iterator
 #include <type_traits>
 
-#include "iterator/traverse_algorithm/pre_order.hpp"
+#include "iterator/traversal_algorithm/pre_order.hpp"
 #include "iterator/tree_iterator/tree_iterator.hpp"
 #include "tree_base.hpp"
 

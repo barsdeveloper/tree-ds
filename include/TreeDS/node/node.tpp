@@ -159,27 +159,27 @@ node<T>::~node() {
 }
 
 template <typename T>
-const node* node<T>::parent() const {
+const node<T>* node<T>::parent() const {
 	return _parent;
 }
 
 template <typename T>
-const node* node<T>::prev_sibling() const {
+const node<T>* node<T>::prev_sibling() const {
 	return _prev_sibling;
 }
 
 template <typename T>
-const node* node<T>::next_sibling() const {
+const node<T>* node<T>::next_sibling() const {
 	return _next_sibling;
 }
 
 template <typename T>
-const node* node<T>::first_child() const {
+const node<T>* node<T>::first_child() const {
 	return _first_child;
 }
 
 template <typename T>
-const node* node<T>::last_child() const {
+const node<T>* node<T>::last_child() const {
 	return _last_child;
 }
 
@@ -192,7 +192,7 @@ void node<T>::save(Archive &ar) const {
 
 template <typename T>
 template <typename Archive>
-node<T>::info node<T>::load(Archive &ar) {
+typename node<T>::info node<T>::load(Archive &ar) {
 	ar >> _value;
 	bool siblings, children;
 	ar >> siblings;

@@ -3,7 +3,7 @@
 
 namespace ds {
 
-//This is just a level of indirection to not repeat the get_instance() method for every concrete visitor class
+// This is just a level of indirection to not repeat the get_instance() method for every concrete visitor class
 template <typename T>
 class visitor {
 
@@ -13,9 +13,9 @@ protected:
 	visitor& operator =(const visitor&) = delete; // Copy assignment operator
 	visitor(visitor&&) = delete;                  // Move constructor
 	visitor& operator =(visitor&&) = delete;      // Move assignment operator
+	~visitor() = default;                         // Destructor
 
 public:
-	~visitor() = default;                         // Destructor
 	static const T& get_instance();
 
 };

@@ -1,8 +1,10 @@
 namespace ds {
 
+template <typename> class node;
+
 template <typename T>
-T* pre_order::increment(T &node) const {
-	T *result = &node;
+const node<T>* pre_order::increment(const node<T> &n) const {
+	const node<T> *result = &n;
 	if(result->first_child()) {
 		result = result->first_child();
 	} else {
@@ -19,8 +21,8 @@ T* pre_order::increment(T &node) const {
 }
 
 template <typename T>
-T* pre_order::decrement(T &node) const {
-	T *result = &node;
+const node<T>* pre_order::decrement(const node<T> &n) const {
+	const node<T> *result = &n;
 	if(result->prev_sibling()) {
 		/*
 		 * If the current node has a previous sibling, the next node will be lowest last
@@ -37,14 +39,14 @@ T* pre_order::decrement(T &node) const {
 }
 
 template <typename T>
-T* pre_order::go_first(T &root) const {
-	T *result = &root;
+const node<T>* pre_order::go_first(const node<T> &root) const {
+	const node<T> *result = &root;
 	return result;
 }
 
 template <typename T>
-T* pre_order::go_last(T &root) const {
-	T *result = &root;
+const node<T>* pre_order::go_last(const node<T> &root) const {
+	const node<T> *result = &root;
 	while(result->last_child()) {
 		result = result->last_child(); // go to the last child
 	}

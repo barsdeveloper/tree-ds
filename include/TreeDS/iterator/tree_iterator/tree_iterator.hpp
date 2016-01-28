@@ -10,10 +10,10 @@ template <typename> class tree_base;
 template <typename, typename, typename> class tree;
 template <typename> class node;
 
-template <typename T, typename Algorithm, bool Is_Const = false>
+template <typename T, typename Algorithm, bool Is_const = false>
 class tree_iterator: public std::iterator<std::bidirectional_iterator_tag, T> {
 
-	friend class tree_iterator<T, Algorithm, !Is_Const> ; // const and non const are each other friends
+	friend class tree_iterator<T, Algorithm, !Is_const> ; // const and non const are each other friends
 	template <typename, typename, typename> friend class tree;
 
 public:
@@ -22,31 +22,30 @@ public:
 	 * There is no conceptual difference between the container and data it holds. If the container is constant, both
 	 * the container and data should be constant.
 	 */
-	using value_type = typename std::conditional<Is_Const, const T, T>::type;
-	using node_type = typename std::conditional<Is_Const, const node<T>, node<T>>::type;
-	using tree_type = typename std::conditional<Is_Const, const tree_base<T>, tree_base<T>>::type;
+	using value_type = typename std::conditional<Is_const, const T, T>::type;
+	using node_type = typename std::conditional<Is_const, const node<T>, node<T>>::type;
+	using tree_type = typename std::conditional<Is_const, const tree_base<T>, tree_base<T>>::type;
 	using algorithm_type = const Algorithm;
 
 protected:
 	algorithm_type &_algorithm;
 	tree_type *_tree; // nullptr => no container associated (default iterator)
 	node_type *_node; // nullptr => end()
+	tree_iterator(tree_type* , node_type*);
 
 public:
 	constexpr tree_iterator();                       // Default constructor
 	tree_iterator(const tree_iterator&);             // Copy constructor
 	tree_iterator& operator =(const tree_iterator&); // Copy assignment operator
 	~tree_iterator() = default;                      // Destructor
-	tree_iterator(tree_type &tree);
-	tree_iterator(tree_type &tree, node_type &current);
+	tree_iterator(tree_type&);
 	/*
 	 * Allow iterator to const_iterator conversion (parameter U is just to have a dependent parameter and delay
 	 * enable_if evaluation until template specialization)
 	 */
-	template <typename U = T, typename = typename std::enable_if<Is_Const && std::is_same<U, T>::value>::type>
+	template <typename U = T, typename = typename std::enable_if<Is_const && std::is_same<U, T>::value>::type>
 	tree_iterator(const tree_iterator<T, Algorithm, false>&);
-	node_type* node() const;
-	bool is_end() const;
+	node_type* get_node() const;
 	value_type& operator *() const;
 	value_type* operator ->() const;
 	bool operator ==(const tree_iterator&) const;
