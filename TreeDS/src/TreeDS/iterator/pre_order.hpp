@@ -1,0 +1,83 @@
+#ifndef H40F7331A_27AB_4B81_A85D_B370D0054AD8
+#define H40F7331A_27AB_4B81_A85D_B370D0054AD8
+
+namespace ds {
+
+template<typename T>
+class node;
+
+class pre_order final {
+
+public:
+	constexpr pre_order() = default;
+	~pre_order() = default;
+
+	template<typename T>
+	const node<T>* increment(const node<T>& n) const {
+		const node<T>* next = &n;
+		if (next->first_child()) {
+			next = next->first_child();
+		} else {
+			/*
+			 * When the passed node (n) doesn't have child, find the first ancestor node with a right child that was not
+			 * visited. That is: go up until we find a node with a right child that is not the node we called get_parent()
+			 * on to get there. We need to keep track of the previous node and compare it with the right node of its parent.
+			 */
+			const node<T>* prev = next;
+			next = next->parent();
+			while (next) {
+				if (next->last_child() != prev) {
+					next = next->right_child();
+					break; // found
+				}
+				prev = next;
+				next = next->parent();
+			}
+		}
+		return next;
+	}
+
+	template<typename T>
+	const node<T>* decrement(const node<T>& n) const {
+		const node<T>* next = n.parent();
+		const node<T>* prev = &n;
+		/*
+		 * The parent is the next node if (REMEMBER: we traverse tree in pre-order and decrement the iterator):
+		 *     1) The passed node is root (its parent is nullptr so the previous value is the end of the reverse iterator).
+		 *     2) The node is the unique child of its parent
+		 */
+		if (!next || next->first_child() == prev) {
+			return next;
+		} else {
+			/*
+			 * Here we are in the situation where the passed node (n) is a right child of a parent that has also a left
+			 * child. All we have to do is find the lowest and rightmost node in the tree structure starting from the left
+			 * sibling.
+			 */
+			next = next->left_child();
+			while (next->last_child()) {
+				next = next->last_child();
+			}
+		}
+		return next;
+	}
+
+	template<typename T> const node<T>* go_first(const node<T>& root) const {
+		const node<T>* result = &root;
+		return result;
+	}
+
+	template<typename T>
+	const node<T>* go_last(const node<T>& root) const {
+		const node<T>* result = &root;
+		while (result->last_child()) {
+			result = result->last_child(); // go to the last child
+		}
+		return result;
+	}
+
+};
+
+} /* namespace ds */
+
+#endif /* H40F7331A_27AB_4B81_A85D_B370D0054AD8 */
