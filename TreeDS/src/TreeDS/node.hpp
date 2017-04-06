@@ -89,6 +89,18 @@ public:
 		return _right ? _right.get() : _left.get();
 	}
 
+	bool is_left_child() const {
+		return _parent ? this == _parent->_left : false;
+	}
+
+	bool is_right_child() const {
+		return _parent ? this == _parent->_right : false;
+	}
+
+	bool is_unique_child() const {
+		return this == left_child() && this == last_child();
+	}
+
 	long hash_code() const;
 
 	bool operator ==(const node& other) {

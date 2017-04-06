@@ -14,27 +14,11 @@ public:
 
 	template<typename T>
 	const node<T>* increment(const node<T>& n) const {
-		const node<T>* next = &n;
-		if (next->first_child()) {
-			next = next->first_child();
-		} else {
-			/*
-			 * When the passed node (n) doesn't have child, find the first ancestor node with a right child that was not
-			 * visited. That is: go up until we find a node with a right child that is not the node we called get_parent()
-			 * on to get there. We need to keep track of the previous node and compare it with the right node of its parent.
-			 */
-			const node<T>* prev = next;
-			next = next->parent();
-			while (next) {
-				if (next->last_child() != prev) {
-					next = next->right_child();
-					break; // found
-				}
-				prev = next;
-				next = next->parent();
-			}
+		auto result = n.first_child();
+		if (result) {
+			return result;
 		}
-		return next;
+		return cross_bridge_right(n);
 	}
 
 	template<typename T>
@@ -46,7 +30,7 @@ public:
 		 *     1) The passed node is root (its parent is nullptr so the previous value is the end of the reverse iterator).
 		 *     2) The node is the unique child of its parent
 		 */
-		if (!next || next->first_child() == prev) {
+		if (!next || prev == next->first_child()) {
 			return next;
 		} else {
 			/*
@@ -63,8 +47,7 @@ public:
 	}
 
 	template<typename T> const node<T>* go_first(const node<T>& root) const {
-		const node<T>* result = &root;
-		return result;
+		return &root;
 	}
 
 	template<typename T>
