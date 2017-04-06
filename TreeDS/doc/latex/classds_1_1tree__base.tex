@@ -1,0 +1,81 @@
+\hypertarget{classds_1_1tree__base}{}\section{ds\+:\+:tree\+\_\+base$<$ T $>$ Class Template Reference}
+\label{classds_1_1tree__base}\index{ds\+::tree\+\_\+base$<$ T $>$@{ds\+::tree\+\_\+base$<$ T $>$}}
+
+
+Inheritance diagram for ds\+:\+:tree\+\_\+base$<$ T $>$\+:
+% FIG 0
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using {\bfseries value\+\_\+type} = T\hypertarget{classds_1_1tree__base_ae0c5f5979dd30d5bb66cec2c047cb62a}{}\label{classds_1_1tree__base_ae0c5f5979dd30d5bb66cec2c047cb62a}
+
+\item 
+using {\bfseries reference} = value\+\_\+type \&\hypertarget{classds_1_1tree__base_aa0c8cec9b58bda7a1fe35e540c4baa9e}{}\label{classds_1_1tree__base_aa0c8cec9b58bda7a1fe35e540c4baa9e}
+
+\item 
+using {\bfseries const\+\_\+reference} = const reference\hypertarget{classds_1_1tree__base_a26a8463da9d5a4f3d8b3b9295397ec0e}{}\label{classds_1_1tree__base_a26a8463da9d5a4f3d8b3b9295397ec0e}
+
+\item 
+using {\bfseries node\+\_\+type} = \hyperlink{classds_1_1node}{node}$<$ T $>$\hypertarget{classds_1_1tree__base_a9b91f60cfcede962c0ce2af11f44cab2}{}\label{classds_1_1tree__base_a9b91f60cfcede962c0ce2af11f44cab2}
+
+\item 
+using {\bfseries size\+\_\+type} = std\+::size\+\_\+t\hypertarget{classds_1_1tree__base_a2d18d43213a92bc031beec25cb28f59c}{}\label{classds_1_1tree__base_a2d18d43213a92bc031beec25cb28f59c}
+
+\item 
+using {\bfseries difference\+\_\+type} = std\+::ptrdiff\+\_\+t\hypertarget{classds_1_1tree__base_a1dad0adf4489ef2b3547e38ec81e7e42}{}\label{classds_1_1tree__base_a1dad0adf4489ef2b3547e38ec81e7e42}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool {\bfseries empty} () const \hypertarget{classds_1_1tree__base_a35c2c9196cfef1a95cf0d1795ea9f730}{}\label{classds_1_1tree__base_a35c2c9196cfef1a95cf0d1795ea9f730}
+
+\item 
+void {\bfseries clear} ()\hypertarget{classds_1_1tree__base_a1b80d41673c08773cd94012b399b0796}{}\label{classds_1_1tree__base_a1b80d41673c08773cd94012b399b0796}
+
+\item 
+size\+\_\+type {\bfseries size} () const \hypertarget{classds_1_1tree__base_a9ec4df9231bfa76c3c38db425e0e545e}{}\label{classds_1_1tree__base_a9ec4df9231bfa76c3c38db425e0e545e}
+
+\item 
+size\+\_\+type {\bfseries max\+\_\+size} () const \hypertarget{classds_1_1tree__base_a807513fa3b0b4a8039f12fff948f20fc}{}\label{classds_1_1tree__base_a807513fa3b0b4a8039f12fff948f20fc}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries tree\+\_\+base} (const \hyperlink{classds_1_1tree__base}{tree\+\_\+base} \&)=delete\hypertarget{classds_1_1tree__base_a32306a7291bfd221b32dbb2415105ffd}{}\label{classds_1_1tree__base_a32306a7291bfd221b32dbb2415105ffd}
+
+\item 
+{\bfseries tree\+\_\+base} (std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node\+\_\+type} $>$ root, size\+\_\+type size)\hypertarget{classds_1_1tree__base_ab4c0fe27f9cebbd5c52b20cd99dc8ef0}{}\label{classds_1_1tree__base_ab4c0fe27f9cebbd5c52b20cd99dc8ef0}
+
+\item 
+\hyperlink{classds_1_1tree__base}{tree\+\_\+base} \& {\bfseries operator=} (const \hyperlink{classds_1_1tree__base}{tree\+\_\+base} \&)=delete\hypertarget{classds_1_1tree__base_a9216427e3ef4a7059479f5cf7b5db0c1}{}\label{classds_1_1tree__base_a9216427e3ef4a7059479f5cf7b5db0c1}
+
+\item 
+{\bfseries tree\+\_\+base} (\hyperlink{classds_1_1tree__base}{tree\+\_\+base} \&\&other)\hypertarget{classds_1_1tree__base_a8f324183929101fcf2e9878bb7210dff}{}\label{classds_1_1tree__base_a8f324183929101fcf2e9878bb7210dff}
+
+\item 
+\hyperlink{classds_1_1tree__base}{tree\+\_\+base} \& {\bfseries operator=} (\hyperlink{classds_1_1tree__base}{tree\+\_\+base} \&\&other)\hypertarget{classds_1_1tree__base_ab588abb8213d1cf267b644a76645290f}{}\label{classds_1_1tree__base_ab588abb8213d1cf267b644a76645290f}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node\+\_\+type} $>$ {\bfseries root}\hypertarget{classds_1_1tree__base_ae5a4c3937a4aceb07f7e5dec92ee3b67}{}\label{classds_1_1tree__base_ae5a4c3937a4aceb07f7e5dec92ee3b67}
+
+\item 
+size\+\_\+type {\bfseries size\+\_\+val}\hypertarget{classds_1_1tree__base_a3541fffa8689f52f5e34e7e6cf26c9b7}{}\label{classds_1_1tree__base_a3541fffa8689f52f5e34e7e6cf26c9b7}
+
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename , typename , bool $>$ }\\class {\bfseries tree\+\_\+iterator}\hypertarget{classds_1_1tree__base_a3eb98ccc605b2d7c29a9caa36be1fa69}{}\label{classds_1_1tree__base_a3eb98ccc605b2d7c29a9caa36be1fa69}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+iterator/tree\+\_\+iterator.\+hpp\item 
+tree\+\_\+base.\+hpp\end{DoxyCompactItemize}

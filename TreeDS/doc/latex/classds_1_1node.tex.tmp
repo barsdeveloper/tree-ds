@@ -1,0 +1,72 @@
+\hypertarget{classds_1_1node}{}\section{ds\+:\+:node$<$ T $>$ Class Template Reference}
+\label{classds_1_1node}\index{ds\+::node$<$ T $>$@{ds\+::node$<$ T $>$}}
+
+
+Inheritance diagram for ds\+:\+:node$<$ T $>$\+:
+% FIG 0
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries node} (T value)\hypertarget{classds_1_1node_ace4694561f7c22fe39de689d4709a13d}{}\label{classds_1_1node_ace4694561f7c22fe39de689d4709a13d}
+
+\item 
+{\footnotesize template$<$typename... Args$>$ }\\{\bfseries node} (Args \&\&...args)\hypertarget{classds_1_1node_aafc75262e8ac43601d2bb72dcbc368a1}{}\label{classds_1_1node_aafc75262e8ac43601d2bb72dcbc368a1}
+
+\item 
+{\bfseries node} (const \hyperlink{classds_1_1node}{node} \&)=delete\hypertarget{classds_1_1node_aaf6551065a6584a5f31c6aa18af078d3}{}\label{classds_1_1node_aaf6551065a6584a5f31c6aa18af078d3}
+
+\item 
+{\bfseries node} (\hyperlink{classds_1_1node}{node} \&\&)=default\hypertarget{classds_1_1node_af1c230d9c40ad96b348fc6999eba6b4a}{}\label{classds_1_1node_af1c230d9c40ad96b348fc6999eba6b4a}
+
+\item 
+const \hyperlink{classds_1_1node}{node} $\ast$ {\bfseries parent} () const \hypertarget{classds_1_1node_a51eb10fd1cd3695a7c34ee814d0762a1}{}\label{classds_1_1node_a51eb10fd1cd3695a7c34ee814d0762a1}
+
+\item 
+const \hyperlink{classds_1_1node}{node} $\ast$ {\bfseries left} () const \hypertarget{classds_1_1node_a42c23fefe04f439081dcd4a45b7eb593}{}\label{classds_1_1node_a42c23fefe04f439081dcd4a45b7eb593}
+
+\item 
+const \hyperlink{classds_1_1node}{node} $\ast$ {\bfseries right} () const \hypertarget{classds_1_1node_ac5d4253b7dd98df8931f26e3e9405fea}{}\label{classds_1_1node_ac5d4253b7dd98df8931f26e3e9405fea}
+
+\item 
+const \hyperlink{classds_1_1node}{node} $\ast$ {\bfseries first\+\_\+child} () const \hypertarget{classds_1_1node_a0fedbd884c88e58be5ecfc27c47b09bd}{}\label{classds_1_1node_a0fedbd884c88e58be5ecfc27c47b09bd}
+
+\item 
+const \hyperlink{classds_1_1node}{node} $\ast$ {\bfseries last\+\_\+child} () const \hypertarget{classds_1_1node_a52c9d3a6d5d3fdfdc341055ec3513c32}{}\label{classds_1_1node_a52c9d3a6d5d3fdfdc341055ec3513c32}
+
+\item 
+long {\bfseries hash\+\_\+code} () const \hypertarget{classds_1_1node_a801e8f528314206591cd9a6e3e1fb165}{}\label{classds_1_1node_a801e8f528314206591cd9a6e3e1fb165}
+
+\item 
+void {\bfseries insert} (std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node}$<$ T $>$$>$ n)\hypertarget{classds_1_1node_ac93b661a433ad559b30cf3b0976dbae9}{}\label{classds_1_1node_ac93b661a433ad559b30cf3b0976dbae9}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void {\bfseries set\+\_\+left} (std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node}$<$ T $>$$>$ n)\hypertarget{classds_1_1node_a99f29474c34ec47bc9776fc3bd920e1e}{}\label{classds_1_1node_a99f29474c34ec47bc9776fc3bd920e1e}
+
+\item 
+void {\bfseries set\+\_\+right} (std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node}$<$ T $>$$>$ n)\hypertarget{classds_1_1node_a8192eb3b477c1c394303cb48031d1420}{}\label{classds_1_1node_a8192eb3b477c1c394303cb48031d1420}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+T {\bfseries value}\hypertarget{classds_1_1node_af7d88713ee12d447cacf55e7f9630f06}{}\label{classds_1_1node_af7d88713ee12d447cacf55e7f9630f06}
+
+\item 
+\hyperlink{classds_1_1node}{node}$<$ T $>$ $\ast$ {\bfseries parent\+\_\+node}\hypertarget{classds_1_1node_a66a859dc3ad7eeea8d126ae521de3139}{}\label{classds_1_1node_a66a859dc3ad7eeea8d126ae521de3139}
+
+\item 
+std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node}$<$ T $>$ $>$ {\bfseries left\+\_\+child}\hypertarget{classds_1_1node_a2768f86338d24198bb69c33966b5b5a9}{}\label{classds_1_1node_a2768f86338d24198bb69c33966b5b5a9}
+
+\item 
+std\+::unique\+\_\+ptr$<$ \hyperlink{classds_1_1node}{node}$<$ T $>$ $>$ {\bfseries right\+\_\+child}\hypertarget{classds_1_1node_a62f59bed6d3508670e7046c94d19f327}{}\label{classds_1_1node_a62f59bed6d3508670e7046c94d19f327}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+iterator/algorithm/pre\+\_\+order.\+hpp\item 
+node.\+hpp\end{DoxyCompactItemize}
