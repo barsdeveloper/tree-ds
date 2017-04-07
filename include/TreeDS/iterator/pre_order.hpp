@@ -1,6 +1,8 @@
 #ifndef H40F7331A_27AB_4B81_A85D_B370D0054AD8
 #define H40F7331A_27AB_4B81_A85D_B370D0054AD8
 
+#include "helper.hpp"
+
 namespace ds {
 
 template<typename T>

@@ -6,66 +6,57 @@ namespace ds {
 template<typename T>
 class node;
 
-class pre_order final {
+class in_order final {
 
 public:
-	constexpr pre_order() = default;
-	~pre_order() = default;
+	constexpr in_order() = default;
+	~in_order() = default;
 
 	template<typename T>
 	const node<T>* increment(const node<T>& n) const {
-		const node<T>* prev;
-		const node<T>* next = &n;
 		if (n.right_child()) {
-			next = next->right_child;
-			prev = next;
-			next = next->left_child();
-			while (next) {
-				prev = next;
-				next = next->left_child();
-			}
+			return descent_left(*n.right_child());
 		}
-		const node<T>* prev = &n;
-		const node<T>* next = n.parent();
-		if (!next || prev == next->left_child()) {
-			return next;
-		}
-		next = next->right_child();
+		auto prev = &n;
+		auto next = n.parent();
 		while (next) {
+			if (prev == next->left_child()) {
+				return next; // found
+			}
 			prev = next;
-			next = next->left_child();
+			next = next->parent();
 		}
-		return prev;
+		return next;
 	}
 
 	template<typename T>
 	const node<T>* decrement(const node<T>& n) const {
-		const node<T>* next = n.parent();
-		const node<T>* prev = &n;
-		if (!next || prev == next->left_child()) {
-			return next;
+		if (n.left_child()) {
+			return descent_right(*n.left_child());
+		}
+		auto prev = &n;
+		auto next = n.parent();
+		while (next) {
+			if (prev == next->right_child()) {
+				return next; // found
+			}
+			prev = next;
+			next = next->parent();
 		}
 		return next;
 	}
 
 	template<typename T> const node<T>* go_first(const node<T>& root) const {
-		const node<T>* result = &root;
-		while (result->left_child()) {
-			result = result->left_child();
-		}
-		return result;
+		return descent_left(root);
 	}
 
 	template<typename T>
 	const node<T>* go_last(const node<T>& root) const {
-		const node<T>* result = &root;
-		while (result->right_child()) {
-			result = result->right_child();
-		}
-		return result;
+		return descent_right(root);
 	}
 
-};
+}
+;
 
 } /* namespace ds */
 

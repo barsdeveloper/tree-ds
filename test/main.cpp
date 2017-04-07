@@ -8,6 +8,7 @@
 
 #include <TreeDS/tree>
 #include <TreeDS/iterator/pre_order.hpp>
+#include <TreeDS/iterator/in_order.hpp>
 
 #include "./lib/catch.hpp"
 #include "checkFunctions.hpp"
@@ -41,9 +42,11 @@ TEST_CASE("Tree test") {
 				REQUIRE(t == move);
 			}
 			// compute iterators
-			tree<T, pre_order> preOrderTree(t);
-			for(auto& val : preOrderTree) {
+			for(auto& val : reinterpret_cast<tree<T, pre_order>&>(t)) {
 				testStructure.actual.preOrder.push_back(val);
+			}
+			for(auto& val : reinterpret_cast<tree<T, in_order>&>(t)) {
+				testStructure.actual.inOrder.push_back(val);
 			}
 			checkTree(testStructure);
 		}

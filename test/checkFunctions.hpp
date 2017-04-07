@@ -1,12 +1,16 @@
 #ifndef HF1631F76_C799_4BF8_B0D3_7A1A1A33A607
 #define HF1631F76_C799_4BF8_B0D3_7A1A1A33A607
 
+#include <algorithm>
+#include <tuple>
+#include <iterator>
 #include <TreeDS/tree.hpp>
 #include "./lib/catch.hpp"
 
 using namespace ds;
+using namespace std;
 
-template <typename T>
+template<typename T>
 void checkSize(const tree<T>& t, typename tree<T>::size_type s) {
 	CHECK(t.size() == s);
 	if (s == 0) {
@@ -23,10 +27,21 @@ void checkSize(const tree<T>& t, typename tree<T>::size_type s) {
 	CHECK(t.size() < t.max_size());
 }
 
-template <typename TreeTest>
+template<typename TreeTest>
 void checkTree(TreeTest treeTest) {
 	checkSize(treeTest.t, treeTest.size);
-	REQUIRE(treeTest.expected == treeTest.actual);
+	for (auto& t : {
+		make_tuple(treeTest.expected.preOrder, treeTest.actual.preOrder),
+		make_tuple(treeTest.expected.inOrder, treeTest.actual.inOrder)
+	}) {
+		auto expected = get<0>(t);
+		auto actual = get<1>(t);
+		REQUIRE(equal(begin(expected), end(expected), begin(actual), end(actual),
+				[](auto l, auto r) {
+					REQUIRE(l == r);
+					return l == r;
+				}));
+	}
 }
 
 #endif /* HF1631F76_C799_4BF8_B0D3_7A1A1A33A607 */

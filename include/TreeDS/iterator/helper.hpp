@@ -34,6 +34,24 @@ const node<T>* cross_bridge_left(const node<T>& n) {
 	return next;
 }
 
+template <typename T>
+const node<T>* descent_left(const node<T>& n) {
+	auto result = &n;
+	while(result->left_child()) {
+		result = result->left_child();
+	}
+	return result;
+}
+
+template <typename T>
+const node<T>* descent_right(const node<T>& n) {
+	auto result = &n;
+	while(result->right_child()) {
+		result = result->right_child();
+	}
+	return result;
+}
+
 } /* namespace ds */
 
 #endif /* H0D7AED97_95FE_4380_8923_43A3E5E92A3A */
