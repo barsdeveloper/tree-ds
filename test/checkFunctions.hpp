@@ -32,14 +32,15 @@ void checkTree(TreeTest treeTest) {
 	checkSize(treeTest.t, treeTest.size);
 	for (auto& t : {
 		make_tuple(treeTest.expected.preOrder, treeTest.actual.preOrder),
-		make_tuple(treeTest.expected.inOrder, treeTest.actual.inOrder)
+		make_tuple(treeTest.expected.inOrder, treeTest.actual.inOrder),
+		make_tuple(treeTest.expected.postOrder, treeTest.actual.postOrder)
 	}) {
 		auto expected = get<0>(t);
 		auto actual = get<1>(t);
-		REQUIRE(equal(begin(expected), end(expected), begin(actual), end(actual),
-				[](auto l, auto r) {
-					REQUIRE(l == r);
-					return l == r;
+		REQUIRE(equal(begin(actual), end(actual), begin(expected), end(expected),
+				[](auto actualValue, auto expectedValue) {
+					REQUIRE(actualValue == expectedValue);
+					return actualValue == expectedValue;
 				}));
 	}
 }

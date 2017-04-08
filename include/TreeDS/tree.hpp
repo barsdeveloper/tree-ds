@@ -11,12 +11,11 @@
 #include <TreeDS/temporary_node.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
+#include <TreeDS/iterator/in_order.hpp>
+#include <TreeDS/iterator/post_order.hpp>
 
 namespace ds {
 
-/**
- * Tree class
- */
 template<typename T, typename Algorithm = pre_order,
 		typename Allocator = std::allocator<T>>
 class tree: public tree_base<T> {
@@ -35,26 +34,20 @@ public:
 	using allocator_type = Allocator;
 
 	// Iterator types
-	template <typename A>
+	template<typename A>
 	using iterator = tree_iterator<T, A, false>;
 
-	template <typename A>
+	template<typename A>
 	using const_iterator = tree_iterator<T, A, true>;
 
-	template <typename A>
+	template<typename A>
 	using reverse_iterator = std::reverse_iterator<iterator<A>>;
 
-	template <typename A>
+	template<typename A>
 	using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
 public:
 	tree() = default;
-
-	// Allow copy from a tree with different template parameters
-	template<typename OtherAlgorithm, typename OtherAllocator>
-	tree(const tree<T, OtherAlgorithm, OtherAllocator>& other) :
-			tree(static_cast<const tree&>(other)) {
-	}
 
 	// REMEMBER: this involves deep copy. Use std::move() whenever you can
 	tree(const tree& other) :
@@ -92,7 +85,7 @@ public:
 	 * c => constant
 	 */
 	// begin
-	iterator<Algorithm> begin() {
+	auto begin() {
 		/*
 		 * Why the incrementation (++)?
 		 * Normally a tree_iterator<T> is constructed by taking a reference to a
@@ -121,51 +114,51 @@ public:
 		return ++iterator<Algorithm>(*this);
 	}
 
-	const_iterator<Algorithm> begin() const {
+	auto begin() const {
 		return cbegin();
 	}
 
-	const_iterator<Algorithm> cbegin() const {
+	auto cbegin() const {
 		// Confused by the incrementation (++)? See the comment above.
 		return ++const_iterator<Algorithm>(*this);
 	}
 
 	// end
-	iterator<Algorithm> end() {
+	auto end() {
 		return iterator<Algorithm>(*this);
 	}
 
-	const_iterator<Algorithm> end() const {
+	auto end() const {
 		return cend();
 	}
 
-	const_iterator<Algorithm> cend() const {
+	auto cend() const {
 		return const_iterator<Algorithm>(*this);
 	}
 
 	// reverse begin
-	reverse_iterator<Algorithm> rbegin() {
+	auto rbegin() {
 		return reverse_iterator<Algorithm>(*this);
 	}
 
-	const_reverse_iterator<Algorithm> rbegin() const {
+	auto rbegin() const {
 		return crbegin();
 	}
 
-	const_reverse_iterator<Algorithm> crbegin() const {
+	auto crbegin() const {
 		return const_reverse_iterator<Algorithm>(*this);
 	}
 
 	// reverse end
-	reverse_iterator<Algorithm> rend() {
+	auto rend() {
 		return --reverse_iterator<Algorithm>(*this);
 	}
 
-	const_reverse_iterator<Algorithm> rend() const {
+	auto rend() const {
 		return crend();
 	}
 
-	const_reverse_iterator<Algorithm> crend() const {
+	auto crend() const {
 		return --const_reverse_iterator<Algorithm>(*this);
 	}
 
@@ -176,7 +169,7 @@ private:
 			std::unique_ptr<node_type> n) {
 		auto p = position.get_node(); // position
 		if (p) {
-			p->insert(std::move(n));
+			p->substitute_with(std::move(n));
 		} else if (!this->_root) {
 			this->_root = std::move(n);
 		} else {
@@ -188,6 +181,12 @@ private:
 	}
 
 public:
+	template<typename It>
+	iterator<typename It::algorithm_type> insert(It position,
+			temporary_node<T> && node) {
+		return insert(position, std::make_unique<node_type>(node));
+	}
+
 	template<typename It>
 	iterator<typename It::algorithm_type> insert(It position,
 			const_reference value) {

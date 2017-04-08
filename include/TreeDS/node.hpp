@@ -17,16 +17,16 @@ class node {
 protected:
 	T _value;
 	node<T>* _parent;
-	std::unique_ptr<node<T>> _left;
-	std::unique_ptr<node<T>> _right;
+	std::unique_ptr<node> _left;
+	std::unique_ptr<node> _right;
 
-	void set_left(std::unique_ptr<node<T>> n) {
+	void set_left(std::unique_ptr<node> n) {
 		_left = std::move(n);
 		if (_left)
 			_left->_parent = this;
 	}
 
-	void set_right(std::unique_ptr<node<T>> n) {
+	void set_right(std::unique_ptr<node> n) {
 		_right = std::move(n);
 		if (_right)
 			_right->_parent = this;
@@ -46,11 +46,11 @@ public:
 			_value(other._value), _parent(nullptr) {
 		if (other._left) {
 			// TODO use allocators
-			this->set_left(std::make_unique<node<T>>(*other._left));
+			this->set_left(std::make_unique<node>(*other._left));
 		}
 		if (other._right) {
 			// TODO use allocators
-			this->set_right(std::make_unique<node<T>>(*other._right));
+			this->set_right(std::make_unique<node>(*other._right));
 		}
 	}
 
@@ -135,15 +135,20 @@ public:
 	}
 
 	/*   ---   Tree construction   ---   */
-	void insert(std::unique_ptr<node<T>> n) {
-		n->_parent = this;
-		if (!_left) {
-			_left = std::move(n);
-		} else if (!_right) {
-			_right = std::move(n);
-		} else {
-			throw std::logic_error("This node already has 2 children.");
+	std::unique_ptr<node> substitute_with(std::unique_ptr<node> n) {
+		std::unique_ptr<node> result;
+		if (_parent) {
+			n->_parent = _parent;
+			if (this == _parent->_left.get()) {
+				result = std::move(_parent->_left);
+				_parent->_left = std::move(n);
+			} else {
+				result = std::move(_parent->_right);
+				_parent->_right = std::move(n);
+			}
+			_parent = nullptr;
 		}
+		return std::move(result);
 	}
 
 };

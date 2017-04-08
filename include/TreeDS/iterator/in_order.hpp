@@ -1,6 +1,8 @@
 #ifndef H53242E79_8449_4605_A949_338CF8B3C51D
 #define H53242E79_8449_4605_A949_338CF8B3C51D
 
+#include "helper.hpp"
+
 namespace ds {
 
 template<typename T>
@@ -15,7 +17,9 @@ public:
 	template<typename T>
 	const node<T>* increment(const node<T>& n) const {
 		if (n.right_child()) {
-			return descent_left(*n.right_child());
+			return descent(*n.right_child(), [](const node<T>& n) {
+				return n.left_child();
+			});
 		}
 		auto prev = &n;
 		auto next = n.parent();
@@ -47,12 +51,16 @@ public:
 	}
 
 	template<typename T> const node<T>* go_first(const node<T>& root) const {
-		return descent_left(root);
+		return descent(root, [](const node<T>& n) {
+			return n.left_child();
+		});
 	}
 
 	template<typename T>
 	const node<T>* go_last(const node<T>& root) const {
-		return descent_right(root);
+		return descent(root, [](const node<T>& n) {
+			return n.right_child();
+		});
 	}
 
 }

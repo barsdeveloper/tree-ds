@@ -34,18 +34,10 @@ public:
 		 */
 		if (!next || prev == next->first_child()) {
 			return next;
-		} else {
-			/*
-			 * Here we are in the situation where the passed node (n) is a right child of a parent that has also a left
-			 * child. All we have to do is find the lowest and rightmost node in the tree structure starting from the left
-			 * sibling.
-			 */
-			next = next->left_child();
-			while (next->last_child()) {
-				next = next->last_child();
-			}
 		}
-		return next;
+		return descent(*next->left_child(), [](const node<T>& n){
+			return n.last_child();
+		});
 	}
 
 	template<typename T> const node<T>* go_first(const node<T>& root) const {
@@ -54,11 +46,9 @@ public:
 
 	template<typename T>
 	const node<T>* go_last(const node<T>& root) const {
-		const node<T>* result = &root;
-		while (result->last_child()) {
-			result = result->last_child(); // go to the last child
-		}
-		return result;
+		return descent(root, [](const node<T>& n) {
+			return n.last_child();
+		});
 	}
 
 };
