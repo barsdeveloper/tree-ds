@@ -55,29 +55,34 @@ Now, calling n(some integer) will return a temporary_node<int> that can be passe
 
 ```c++
 ds::tree<int> myTree(
-    n(100)(         // root node
-        nullptr,    // left child of root (no child)
-        n(200)(     // right child of root
-            n(300), // left child of 200
-            n(400)  // right child of 200
+    n(100)(             // root node
+        nullptr,        // left child of root (no child)
+        n(200)(         // right child of root
+            n(300)(     // left child of 200
+                n(500), // left child of 300
+                n(600)  // right child of 300
+            ),
+            n(400)      // right child of 200
         )
     )
 );
 /*
  * Result:
  *
- *   100
- *     \
- *      \
- *      200
- *       /\
- *      /  \
- *    300  400
- *
+ *     100
+ *       \
+ *        \
+ *        200
+ *         /\
+ *        /  \
+ *      300  400
+ *      /\
+ *     /  \
+ *   500  600
  */
 ```
 
-You can use the same pattern also for the insert method, let's substitute the 300 with another tree:
+You can use the same pattern also for the insert method, let's substitute the node 300 (and its subtree) with another tree:
 
 ```c++
 myTree.insert(
