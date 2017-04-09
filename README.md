@@ -13,7 +13,15 @@ Please feel free to modify it and contribute to the code if you want.
 ## Getting started
 The library is header only, to start using it you just have to add the "include" directory to the include paths and then include it in your C++ file:
 
-    #include <TreeDS/tree.hpp>
+```c++
+#include <TreeDS/tree.hpp>
+```
+
+you can alternatively
+
+```c++
+#include <TreeDS/tree>
+```
 
 ## Example
 Here's a small example of utilization, for a more complete reference look at html doxygen-produced documentation (./html/index.html). You can merge and compile the code snippets.
