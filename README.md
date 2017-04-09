@@ -137,6 +137,6 @@ You can always traverse a tree in a personalized manner, independently on the Al
 cout << "Pre-order: ";
 ds::tree<int>::iterator<ds::post_order> it(inOrder);
 while(it != inOrder.end<ds::post_order>()) {
-    cout << *it++ << ", "; // Pre-order: -20, -40, -30, -10, 400, 200, 100,
+    cout << *it++ << ", ";
 }
 ```
