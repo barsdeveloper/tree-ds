@@ -20,6 +20,10 @@ void checkSize(const tree<T>& t, typename tree<T>::size_type s) {
 		REQUIRE(t.rbegin() == t.rend());
 	} else {
 		CHECK_FALSE(t.empty());
+		if (t.begin() == t.end()) {
+			t.end();
+			int a = 1;
+		}
 		REQUIRE_FALSE(t.begin() == t.end());
 		REQUIRE_FALSE(t.cbegin() == t.cend());
 		REQUIRE_FALSE(t.rbegin() == t.rend());

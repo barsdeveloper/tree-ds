@@ -20,6 +20,9 @@ template<typename T, typename Algorithm = pre_order,
 		typename Allocator = std::allocator<T>>
 class tree: public tree_base<T> {
 
+	template<typename, typename, typename >
+	friend class tree;
+
 public:
 	/*   ---   Types declarations   ---   */
 	using typename tree_base<T>::value_type;
@@ -30,7 +33,7 @@ public:
 	using typename tree_base<T>::difference_type;
 	using pointer = typename std::allocator_traits<Allocator>::pointer;
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
-	typedef Algorithm algorithm_type;
+	using algorithm_type = Algorithm;
 	using allocator_type = Allocator;
 
 	// Iterator types
@@ -59,6 +62,19 @@ public:
 
 	tree(tree&&) = default;
 
+	template<typename OtherAlg, typename OtherAlloc>
+	tree(const tree<T, OtherAlg, OtherAlloc>& other) :
+			tree_base<T>(
+					other._root ?
+							std::make_unique<node_type>(*other._root) : nullptr,
+					other._size) {
+	}
+
+	template<typename OtherAlg, typename OtherAlloc>
+	tree(tree<T, OtherAlg, OtherAlloc> && other) :
+			tree_base<T>(std::move(other._root), other._size) {
+	}
+
 	tree(temporary_node<T> && root) :
 			// TODO use allocators
 			tree_base<T>(std::make_unique<node_type>(std::move(root)),
@@ -85,7 +101,8 @@ public:
 	 * c => constant
 	 */
 	// begin
-	auto begin() {
+	template<typename Alg = Algorithm>
+	iterator<Alg> begin() {
 		/*
 		 * Why the incrementation (++)?
 		 * Normally a tree_iterator<T> is constructed by taking a reference to a
@@ -111,55 +128,68 @@ public:
 		 * Also the reason reverse end iterator are incremented should be clear
 		 * now. In general reverse_iterator == iterator - 1
 		 */
-		return ++iterator<Algorithm>(*this);
+		return ++iterator<Alg>(this);
 	}
 
-	auto begin() const {
+	template<typename Alg = Algorithm>
+	const_iterator<Alg> begin() const {
 		return cbegin();
 	}
 
-	auto cbegin() const {
+	template<typename Alg = Algorithm>
+	const_iterator<Alg> cbegin() const {
 		// Confused by the incrementation (++)? See the comment above.
-		return ++const_iterator<Algorithm>(*this);
+		return ++const_iterator<Alg>(this);
 	}
 
 	// end
-	auto end() {
-		return iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	iterator<Alg> end() {
+		return iterator<Alg>(this);
 	}
 
-	auto end() const {
+	template<typename Alg = Algorithm>
+	const_iterator<Alg> end() const {
 		return cend();
 	}
 
-	auto cend() const {
-		return const_iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	const_iterator<Alg> cend() const {
+		return const_iterator<Alg>(this);
 	}
 
 	// reverse begin
-	auto rbegin() {
-		return reverse_iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	reverse_iterator<Alg> rbegin() {
+		return reverse_iterator<Alg>(iterator<Alg>(this));
 	}
 
-	auto rbegin() const {
+	template<typename Alg = Algorithm>
+	const_reverse_iterator<Alg> rbegin() const {
 		return crbegin();
 	}
 
-	auto crbegin() const {
-		return const_reverse_iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	const_reverse_iterator<Alg> crbegin() const {
+		return const_reverse_iterator<Alg>(const_iterator<Alg>(this));
 	}
 
 	// reverse end
-	auto rend() {
-		return --reverse_iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	reverse_iterator<Alg> rend() {
+		// reverse_iterator takes an iterator as argument, we construcit using {this}
+		return --reverse_iterator<Alg>(iterator<Alg>(this));
 	}
 
-	auto rend() const {
+	template<typename Alg = Algorithm>
+	const_reverse_iterator<Alg> rend() const {
 		return crend();
 	}
 
-	auto crend() const {
-		return --const_reverse_iterator<Algorithm>(*this);
+	template<typename Alg = Algorithm>
+	const_reverse_iterator<Alg> crend() const {
+		// reverse_iterator takes an iterator as argument, we construcit using {this}
+		return --const_reverse_iterator<Alg>(const_iterator<Alg>(this));
 	}
 
 	/*   ---   Modifiers   ---   */

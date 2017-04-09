@@ -12,18 +12,19 @@ template<typename > class tree_base;
 template<typename, typename, typename > class tree;
 template<typename > class node;
 
-template<typename T, typename Algorithm, bool Is_const = false>
+template<typename T, typename Algorithm, bool Constant = false>
 class tree_iterator: public std::iterator<std::bidirectional_iterator_tag, T> {
 
 	// const and non const are each other friends
-	friend class tree_iterator<T, Algorithm, !Is_const> ;
+	template<typename, typename, bool>
+	friend class tree_iterator;
 	template<typename, typename, typename >
 	friend class tree;
 
 public:
-	using value_type = typename std::conditional<Is_const, const T, T>::type;
-	using node_type = typename std::conditional<Is_const, const node<T>, node<T>>::type;
-	using tree_type = typename std::conditional<Is_const, const tree_base<T>, tree_base<T>>::type;
+	using value_type = typename std::conditional<Constant, const T, T>::type;
+	using node_type = typename std::conditional<Constant, const node<T>, node<T>>::type;
+	using tree_type = typename std::conditional<Constant, const tree_base<T>, tree_base<T>>::type;
 	using algorithm_type = const Algorithm;
 
 protected:
@@ -31,7 +32,7 @@ protected:
 	tree_type *tree; // nullptr => no container associated (default iterator)
 	node_type *current; // nullptr => end()
 
-	tree_iterator(tree_type* tree, node_type* current) :
+	tree_iterator(tree_type* tree, node_type* current = nullptr) :
 			tree(tree), current(current) {
 	}
 
@@ -42,6 +43,24 @@ public:
 
 	tree_iterator(const tree_iterator&) = default;
 
+	/*
+	 * This will enable conversion between templates with different Algorithm
+	 * but same T. Also this allows a general conversion between any (but having
+	 * same parameter T) const_iterator to any iterator.
+	 * Why explicit?
+	 * Iterator must satisfy the multipass guarantee:
+	 * http://en.cppreference.com/w/cpp/concept/ForwardIterator
+	 * That means that it1 == it2 implies ++it1 == ++it2. Clearly this would be
+	 * false if we allow implicit conversion between iterators with different
+	 * types. That's the reason of explicit, to limit compiler magics.
+	 */
+	template<typename OtherAlgorithm, bool OtherConstant,
+			typename = std::enable_if<!Constant || OtherConstant>>
+	explicit tree_iterator(
+			const tree_iterator<T, OtherAlgorithm, OtherConstant>& other) :
+			algorithm(), tree(other.tree), current(other.current) {
+	}
+
 	tree_iterator& operator =(const tree_iterator& other) {
 		tree = other.tree;
 		current = other.current;
@@ -50,20 +69,11 @@ public:
 
 	~tree_iterator() = default;
 
-	tree_iterator(tree_type& tree) :
+	tree_iterator(tree_type& tree, bool go_first = true) :
 			algorithm(), tree(&tree), current(nullptr) {
-	}
-
-	/*
-	 * Allow iterator to const_iterator conversion (parameter U is just to have
-	 * a dependent parameter and delay enable_if evaluation until template
-	 * specialization)
-	 */
-	template<typename U = T, typename = typename std::enable_if<
-			Is_const && std::is_same<U, T>::value>::type>
-	tree_iterator(const tree_iterator<T, Algorithm, false>& iterator) :
-			algorithm(Algorithm { }), tree(iterator.tree), current(
-					iterator.current) {
+		if (go_first) {
+			++(*this);
+		}
 	}
 
 	node_type* get_node() const {
@@ -78,11 +88,15 @@ public:
 		return &(current->_value);
 	}
 
-	bool operator ==(const tree_iterator& other) const {
+	template<bool OtherConst>
+	bool operator ==(
+			const tree_iterator<T, Algorithm, OtherConst>& other) const {
 		return tree == other.tree && current == other.current;
 	}
 
-	bool operator !=(const tree_iterator& other) const {
+	template<bool OtherConst>
+	bool operator !=(
+			const tree_iterator<T, Algorithm, OtherConst>& other) const {
 		return !(*this == other);
 	}
 

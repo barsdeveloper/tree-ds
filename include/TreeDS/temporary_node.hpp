@@ -10,7 +10,7 @@ namespace ds {
 template<typename T>
 class temporary_node: public node<T> {
 
-	template<typename, typename, typename>
+	template<typename, typename, typename >
 	friend class tree;
 
 private:
@@ -27,7 +27,8 @@ public:
 		return tree_size;
 	}
 
-	temporary_node operator ()(temporary_node&& left) {
+	temporary_node operator ()(temporary_node&& left, std::nullptr_t right =
+			nullptr) {
 		this->tree_size += left.tree_size;
 		this->set_left(std::make_unique<node<T>>(std::move(left)));
 		return std::move(*this);

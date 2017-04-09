@@ -77,7 +77,8 @@ auto stringTrees = [](){
 				n("a")(
 						n("b")(
 								n("d")(
-										n("h")
+										n("h"),
+										nullptr // This can be omitted but I want to test it
 								),
 								n("e")
 						),
