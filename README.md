@@ -113,7 +113,7 @@ myTree.insert(
    */
 ```
 
-Let's now iterate the tree in post-order and in-order. You can create a tree with a specified traversal algorithm type of an iterator. Remember pre_order is the default.
+Let's now iterate the tree in post-order and in-order. You can create a tree with a specified traversal algorithm type of an iterator.
 
 ```c++
 ds::tree<int, ds::in_order> inOrder(move(myTree));
