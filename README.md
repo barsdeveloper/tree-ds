@@ -16,7 +16,7 @@ The library is header only, to start using it you just have to add the "include"
     #include <TreeDS/tree.hpp>
 
 ## Example
-Here's a small example of utilization, for a more complete reference look at html doxygen-produced documentation.
+Here's a small example of utilization, for a more complete reference look at html doxygen-produced documentation (./html/index.html). You can merge and compile the code snippets.
 
 ```c++
 #include <string>
@@ -31,86 +31,97 @@ int main() {
 ```
       
 you can add elements to the tree in the usual way
-
-    t.insert(t.begin(), "hello");
-    cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
+```c++
+t.insert(t.begin(), "hello");
+cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
+```
 
 The most simple way to use this library is to construct trees inline. To to this just take a reference to tree::produce_node and call the operator () (function call operator). Look at the following example.
 
-    auto& n = ds::tree<int>::produce_node;
+```c++
+auto& n = ds::tree<int>::produce_node;
+```
 
 Now, calling n(some integer) will return a temporary_node<int> that can be passed to insert method or to the tree constructor itself. Let's create a more complex tree.
 
-    ds::tree<int> myTree(
-        n(100)(         // root node
-            nullptr,    // left child of root (no child)
-            n(200)(     // right child of root
-                n(300), // left child of 200
-                n(400)  // right child of 200
-            )
+```c++
+ds::tree<int> myTree(
+    n(100)(         // root node
+        nullptr,    // left child of root (no child)
+        n(200)(     // right child of root
+            n(300), // left child of 200
+            n(400)  // right child of 200
         )
-    );
-    /*
-     * Result:
-     *
-     *   100
-     *     \
-     *      \
-     *      200
-     *       /\
-     *      /  \
-     *    300  400
-     *
-     */
+    )
+);
+/*
+ * Result:
+ *
+ *   100
+ *     \
+ *      \
+ *      200
+ *       /\
+ *      /  \
+ *    300  400
+ *
+ */
+```
 
 You can use the same pattern also for the insert method, let's substitute the 300 with another tree:
 
-    myTree.insert(
-        find(myTree.begin(), myTree.end(), 300), // find (first) position of node 300
-        n(-10)(
-            n(-20),
-            n(-30)(
-                n(-40)
-            )
+```c++
+myTree.insert(
+    find(myTree.begin(), myTree.end(), 300), // find (first) position of node 300
+    n(-10)(
+        n(-20),
+        n(-30)(
+            n(-40)
         )
-      );
-      /*
-       * Result:
-       *
-       *   100
-       *     \
-       *      \
-       *      200
-       *       /\
-       *      /  \
-       *    -10  400
-       *     /\
-       *    /  \
-       *  -20  -30
-       *        /
-       *       /
-       *     -40
-       */
+    )
+  );
+  /*
+   * Result:
+   *
+   *   100
+   *     \
+   *      \
+   *      200
+   *       /\
+   *      /  \
+   *    -10  400
+   *     /\
+   *    /  \
+   *  -20  -30
+   *        /
+   *       /
+   *     -40
+   */
+```
 
 Let's now iterate the tree in post-order and in-order. You can create a tree with a specified traversal algorithm type of an iterator. Remember pre_order is the default.
 
-    ds::tree<int, ds::in_order> inOrder(move(myTree));
+```c++
+ds::tree<int, ds::in_order> inOrder(move(myTree));
+```
 
 We moved the tree content from myTree which now is empty, we could also copy the tree (same but without move) using copy constructor. That makes a deep copy (slow, avoid whenever you can).
 
-    cout << "In-order: ";
-    for (auto& value : inOrder) {
-        cout << value << ", ";
-    }
-    cout << endl;
-    // In-order: 100, -20, -10, -40, -30, 200, 400,
+```c++
+cout << "In-order: ";
+for (auto& value : inOrder) {
+    cout << value << ", ";
+}
+cout << endl;
+// In-order: 100, -20, -10, -40, -30, 200, 400,
+```
 
 You can always traverse a tree in a personalized manner, independently on the Algorithm parameter the tree has. Just construct the iterator by passing  tree.
 
-    cout << "Pre-order: ";
-    ds::tree<int>::iterator<ds::post_order> it(inOrder);
-    while(it != inOrder.end<ds::post_order>()) {
-        cout << *it++ << ", "; // Pre-order: -20, -40, -30, -10, 400, 200, 100,
-    }
-
-For more details please see the documentation in at ./html/index.html
+```c++
+cout << "Pre-order: ";
+ds::tree<int>::iterator<ds::post_order> it(inOrder);
+while(it != inOrder.end<ds::post_order>()) {
+    cout << *it++ << ", "; // Pre-order: -20, -40, -30, -10, 400, 200, 100,
+}
+```
