@@ -18,15 +18,17 @@ The library is header only, to start using it you just have to add the "include"
 ## Example
 Here's a small example of utilization, for a more complete reference look at html doxygen-produced documentation.
 
-    #include <string>
-    #include <iostream>
-    #include <algorithm>
-    #include <TreeDS/tree.hpp>
-    using namespace std;
-    
-    int main() {
-        ds::tree<string> t; // empty tree created
-        cout << t.size() << endl; // 0
+```c++
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <TreeDS/tree.hpp>
+using namespace std;
+
+int main() {
+    ds::tree<string> t; // empty tree created
+    cout << t.size() << endl; // 0
+```
       
 you can add elements to the tree in the usual way
 
