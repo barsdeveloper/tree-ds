@@ -41,6 +41,7 @@ int main() {
 you can add elements to the tree in the usual way
 ```c++
 t.insert(t.begin(), "hello");
+// size: 1 (hello)
 cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
 ```
 
@@ -116,17 +117,18 @@ ds::tree<int, ds::in_order> inOrder(move(myTree));
 We moved the tree content from myTree which now is empty, we could also copy the tree (same but without move) using copy constructor. That makes a deep copy (slow, avoid whenever you can).
 
 ```c++
+// In-order: 100, -20, -10, -40, -30, 200, 400,
 cout << "In-order: ";
 for (auto& value : inOrder) {
     cout << value << ", ";
 }
 cout << endl;
-// In-order: 100, -20, -10, -40, -30, 200, 400,
 ```
 
 You can always traverse a tree in a personalized manner, independently on the Algorithm parameter the tree has. Just construct the iterator by passing  tree.
 
 ```c++
+// Pre-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Pre-order: ";
 ds::tree<int>::iterator<ds::post_order> it(inOrder);
 while(it != inOrder.end<ds::post_order>()) {
