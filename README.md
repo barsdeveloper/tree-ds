@@ -45,13 +45,13 @@ t.insert(t.begin(), "hello");
 cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
 ```
 
-The most simple way to use this library is to construct trees inline. To to this just take a reference to tree::produce_node and call the operator () (function call operator). Look at the following example.
+The most simple way to use this library is to construct trees inline. To to this just take a reference to `tree<int>::produce_node` and call the operator () (function call operator). Look at the following example.
 
 ```c++
 auto& n = ds::tree<int>::produce_node;
 ```
 
-Now, calling n(some integer) will return a temporary_node<int> that can be passed to insert method or to the tree constructor itself. Let's create a more complex tree.
+Now, calling n(some integer) will return a `temporary_node<int>` that can be passed to insert method or to the tree constructor itself. Let's create a more complex tree.
 
 ```c++
 ds::tree<int> myTree(
