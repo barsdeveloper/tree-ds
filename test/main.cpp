@@ -43,13 +43,13 @@ TEST_CASE("Tree iterators") {
 				REQUIRE(t == move);
 			}
 			// compute iterators
-			for(auto& val : reinterpret_cast<tree<T, pre_order>&>(t)) {
+			for(auto& val : tree<T, pre_order>(t)) {
 				testStructure.actual.preOrder.push_back(val);
 			}
-			for(auto& val : reinterpret_cast<tree<T, in_order>&>(t)) {
+			for(auto& val : tree<T, in_order>(t)) {
 				testStructure.actual.inOrder.push_back(val);
 			}
-			for(auto& val : reinterpret_cast<tree<T, post_order>&>(t)) {
+			for(auto& val : tree<T, post_order>(t)) {
 				testStructure.actual.postOrder.push_back(val);
 			}
 			checkTree(testStructure);

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>TreeDS: ds::tree_iterator&lt; T, Algorithm, Is_const &gt; Class Template Reference</title>
+<title>TreeDS: ds::tree_iterator&lt; T, Algorithm, Constant &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -39,6 +39,7 @@
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 <div id="nav-path" class="navpath">
@@ -55,99 +56,102 @@
 <a href="#friends">Friends</a> &#124;
 <a href="classds_1_1tree__iterator-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ds::tree_iterator&lt; T, Algorithm, Is_const &gt; Class Template Reference</div>  </div>
+<div class="title">ds::tree_iterator&lt; T, Algorithm, Constant &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="dynheader">
-Inheritance diagram for ds::tree_iterator&lt; T, Algorithm, Is_const &gt;:</div>
+Inheritance diagram for ds::tree_iterator&lt; T, Algorithm, Constant &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classds_1_1tree__iterator.png" usemap="#ds::tree_5Fiterator_3C_20T_2C_20Algorithm_2C_20Is_5Fconst_20_3E_map" alt=""/>
-  <map id="ds::tree_5Fiterator_3C_20T_2C_20Algorithm_2C_20Is_5Fconst_20_3E_map" name="ds::tree_iterator&lt; T, Algorithm, Is_const &gt;_map">
+  <img src="classds_1_1tree__iterator.png" usemap="#ds::tree_5Fiterator_3C_20T_2C_20Algorithm_2C_20Constant_20_3E_map" alt=""/>
+  <map id="ds::tree_5Fiterator_3C_20T_2C_20Algorithm_2C_20Constant_20_3E_map" name="ds::tree_iterator&lt; T, Algorithm, Constant &gt;_map">
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a7c3b03ca4786de58fbe8d3ef0a57dcdc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c3b03ca4786de58fbe8d3ef0a57dcdc"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = typename std::conditional&lt; Is_const, const T, T &gt;::type</td></tr>
-<tr class="separator:a7c3b03ca4786de58fbe8d3ef0a57dcdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a936452e2673474a943d038cfca696020"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a936452e2673474a943d038cfca696020"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>node_type</b> = typename std::conditional&lt; Is_const, const <a class="el" href="classds_1_1node.html">node</a>&lt; T &gt;, <a class="el" href="classds_1_1node.html">node</a>&lt; T &gt;&gt;::type</td></tr>
-<tr class="separator:a936452e2673474a943d038cfca696020"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9cccdd2827981d9993409ff687dac49"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9cccdd2827981d9993409ff687dac49"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>tree_type</b> = typename std::conditional&lt; Is_const, const <a class="el" href="classds_1_1tree__base.html">tree_base</a>&lt; T &gt;, <a class="el" href="classds_1_1tree__base.html">tree_base</a>&lt; T &gt;&gt;::type</td></tr>
-<tr class="separator:aa9cccdd2827981d9993409ff687dac49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a978be0b5d013a464ec6fd1d08201f36b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a978be0b5d013a464ec6fd1d08201f36b"></a>
+<tr class="memitem:a1003eb14dd8b5878804a69492140ffc9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1003eb14dd8b5878804a69492140ffc9"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = typename std::conditional&lt; Constant, const T, T &gt;::type</td></tr>
+<tr class="separator:a1003eb14dd8b5878804a69492140ffc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa037446e0ffc15d3fa94a8bf8b74f6f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa037446e0ffc15d3fa94a8bf8b74f6f1"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>node_type</b> = typename std::conditional&lt; Constant, const <a class="el" href="classds_1_1node.html">node</a>&lt; T &gt;, <a class="el" href="classds_1_1node.html">node</a>&lt; T &gt;&gt;::type</td></tr>
+<tr class="separator:aa037446e0ffc15d3fa94a8bf8b74f6f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22e0fc3a5e5aa379f18fb76065a12744"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22e0fc3a5e5aa379f18fb76065a12744"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>tree_type</b> = typename std::conditional&lt; Constant, const <a class="el" href="classds_1_1tree__base.html">tree_base</a>&lt; T &gt;, <a class="el" href="classds_1_1tree__base.html">tree_base</a>&lt; T &gt;&gt;::type</td></tr>
+<tr class="separator:a22e0fc3a5e5aa379f18fb76065a12744"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adeb27175097889cc9837bbf6c0c91b59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adeb27175097889cc9837bbf6c0c91b59"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>algorithm_type</b> = const Algorithm</td></tr>
-<tr class="separator:a978be0b5d013a464ec6fd1d08201f36b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:adeb27175097889cc9837bbf6c0c91b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae673d509c4a9d2187d9ab833ac04ace9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae673d509c4a9d2187d9ab833ac04ace9"></a>
+<tr class="memitem:af0ff0d2eea379e8fa79fbe847b5fe6bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0ff0d2eea379e8fa79fbe847b5fe6bd"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;)=default</td></tr>
-<tr class="separator:ae673d509c4a9d2187d9ab833ac04ace9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5a51b255682e19048f6003eaac652ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5a51b255682e19048f6003eaac652ea"></a>
+<tr class="separator:af0ff0d2eea379e8fa79fbe847b5fe6bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa890ab9769370833b606d1aed0dc5e5"><td class="memTemplParams" colspan="2"><a class="anchor" id="aaa890ab9769370833b606d1aed0dc5e5"></a>
+template&lt;typename OtherAlgorithm , bool OtherConstant, typename  = std::enable_if&lt;!Constant || OtherConstant&gt;&gt; </td></tr>
+<tr class="memitem:aaa890ab9769370833b606d1aed0dc5e5"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tree_iterator</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&lt; T, OtherAlgorithm, OtherConstant &gt; &amp;other)</td></tr>
+<tr class="separator:aaa890ab9769370833b606d1aed0dc5e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a522097c6bbc91000ad0c5dd86e702a6b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a522097c6bbc91000ad0c5dd86e702a6b"></a>
 <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;other)</td></tr>
-<tr class="separator:ae5a51b255682e19048f6003eaac652ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b300c2faa72e4c9fd3158780ec8d278"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b300c2faa72e4c9fd3158780ec8d278"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator</b> (tree_type &amp;<a class="el" href="classds_1_1tree.html">tree</a>)</td></tr>
-<tr class="separator:a6b300c2faa72e4c9fd3158780ec8d278"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a67a55dfa916b78e873e404f45594b1"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2a67a55dfa916b78e873e404f45594b1"></a>
-template&lt;typename U  = T, typename  = typename std::enable_if&lt;			Is_const &amp;&amp; std::is_same&lt;U, T&gt;::value&gt;::type&gt; </td></tr>
-<tr class="memitem:a2a67a55dfa916b78e873e404f45594b1"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tree_iterator</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&lt; T, Algorithm, false &gt; &amp;iterator)</td></tr>
-<tr class="separator:a2a67a55dfa916b78e873e404f45594b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a263f5bcf61a1502f64f826eba0a2c8c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a263f5bcf61a1502f64f826eba0a2c8c9"></a>
+<tr class="separator:a522097c6bbc91000ad0c5dd86e702a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a212597bfb5df2a886a0125d16433de2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a212597bfb5df2a886a0125d16433de2c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator</b> (tree_type &amp;<a class="el" href="classds_1_1tree.html">tree</a>, bool go_first=true)</td></tr>
+<tr class="separator:a212597bfb5df2a886a0125d16433de2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae44209b619c69247ab117014ad86780"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae44209b619c69247ab117014ad86780"></a>
 node_type *&#160;</td><td class="memItemRight" valign="bottom"><b>get_node</b> () const </td></tr>
-<tr class="separator:a263f5bcf61a1502f64f826eba0a2c8c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a652f78bc4746574ff1c81d774c3ccb97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a652f78bc4746574ff1c81d774c3ccb97"></a>
+<tr class="separator:aae44209b619c69247ab117014ad86780"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5776d02df58790c4c826f4cb40f733c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5776d02df58790c4c826f4cb40f733c"></a>
 value_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () const </td></tr>
-<tr class="separator:a652f78bc4746574ff1c81d774c3ccb97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50d0fae27f3af8598148e6f499972c07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50d0fae27f3af8598148e6f499972c07"></a>
+<tr class="separator:ae5776d02df58790c4c826f4cb40f733c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b76595daf7956475319095968f0fbaf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b76595daf7956475319095968f0fbaf"></a>
 value_type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator-&gt;</b> () const </td></tr>
-<tr class="separator:a50d0fae27f3af8598148e6f499972c07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d2be560eb5ebdc8b239915d6987c38f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d2be560eb5ebdc8b239915d6987c38f"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;other) const </td></tr>
-<tr class="separator:a7d2be560eb5ebdc8b239915d6987c38f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e4a6ddc21d773b13c1a0fd109fcd890"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e4a6ddc21d773b13c1a0fd109fcd890"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;other) const </td></tr>
-<tr class="separator:a0e4a6ddc21d773b13c1a0fd109fcd890"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae70f8f7347dec86e86483e60d28f8026"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae70f8f7347dec86e86483e60d28f8026"></a>
+<tr class="separator:a7b76595daf7956475319095968f0fbaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adde6320f4c91531c2ad7d3d99acdeedd"><td class="memTemplParams" colspan="2"><a class="anchor" id="adde6320f4c91531c2ad7d3d99acdeedd"></a>
+template&lt;bool OtherConst&gt; </td></tr>
+<tr class="memitem:adde6320f4c91531c2ad7d3d99acdeedd"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&lt; T, Algorithm, OtherConst &gt; &amp;other) const </td></tr>
+<tr class="separator:adde6320f4c91531c2ad7d3d99acdeedd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeed24aac3f831e1732dfba68caea0ecd"><td class="memTemplParams" colspan="2"><a class="anchor" id="aeed24aac3f831e1732dfba68caea0ecd"></a>
+template&lt;bool OtherConst&gt; </td></tr>
+<tr class="memitem:aeed24aac3f831e1732dfba68caea0ecd"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&lt; T, Algorithm, OtherConst &gt; &amp;other) const </td></tr>
+<tr class="separator:aeed24aac3f831e1732dfba68caea0ecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed65fad6e14523b3a862505442dda579"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed65fad6e14523b3a862505442dda579"></a>
 <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> ()</td></tr>
-<tr class="separator:ae70f8f7347dec86e86483e60d28f8026"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a631cddeedbbd053ef3a2196fe737f132"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a631cddeedbbd053ef3a2196fe737f132"></a>
+<tr class="separator:aed65fad6e14523b3a862505442dda579"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c3d99eae809e483ad86742ae83be601"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c3d99eae809e483ad86742ae83be601"></a>
 <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int)</td></tr>
-<tr class="separator:a631cddeedbbd053ef3a2196fe737f132"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d16cacb094121b262766e751b11d2b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d16cacb094121b262766e751b11d2b5"></a>
+<tr class="separator:a9c3d99eae809e483ad86742ae83be601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70029e0ee7c79676e1a43ce1c797cae4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70029e0ee7c79676e1a43ce1c797cae4"></a>
 <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> ()</td></tr>
-<tr class="separator:a4d16cacb094121b262766e751b11d2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1cb98a03b15c7d733d0eb8248e4aef3a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1cb98a03b15c7d733d0eb8248e4aef3a"></a>
+<tr class="separator:a70029e0ee7c79676e1a43ce1c797cae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8dc07e1bc75e55f89faaf5982cf97518"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dc07e1bc75e55f89faaf5982cf97518"></a>
 <a class="el" href="classds_1_1tree__iterator.html">tree_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> (int)</td></tr>
-<tr class="separator:a1cb98a03b15c7d733d0eb8248e4aef3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a8dc07e1bc75e55f89faaf5982cf97518"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a436c98cdb97b7b7c59c926d31a675d6d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a436c98cdb97b7b7c59c926d31a675d6d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator</b> (tree_type *<a class="el" href="classds_1_1tree.html">tree</a>, node_type *current)</td></tr>
-<tr class="separator:a436c98cdb97b7b7c59c926d31a675d6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82778c829f478111cf310acc2fd46e0a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a82778c829f478111cf310acc2fd46e0a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator</b> (tree_type *<a class="el" href="classds_1_1tree.html">tree</a>, node_type *current=nullptr)</td></tr>
+<tr class="separator:a82778c829f478111cf310acc2fd46e0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a9905c7db4d394e6595591f5678d3a10b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9905c7db4d394e6595591f5678d3a10b"></a>
-algorithm_type&#160;</td><td class="memItemRight" valign="bottom"><b>algorithm</b></td></tr>
-<tr class="separator:a9905c7db4d394e6595591f5678d3a10b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fc8efa4c3a61f44897e8b7e1ce38f40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2fc8efa4c3a61f44897e8b7e1ce38f40"></a>
-tree_type *&#160;</td><td class="memItemRight" valign="bottom"><b>tree</b></td></tr>
-<tr class="separator:a2fc8efa4c3a61f44897e8b7e1ce38f40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01fb77b9f35ec5b0c593afd5de434e81"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01fb77b9f35ec5b0c593afd5de434e81"></a>
-node_type *&#160;</td><td class="memItemRight" valign="bottom"><b>current</b></td></tr>
-<tr class="separator:a01fb77b9f35ec5b0c593afd5de434e81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa09c39131c5f630b3fc8d10115951f1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa09c39131c5f630b3fc8d10115951f1b"></a>
+algorithm_type&#160;</td><td class="memItemRight" valign="bottom"><b>_algorithm</b></td></tr>
+<tr class="separator:aa09c39131c5f630b3fc8d10115951f1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acee313309fe50e4d8a934083becd044c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acee313309fe50e4d8a934083becd044c"></a>
+tree_type *&#160;</td><td class="memItemRight" valign="bottom"><b>_tree</b></td></tr>
+<tr class="separator:acee313309fe50e4d8a934083becd044c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a576131e3f697b59f545fd0991136dc38"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a576131e3f697b59f545fd0991136dc38"></a>
+node_type *&#160;</td><td class="memItemRight" valign="bottom"><b>_current</b></td></tr>
+<tr class="separator:a576131e3f697b59f545fd0991136dc38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a1e85387951bb4931cc67e99ff66291a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e85387951bb4931cc67e99ff66291a3"></a>
-class&#160;</td><td class="memItemRight" valign="bottom"><b>tree_iterator&lt; T, Algorithm,!Is_const &gt;</b></td></tr>
-<tr class="separator:a1e85387951bb4931cc67e99ff66291a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3eb98ccc605b2d7c29a9caa36be1fa69"><td class="memTemplParams" colspan="2"><a class="anchor" id="a3eb98ccc605b2d7c29a9caa36be1fa69"></a>
+template&lt;typename , typename , bool &gt; </td></tr>
+<tr class="memitem:a3eb98ccc605b2d7c29a9caa36be1fa69"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tree_iterator</b></td></tr>
+<tr class="separator:a3eb98ccc605b2d7c29a9caa36be1fa69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7a47147f26926cd831723f2581162e0"><td class="memTemplParams" colspan="2"><a class="anchor" id="ad7a47147f26926cd831723f2581162e0"></a>
 template&lt;typename , typename , typename &gt; </td></tr>
 <tr class="memitem:ad7a47147f26926cd831723f2581162e0"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tree</b></td></tr>

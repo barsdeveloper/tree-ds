@@ -13,9 +13,27 @@
 #include <TreeDS/iterator/pre_order.hpp>
 #include <TreeDS/iterator/in_order.hpp>
 #include <TreeDS/iterator/post_order.hpp>
+#include <TreeDS/std_implementations.hpp>
 
 namespace ds {
 
+
+/**
+ * @brief A binary tree data structure.
+ * @details A binary tree structured as a hierarchy of {@link node}. Every node
+ * keeps an object of type T and can have a most two nodes as children. This
+ * class is compatible with STL containers. For example you can insert an
+ * element into the data structure by calling the usual:<br />
+ * <ul>
+ *     <li>{@link #insert(It, const_reference) insert(iterator, const T&)} - if you want copy semantics</li>
+ *     <li>{@link #insert(It, value_type&&) insert(iterator, T&&)} - if you want move semantics</li>
+ * </ul>
+ * method and using an {@link #iterator} as place indicator.
+ *
+ * @tparam T type of element hold by the tree
+ * @tparam Algorithm default iterator algorithm used to traverse the tree in a range-based for loop
+ * @tparam Allocator allocator type used to allocate new nodes
+ */
 template<typename T, typename Algorithm = pre_order,
 		typename Allocator = std::allocator<T>>
 class tree: public tree_base<T> {
@@ -36,21 +54,39 @@ public:
 	using algorithm_type = Algorithm;
 	using allocator_type = Allocator;
 
-	// Iterator types
+	/**
+	 * A bi-directional iterator used to traverse the tree.
+	 * @tparam A traversal algorithm used by the iterator
+	 */
 	template<typename A>
 	using iterator = tree_iterator<T, A, false>;
 
+	/**
+	 * A bi-directional constant iterator used to traverse the tree. You can't modify the tree using this iterator.
+	 * @tparam A traversal algorithm used by the iterator
+	 */
 	template<typename A>
 	using const_iterator = tree_iterator<T, A, true>;
 
+	/**
+	 * A bi-directional reverse iterator used to traverse the tree.
+	 * @tparam A traversal algorithm used by the iterator
+	 */
 	template<typename A>
 	using reverse_iterator = std::reverse_iterator<iterator<A>>;
 
+	/**
+	 * A bi-directional reverse iterator used to traverse the tree. You can't modify the tree using this iterator.
+	 * @tparam A traversal algorithm used by the iterator
+	 */
 	template<typename A>
 	using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
 public:
-	tree() = default;
+	/**
+	 * Create an empty tree.
+	 */
+	constexpr tree() = default;
 
 	// REMEMBER: this involves deep copy. Use std::move() whenever you can
 	tree(const tree& other) :
@@ -100,9 +136,14 @@ public:
 	 * r => reverse
 	 * c => constant
 	 */
-	// begin
-	template<typename Alg = Algorithm>
-	iterator<Alg> begin() {
+	/**
+	 * @brief Returns an iterator to the beginning.
+	 * @details The iterator will point to the first element of the container. Which one is the first depends on the
+	 * algorithm used to traverse the tree.
+	 * @return iterator to the first element
+	 */
+	template<typename A = Algorithm>
+	iterator<A> begin() {
 		/*
 		 * Why the incrementation (++)?
 		 * Normally a tree_iterator<T> is constructed by taking a reference to a
@@ -128,68 +169,85 @@ public:
 		 * Also the reason reverse end iterator are incremented should be clear
 		 * now. In general reverse_iterator == iterator - 1
 		 */
-		return ++iterator<Alg>(this);
+		return ++iterator<A>(this);
 	}
 
-	template<typename Alg = Algorithm>
-	const_iterator<Alg> begin() const {
+	/**
+	 * @brief Returns a constant iterator to the beginning.
+	 * @details The iterator will point to the first element of the container. Which one is the first depends on the algorithm
+	 * used to traverse the tree. Using this iterator you can't modify the container.
+	 * @return constant iterator to the first element
+	 */
+	template<typename A = Algorithm>
+	const_iterator<A> begin() const {
 		return cbegin();
 	}
 
-	template<typename Alg = Algorithm>
-	const_iterator<Alg> cbegin() const {
+	/**
+	 * @copydoc #begin() const
+	 */
+	template<typename A = Algorithm>
+	const_iterator<A> cbegin() const {
 		// Confused by the incrementation (++)? See the comment above.
-		return ++const_iterator<Alg>(this);
+		return ++const_iterator<A>(this);
 	}
 
-	// end
-	template<typename Alg = Algorithm>
-	iterator<Alg> end() {
-		return iterator<Alg>(this);
+
+	/**
+	 * @brief Returns an iterator to the end.
+	 *
+	 * The iterator will point one step after the last element of the container. Which one is the last depends on the
+	 * algorithm used to traverse the tree. It's perfectly legitimate to decrement this iterator to obtain the last
+	 * element.
+	 * @return iterator the element following the last element
+	 */
+	template<typename A = Algorithm>
+	iterator<A> end() {
+		return iterator<A>(this);
 	}
 
-	template<typename Alg = Algorithm>
-	const_iterator<Alg> end() const {
+	template<typename A = Algorithm>
+	const_iterator<A> end() const {
 		return cend();
 	}
 
-	template<typename Alg = Algorithm>
-	const_iterator<Alg> cend() const {
-		return const_iterator<Alg>(this);
+	template<typename A = Algorithm>
+	const_iterator<A> cend() const {
+		return const_iterator<A>(this);
 	}
 
 	// reverse begin
-	template<typename Alg = Algorithm>
-	reverse_iterator<Alg> rbegin() {
-		return reverse_iterator<Alg>(iterator<Alg>(this));
+	template<typename A = Algorithm>
+	reverse_iterator<A> rbegin() {
+		return reverse_iterator<A>(iterator<A>(this));
 	}
 
-	template<typename Alg = Algorithm>
-	const_reverse_iterator<Alg> rbegin() const {
+	template<typename A = Algorithm>
+	const_reverse_iterator<A> rbegin() const {
 		return crbegin();
 	}
 
-	template<typename Alg = Algorithm>
-	const_reverse_iterator<Alg> crbegin() const {
-		return const_reverse_iterator<Alg>(const_iterator<Alg>(this));
+	template<typename A = Algorithm>
+	const_reverse_iterator<A> crbegin() const {
+		return const_reverse_iterator<A>(const_iterator<A>(this));
 	}
 
 	// reverse end
-	template<typename Alg = Algorithm>
-	reverse_iterator<Alg> rend() {
+	template<typename A = Algorithm>
+	reverse_iterator<A> rend() {
 		// reverse_iterator takes an iterator as argument, we construcit using {this}
-		return --reverse_iterator<Alg>(iterator<Alg>(this));
+		return --reverse_iterator<A>(iterator<A>(this));
 	}
 
-	template<typename Alg = Algorithm>
-	const_reverse_iterator<Alg> rend() const {
+	template<typename A = Algorithm>
+	const_reverse_iterator<A> rend() const {
 		return crend();
 	}
 
-	template<typename Alg = Algorithm>
-	const_reverse_iterator<Alg> crend() const {
+	template<typename A = Algorithm>
+	const_reverse_iterator<A> crend() const {
 		// reverse_iterator takes an iterator as argument, we construcit using {this}
-		return --const_reverse_iterator<Alg>(const_iterator<Alg>(this));
+		return --const_reverse_iterator<A>(const_iterator<A>(this));
 	}
 
 	/*   ---   Modifiers   ---   */
@@ -211,18 +269,39 @@ private:
 	}
 
 public:
+	/**
+	 * Insert an element at the specified position by replacing the existent
+	 * node. This will use the copy semantics.
+	 * @param position where to insert the element
+	 * @param node an r-value reference to a temporary_node
+	 * @return an iterator that points to the inserted element
+	 */
 	template<typename It>
 	iterator<typename It::algorithm_type> insert(It position,
 			temporary_node<T> && node) {
 		return insert(position, std::make_unique<node_type>(node));
 	}
 
+	/**
+	 * Insert an element at the specified position by replacing the existent
+	 * node. This will use the copy semantics.
+	 * @param position where to insert the element
+	 * @param value to insert in the tree, that will be copied
+	 * @return an iterator that points to the inserted element
+	 */
 	template<typename It>
 	iterator<typename It::algorithm_type> insert(It position,
 			const_reference value) {
 		return insert(position, std::make_unique<node_type>(value));
 	}
 
+	/**
+	 * Insert an element at the specified position by replacing the existent
+	 * node. This will use the move semantics.
+	 * @param position where to insert the element
+	 * @param value to insert in the tree, that will be copied
+	 * @return an iterator that points to the inserted element
+	 */
 	template<typename It>
 	iterator<typename It::algorithm_type> insert(It position,
 			value_type&& value) {
