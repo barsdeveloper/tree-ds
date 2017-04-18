@@ -45,7 +45,7 @@ t.insert(t.begin(), "hello");
 cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
 ```
 
-The most simple way to use this library is to construct trees inline. To to this just take a reference to `tree<int>::produce_node` and call the operator () (function call operator). Look at the following example.
+The most simple way to use this library is to create inline trees. To to this just take a reference to `tree<int>::produce_node` and call the operator () (function call operator). Look at the following example.
 
 ```c++
 auto& n = ds::tree<int>::produce_node;
@@ -113,13 +113,14 @@ myTree.insert(
    */
 ```
 
-Let's now iterate the tree in post-order and in-order. You can create a tree with a specified traversal algorithm type of an iterator.
+Let's now iterate the tree in post-order and in-order. You can create a tree with a specified traversal algorithm by settings the second template parameter. This algorithm will be used in the range based for loop.
 
 ```c++
 ds::tree<int, ds::in_order> inOrder(move(myTree));
+//            ^^^^^^^^^^^^
 ```
 
-We moved the tree content from myTree which now is empty, we could also copy the tree (same but without move) using copy constructor. That makes a deep copy (slow, avoid whenever you can).
+We moved the content from myTree (which now is empty) to inOrder, we could also copy the tree using copy constructor. That makes a deep copy (slow, avoid whenever you can).
 
 ```c++
 // In-order: 100, -20, -10, -40, -30, 200, 400,
@@ -130,12 +131,13 @@ for (auto& value : inOrder) {
 cout << endl;
 ```
 
-You can always traverse a tree in a personalized manner, independently on the Algorithm parameter the tree has. Just construct the iterator by passing  tree.
+You can always traverse a tree in a personalized manner, independently on the Algorithm parameter the tree has. Just construct the iterator by passing a tree as argument.
 
 ```c++
 // Post-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Post-order: ";
 ds::tree<int>::iterator<ds::post_order> it(inOrder);
+// alternatively auto it = inOrder.begin<post_order>();
 while(it != inOrder.end<ds::post_order>()) {
     cout << *it++ << ", ";
 }
