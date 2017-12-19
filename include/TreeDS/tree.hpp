@@ -6,17 +6,16 @@
 #include <memory>    // std::unique_ptr, std::make_unique
 #include <utility>   // std::move()
 
-#include <TreeDS/tree_base.hpp>
-#include <TreeDS/node.hpp>
-#include <TreeDS/temporary_node.hpp>
-#include <TreeDS/tree_iterator.hpp>
-#include <TreeDS/iterator/pre_order.hpp>
 #include <TreeDS/iterator/in_order.hpp>
 #include <TreeDS/iterator/post_order.hpp>
+#include <TreeDS/iterator/pre_order.hpp>
+#include <TreeDS/node.hpp>
 #include <TreeDS/std_implementations.hpp>
+#include <TreeDS/temporary_node.hpp>
+#include <TreeDS/tree_base.hpp>
+#include <TreeDS/tree_iterator.hpp>
 
 namespace ds {
-
 
 /**
  * @brief A binary tree data structure.
@@ -34,117 +33,111 @@ namespace ds {
  * @tparam Algorithm default iterator algorithm used to traverse the tree in a range-based for loop
  * @tparam Allocator allocator type used to allocate new nodes
  */
-template<typename T, typename Algorithm = pre_order,
-		typename Allocator = std::allocator<T>>
-class tree: public tree_base<T> {
+template <typename T, typename Algorithm = pre_order, typename Allocator = std::allocator<T>>
+class tree : public tree_base<T> {
 
-	template<typename, typename, typename >
-	friend class tree;
+    template <typename, typename, typename>
+    friend class tree;
 
 public:
-	/*   ---   Types declarations   ---   */
-	using typename tree_base<T>::value_type;
-	using typename tree_base<T>::node_type;
-	using typename tree_base<T>::reference;
-	using typename tree_base<T>::const_reference;
-	using typename tree_base<T>::size_type;
-	using typename tree_base<T>::difference_type;
-	using pointer = typename std::allocator_traits<Allocator>::pointer;
-	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
-	using algorithm_type = Algorithm;
-	using allocator_type = Allocator;
-
-	/**
+    /*   ---   Types declarations   ---   */
+    using typename tree_base<T>::value_type;
+    using typename tree_base<T>::node_type;
+    using typename tree_base<T>::reference;
+    using typename tree_base<T>::const_reference;
+    using typename tree_base<T>::size_type;
+    using typename tree_base<T>::difference_type;
+    using pointer        = typename std::allocator_traits<Allocator>::pointer;
+    using const_pointer  = typename std::allocator_traits<Allocator>::const_pointer;
+    using algorithm_type = Algorithm;
+    using allocator_type = Allocator;
+    /**
 	 * A bi-directional iterator used to traverse the tree.
 	 * @tparam A traversal algorithm used by the iterator
 	 */
-	template<typename A>
-	using iterator = tree_iterator<T, A, false>;
+    template <typename A>
+    using iterator = tree_iterator<T, A, false>;
 
-	/**
+    /**
 	 * A bi-directional constant iterator used to traverse the tree. You can't modify the tree using this iterator.
 	 * @tparam A traversal algorithm used by the iterator
 	 */
-	template<typename A>
-	using const_iterator = tree_iterator<T, A, true>;
+    template <typename A>
+    using const_iterator = tree_iterator<T, A, true>;
 
-	/**
+    /**
 	 * A bi-directional reverse iterator used to traverse the tree.
 	 * @tparam A traversal algorithm used by the iterator
 	 */
-	template<typename A>
-	using reverse_iterator = std::reverse_iterator<iterator<A>>;
+    template <typename A>
+    using reverse_iterator = std::reverse_iterator<iterator<A>>;
 
-	/**
+    /**
 	 * A bi-directional reverse iterator used to traverse the tree. You can't modify the tree using this iterator.
 	 * @tparam A traversal algorithm used by the iterator
 	 */
-	template<typename A>
-	using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
+    template <typename A>
+    using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
 public:
-	/**
+    /**
 	 * Create an empty tree.
 	 */
-	constexpr tree() = default;
+    constexpr tree() = default;
 
-	// REMEMBER: this involves deep copy. Use std::move() whenever you can
-	tree(const tree& other) :
-			tree_base<T>(other._root ?
-			// TODO use allocators
-					std::make_unique<node_type>(*other._root) : nullptr,
-					other._size) {
-	}
+    // REMEMBER: this involves deep copy. Use std::move() whenever you can
+    tree(const tree& other) :
+        tree_base<T>(
+            other._root ? std::make_unique<node_type>(*other._root) : nullptr,
+            other._size) {
+    }
 
-	tree(tree&&) = default;
+    tree(tree&&) = default;
 
-	template<typename OtherAlg, typename OtherAlloc>
-	tree(const tree<T, OtherAlg, OtherAlloc>& other) :
-			tree_base<T>(
-					other._root ?
-							std::make_unique<node_type>(*other._root) : nullptr,
-					other._size) {
-	}
+    template <typename OtherAlg, typename OtherAlloc>
+    tree(const tree<T, OtherAlg, OtherAlloc>& other) :
+        tree_base<T>(
+            other._root ? std::make_unique<node_type>(*other._root) : nullptr,
+            other._size) {
+    }
 
-	template<typename OtherAlg, typename OtherAlloc>
-	tree(tree<T, OtherAlg, OtherAlloc> && other) :
-			tree_base<T>(std::move(other._root), other._size) {
-	}
+    template <typename OtherAlg, typename OtherAlloc>
+    tree(tree<T, OtherAlg, OtherAlloc>&& other) :
+        tree_base<T>(std::move(other._root), other._size) {
+    }
 
-	tree(temporary_node<T> && root) :
-			// TODO use allocators
-			tree_base<T>(std::make_unique<node_type>(std::move(root)),
-					root.get_size()) {
-	}
+    tree(temporary_node<T>&& root) :
+        // TODO use allocators
+        tree_base<T>(
+            std::make_unique<node_type>(std::move(root)),
+            root.get_size()) {
+    }
 
-	tree& operator =(const tree& other) {
-		// TODO use allocators
-		this->_root = std::make_unique<node_type>(*other.root);
-		this->_size = other.size;
-		return *this;
-	}
+    tree& operator=(const tree& other) {
+        // TODO use allocators
+        this->_root = std::make_unique<node_type>(*other.root);
+        this->_size = other.size;
+        return *this;
+    }
 
-	tree& operator =(tree&&) = default;
+    tree& operator=(tree&&) = default;
 
-	~tree() = default;
+    ~tree() = default;
 
-	static temporary_node<T> produce_node(T value) {
-		return {value};
-	}
+    static temporary_node<T> produce_node(T value) {
+        return {value};
+    }
 
-	/*   ---   Iterators   ---   *
-	 * r => reverse
-	 * c => constant
-	 */
-	/**
+    /*   ---   Iterators   ---   */
+    /**
 	 * @brief Returns an iterator to the beginning.
 	 * @details The iterator will point to the first element of the container. Which one is the first depends on the
 	 * algorithm used to traverse the tree.
 	 * @return iterator to the first element
 	 */
-	template<typename A = Algorithm>
-	iterator<A> begin() {
-		/*
+    template <typename A = Algorithm>
+    iterator<A> begin() {
+        /*
 		 * Why the incrementation (++)?
 		 * Normally a tree_iterator<T> is constructed by taking a reference to a
 		 * tree<T> object. The iterator constructed this way points to the
@@ -169,31 +162,30 @@ public:
 		 * Also the reason reverse end iterator are incremented should be clear
 		 * now. In general reverse_iterator == iterator - 1
 		 */
-		return ++iterator<A>(this);
-	}
+        return ++iterator<A>(this);
+    }
 
-	/**
+    /**
 	 * @brief Returns a constant iterator to the beginning.
 	 * @details The iterator will point to the first element of the container. Which one is the first depends on the algorithm
 	 * used to traverse the tree. Using this iterator you can't modify the container.
 	 * @return constant iterator to the first element
 	 */
-	template<typename A = Algorithm>
-	const_iterator<A> begin() const {
-		return cbegin();
-	}
+    template <typename A = Algorithm>
+    const_iterator<A> begin() const {
+        return cbegin();
+    }
 
-	/**
+    /**
 	 * @copydoc #begin() const
 	 */
-	template<typename A = Algorithm>
-	const_iterator<A> cbegin() const {
-		// Confused by the incrementation (++)? See the comment above.
-		return ++const_iterator<A>(this);
-	}
+    template <typename A = Algorithm>
+    const_iterator<A> cbegin() const {
+        // Confused by the incrementation (++)? See the comment above.
+        return ++const_iterator<A>(this);
+    }
 
-
-	/**
+    /**
 	 * @brief Returns an iterator to the end.
 	 *
 	 * The iterator will point one step after the last element of the container. Which one is the last depends on the
@@ -201,118 +193,113 @@ public:
 	 * element.
 	 * @return iterator the element following the last element
 	 */
-	template<typename A = Algorithm>
-	iterator<A> end() {
-		return iterator<A>(this);
-	}
+    template <typename A = Algorithm>
+    iterator<A> end() {
+        return iterator<A>(this);
+    }
 
-	template<typename A = Algorithm>
-	const_iterator<A> end() const {
-		return cend();
-	}
+    template <typename A = Algorithm>
+    const_iterator<A> end() const {
+        return cend();
+    }
 
-	template<typename A = Algorithm>
-	const_iterator<A> cend() const {
-		return const_iterator<A>(this);
-	}
+    template <typename A = Algorithm>
+    const_iterator<A> cend() const {
+        return const_iterator<A>(this);
+    }
 
-	// reverse begin
-	template<typename A = Algorithm>
-	reverse_iterator<A> rbegin() {
-		return reverse_iterator<A>(iterator<A>(this));
-	}
+    // reverse begin
+    template <typename A = Algorithm>
+    reverse_iterator<A> rbegin() {
+        return reverse_iterator<A>(iterator<A>(this));
+    }
 
-	template<typename A = Algorithm>
-	const_reverse_iterator<A> rbegin() const {
-		return crbegin();
-	}
+    template <typename A = Algorithm>
+    const_reverse_iterator<A> rbegin() const {
+        return crbegin();
+    }
 
-	template<typename A = Algorithm>
-	const_reverse_iterator<A> crbegin() const {
-		return const_reverse_iterator<A>(const_iterator<A>(this));
-	}
+    template <typename A = Algorithm>
+    const_reverse_iterator<A> crbegin() const {
+        return const_reverse_iterator<A>(const_iterator<A>(this));
+    }
 
-	// reverse end
-	template<typename A = Algorithm>
-	reverse_iterator<A> rend() {
-		// reverse_iterator takes an iterator as argument, we construcit using {this}
-		return --reverse_iterator<A>(iterator<A>(this));
-	}
+    // reverse end
+    template <typename A = Algorithm>
+    reverse_iterator<A> rend() {
+        // reverse_iterator takes an iterator as argument, we construcit using {this}
+        return --reverse_iterator<A>(iterator<A>(this));
+    }
 
-	template<typename A = Algorithm>
-	const_reverse_iterator<A> rend() const {
-		return crend();
-	}
+    template <typename A = Algorithm>
+    const_reverse_iterator<A> rend() const {
+        return crend();
+    }
 
-	template<typename A = Algorithm>
-	const_reverse_iterator<A> crend() const {
-		// reverse_iterator takes an iterator as argument, we construcit using {this}
-		return --const_reverse_iterator<A>(const_iterator<A>(this));
-	}
+    template <typename A = Algorithm>
+    const_reverse_iterator<A> crend() const {
+        // reverse_iterator takes an iterator as argument, we construcit using {this}
+        return --const_reverse_iterator<A>(const_iterator<A>(this));
+    }
 
-	/*   ---   Modifiers   ---   */
+    /*   ---   Modifiers   ---   */
 private:
-	template<typename It>
-	iterator<typename It::algorithm_type> insert(It position,
-			std::unique_ptr<node_type> n) {
-		auto p = position.get_node(); // position
-		if (p) {
-			p->substitute_with(std::move(n));
-		} else if (!this->_root) {
-			this->_root = std::move(n);
-		} else {
-			throw std::logic_error(
-					"Tried to insert node in a not valid position.");
-		}
-		++this->_size;
-		return iterator<typename It::algorithm_type>(this, n.get());
-	}
+    template <typename It>
+    iterator<typename It::algorithm_type> insert(It position, std::unique_ptr<node_type> n) {
+        auto p = position.get_node(); // position
+        if (p) {
+            p->substitute_with(std::move(n));
+        } else if (!this->_root) {
+            this->_root = std::move(n);
+        } else {
+            throw std::logic_error(
+                "Tried to insert node in a not valid position.");
+        }
+        ++this->_size;
+        return iterator<typename It::algorithm_type>(this, n.get());
+    }
 
 public:
-	/**
+    /**
 	 * Insert an element at the specified position by replacing the existent
 	 * node. This will use the copy semantics.
 	 * @param position where to insert the element
 	 * @param node an r-value reference to a temporary_node
 	 * @return an iterator that points to the inserted element
 	 */
-	template<typename It>
-	iterator<typename It::algorithm_type> insert(It position,
-			temporary_node<T> && node) {
-		return insert(position, std::make_unique<node_type>(node));
-	}
+    template <typename It>
+    iterator<typename It::algorithm_type> insert(It position, temporary_node<T>&& node) {
+        return insert(position, std::make_unique<node_type>(node));
+    }
 
-	/**
+    /**
 	 * Insert an element at the specified position by replacing the existent
 	 * node. This will use the copy semantics.
 	 * @param position where to insert the element
 	 * @param value to insert in the tree, that will be copied
 	 * @return an iterator that points to the inserted element
 	 */
-	template<typename It>
-	iterator<typename It::algorithm_type> insert(It position,
-			const_reference value) {
-		return insert(position, std::make_unique<node_type>(value));
-	}
+    template <typename It>
+    iterator<typename It::algorithm_type> insert(It position, const_reference value) {
+        return insert(position, std::make_unique<node_type>(value));
+    }
 
-	/**
+    /**
 	 * Insert an element at the specified position by replacing the existent
 	 * node. This will use the move semantics.
 	 * @param position where to insert the element
 	 * @param value to insert in the tree, that will be copied
 	 * @return an iterator that points to the inserted element
 	 */
-	template<typename It>
-	iterator<typename It::algorithm_type> insert(It position,
-			value_type&& value) {
-		return insert(position, std::make_unique<node_type>(std::move(value)));
-	}
+    template <typename It>
+    iterator<typename It::algorithm_type> insert(It position, value_type&& value) {
+        return insert(position, std::make_unique<node_type>(std::move(value)));
+    }
 
-	template<typename It, typename ...Args>
-	iterator<typename It::algorithm_type> emplace(It position, Args&&... args) {
-		return insert(position, std::make_unique<node_type>(args...));
-	}
-
+    template <typename It, typename... Args>
+    iterator<typename It::algorithm_type> emplace(It position, Args&&... args) {
+        return insert(position, std::make_unique<node_type>(args...));
+    }
 };
 
 } /* namespace ds */
