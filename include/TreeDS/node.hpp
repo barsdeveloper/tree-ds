@@ -39,8 +39,7 @@ public:
         _value(value),
         _parent(nullptr),
         _left(nullptr),
-        _right(nullptr) {
-    }
+        _right(nullptr) {}
 
     node(const node& other) :
         _value(other._value),
@@ -58,8 +57,7 @@ public:
     node(node&& other) :
         _value(other._value),
         _parent(other._parent),
-        _left(
-            std::move(other._left)),
+        _left(std::move(other._left)),
         _right(std::move(other._right)) {
         if (_left) {
             _left->_parent = this;
@@ -73,25 +71,18 @@ public:
     ~node() = default;
 
     /*   ---   Getters   ---   */
-    const node* parent() const {
-        return _parent;
-    }
+    const T value() const { return _value; }
+    T value() { return _value; }
 
-    const node* left_child() const {
-        return _left.get();
-    }
+    const node* parent() const { return _parent; }
 
-    const node* right_child() const {
-        return _right.get();
-    }
+    const node* left_child() const { return _left.get(); }
 
-    const node* first_child() const {
-        return _left ? _left.get() : _right.get();
-    }
+    const node* right_child() const { return _right.get(); }
 
-    const node* last_child() const {
-        return _right ? _right.get() : _left.get();
-    }
+    const node* first_child() const { return _left ? _left.get() : _right.get(); }
+
+    const node* last_child() const { return _right ? _right.get() : _left.get(); }
 
     bool is_left_child() const {
         return _parent ? this == _parent->_left : false;
@@ -109,11 +100,11 @@ public:
 
     bool operator==(const node& other) {
         /*
-		 * Case when one between this or other has a left or right that is set
-		 * while the other doesn't.
-		 */
-        if ((this->_left == nullptr) != (other._left == nullptr)
-            || (this->_right == nullptr) != (other._right == nullptr)) {
+     * Case when one between this or other has a left or right that is
+* set
+     * while the other doesn't.
+     */
+        if ((this->_left == nullptr) != (other._left == nullptr) || (this->_right == nullptr) != (other._right == nullptr)) {
             return false;
         }
         // Test hold value for inequality
@@ -134,9 +125,7 @@ public:
         return true;
     }
 
-    bool operator!=(const node& other) {
-        return !(*this == other);
-    }
+    bool operator!=(const node& other) { return !(*this == other); }
 
     /*   ---   Tree construction   ---   */
     std::unique_ptr<node> substitute_with(std::unique_ptr<node> n) {

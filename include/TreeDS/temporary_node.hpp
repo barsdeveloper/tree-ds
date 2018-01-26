@@ -4,6 +4,7 @@
 #include <TreeDS/node.hpp>
 #include <cstddef> // nullptr_t
 #include <string>
+#include <type_traits>
 
 namespace ds {
 
@@ -12,18 +13,19 @@ class temporary_node : public node<T> {
 
     template <typename X>
     friend temporary_node<X> n(X);
+    friend temporary_node<std::string> n(const char*);
 
 private:
     size_t _tree_size;
 
     using node<T>::node; // automatically inherit constructors
 
+public:
     temporary_node(T value) :
         node<T>(value),
         _tree_size(1) {
     }
 
-public:
     size_t get_size() const {
         return _tree_size;
     }
@@ -47,11 +49,6 @@ public:
         return std::move(*this);
     }
 };
-
-template <typename T>
-temporary_node<T> n(T value) {
-    return {value};
-}
 
 } /* namespace ds */
 

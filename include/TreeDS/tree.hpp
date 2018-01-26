@@ -1,11 +1,6 @@
 #ifndef H454503B6_5C98_4082_8BCC_12BDF76731AE
 #define H454503B6_5C98_4082_8BCC_12BDF76731AE
 
-#include <exception> // std::exception
-#include <limits>    // std::numeric_limits()
-#include <memory>    // std::unique_ptr, std::make_unique
-#include <utility>   // std::move()
-
 #include <TreeDS/iterator/in_order.hpp>
 #include <TreeDS/iterator/post_order.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
@@ -14,6 +9,11 @@
 #include <TreeDS/temporary_node.hpp>
 #include <TreeDS/tree_base.hpp>
 #include <TreeDS/tree_iterator.hpp>
+#include <exception>   // std::exception
+#include <limits>      // std::numeric_limits()
+#include <memory>      // std::unique_ptr, std::make_unique
+#include <type_traits> // std::enable_if
+#include <utility>     // std::move()
 
 namespace ds {
 
