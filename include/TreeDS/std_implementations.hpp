@@ -7,8 +7,9 @@
 
 namespace std {
 
-template <typename T> void swap(ds::tree_base<T> &a, ds::tree_base<T> &b) {
-  a.swap(b);
+template <typename T>
+void swap(ds::tree_base<T>& a, ds::tree_base<T>& b) {
+    a.swap(b);
 }
 
 } /* namespace std */

@@ -3,7 +3,7 @@
 
 #include <TreeDS/node.hpp>
 #include <cstddef> // std::size_t
-#include <memory> // std::unique_ptr
+#include <memory>  // std::unique_ptr
 
 namespace ds {
 
@@ -50,10 +50,9 @@ protected:
     /**
 	 * @brief Create an empty tree.
 	 */
-    constexpr tree_base()
-        : _root(nullptr)
-        , _size(0)
-    {
+    constexpr tree_base() :
+        _root(nullptr),
+        _size(0) {
     }
 
     // Copy logic is implemented in the sub class tree to use allocator.
@@ -64,10 +63,9 @@ protected:
 	 * @details The moved tree will have no nodes after this operator and its size will be 0.
 	 * @param other the tree to be moved into this tree.
 	 */
-    tree_base(tree_base&& other)
-        : _root(std::move(other._root))
-        , _size(other._size)
-    {
+    tree_base(tree_base&& other) :
+        _root(std::move(other._root)),
+        _size(other._size) {
         other._size = 0;
     }
 
@@ -76,10 +74,9 @@ protected:
 	 * @param root an owning pointer to the root node
 	 * @param size the size of the tree
 	 */
-    tree_base(std::unique_ptr<node_type> root, size_type size)
-        : _root(std::move(root))
-        , _size(size)
-    {
+    tree_base(std::unique_ptr<node_type> root, size_type size) :
+        _root(std::move(root)),
+        _size(size) {
     }
 
     // Copy logic is implemented in the sub class tree to use allocator.
@@ -90,11 +87,10 @@ protected:
 	 * @copydetails #tree_base(tree_base&&)
 	 * @return this tree reference
 	 */
-    tree_base& operator=(tree_base&& other)
-    {
-        _size = other._size;
+    tree_base& operator=(tree_base&& other) {
+        _size       = other._size;
         other._size = 0;
-        _root = std::move(other._root);
+        _root       = std::move(other._root);
         return *this;
     }
 
@@ -111,8 +107,7 @@ public:
 	 * </ul>
 	 * @return true if the tree is empty
 	 */
-    bool empty() const
-    {
+    bool empty() const {
         return _root == nullptr;
     }
 
@@ -121,8 +116,7 @@ public:
 	 * @details Invalidates any references, pointers, or iterators referring to contained elements. Any past-the-last
 	 * element iterator ({@link tree#end() end()}) remains valid.
 	 */
-    void clear()
-    {
+    void clear() {
         _root = nullptr;
         _size = 0;
     }
@@ -131,8 +125,7 @@ public:
 	 * @brief Returns the number of the nodes in this tree
 	 * @return the number of nodes
 	 */
-    size_type size() const
-    {
+    size_type size() const {
         return _size;
     }
 
@@ -143,8 +136,7 @@ public:
 	 * library is stl-like.
 	 * @return maximum possible number of elements
 	 */
-    size_type max_size() const
-    {
+    size_type max_size() const {
         return std::numeric_limits<size_type>::max();
     }
 
@@ -153,8 +145,7 @@ public:
 	 * @param other the tree to compare with
 	 * @return true if the trees are lexicographically equal
 	 */
-    bool operator==(const tree_base& other)
-    {
+    bool operator==(const tree_base& other) {
         if (this->_size != other._size) {
             return false;
         }
@@ -170,8 +161,7 @@ public:
 	 * @param other the tree to compare with
 	 * @return true if the trees are <b>not</b> lexicographically equal
 	 */
-    bool operator!=(const tree_base& other)
-    {
+    bool operator!=(const tree_base& other) {
         return !(*this == other);
     }
 
@@ -182,8 +172,7 @@ public:
 	 * not. Do not use iterator after you swapped trees.
 	 * @param other the tree to swap with
 	 */
-    void swap(tree_base<T>& other)
-    {
+    void swap(tree_base<T>& other) {
         using namespace std;
         swap(_root, other._root);
         swap(_size, other._size);

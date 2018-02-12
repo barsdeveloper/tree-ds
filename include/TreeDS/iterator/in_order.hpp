@@ -1,5 +1,4 @@
-#ifndef H53242E79_8449_4605_A949_338CF8B3C51D
-#define H53242E79_8449_4605_A949_338CF8B3C51D
+#pragma once
 
 #include "helper.hpp"
 
@@ -65,5 +64,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H53242E79_8449_4605_A949_338CF8B3C51D */

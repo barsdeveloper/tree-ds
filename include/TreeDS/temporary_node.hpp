@@ -18,8 +18,6 @@ class temporary_node : public node<T> {
 private:
     size_t _tree_size;
 
-    using node<T>::node; // automatically inherit constructors
-
 public:
     temporary_node(T value) :
         node<T>(value),

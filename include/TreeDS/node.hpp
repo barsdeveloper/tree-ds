@@ -1,6 +1,7 @@
 #ifndef H2FA9DD71_C0FC_409B_82F9_A6BCC3512038
 #define H2FA9DD71_C0FC_409B_82F9_A6BCC3512038
 
+#include <TreeDS/temporary_node.hpp>
 #include <memory> // std::unique_ptr, std::move()
 
 namespace ds {
@@ -20,26 +21,21 @@ protected:
     std::unique_ptr<node> _left;
     std::unique_ptr<node> _right;
 
-    void set_left(std::unique_ptr<node> n) {
-        _left = std::move(n);
-        if (_left) {
-            _left->_parent = this;
-        }
-    }
-
-    void set_right(std::unique_ptr<node> n) {
-        _right = std::move(n);
-        if (_right) {
-            _right->_parent = this;
-        }
-    }
-
 public:
+    template <typename... Args>
+    node(Args... args) :
+        _value{args...},
+        _parent(nullptr),
+        _left(nullptr),
+        _right(nullptr) {
+    }
+
     node(T value) :
         _value(value),
         _parent(nullptr),
         _left(nullptr),
-        _right(nullptr) {}
+        _right(nullptr) {
+    }
 
     node(const node& other) :
         _value(other._value),
@@ -52,6 +48,11 @@ public:
             // TODO use allocators
             this->set_right(std::make_unique<node>(*other._right));
         }
+    }
+
+    // needed otherwise passing temporary_node will call the template version of constructor
+    node(const temporary_node<T>& other) :
+        node(static_cast<const node&>(other)) {
     }
 
     node(node&& other) :
@@ -70,19 +71,49 @@ public:
 
     ~node() = default;
 
+protected:
+    void set_left(std::unique_ptr<node> n) {
+        _left = std::move(n);
+        if (_left) {
+            _left->_parent = this;
+        }
+    }
+
+    void set_right(std::unique_ptr<node> n) {
+        _right = std::move(n);
+        if (_right) {
+            _right->_parent = this;
+        }
+    }
+
+public:
     /*   ---   Getters   ---   */
-    const T value() const { return _value; }
-    T value() { return _value; }
+    const T value() const {
+        return _value;
+    }
+    T value() {
+        return _value;
+    }
 
-    const node* parent() const { return _parent; }
+    const node* parent() const {
+        return _parent;
+    }
 
-    const node* left_child() const { return _left.get(); }
+    const node* left_child() const {
+        return _left.get();
+    }
 
-    const node* right_child() const { return _right.get(); }
+    const node* right_child() const {
+        return _right.get();
+    }
 
-    const node* first_child() const { return _left ? _left.get() : _right.get(); }
+    const node* first_child() const {
+        return _left ? _left.get() : _right.get();
+    }
 
-    const node* last_child() const { return _right ? _right.get() : _left.get(); }
+    const node* last_child() const {
+        return _right ? _right.get() : _left.get();
+    }
 
     bool is_left_child() const {
         return _parent ? this == _parent->_left : false;
@@ -125,7 +156,9 @@ public:
         return true;
     }
 
-    bool operator!=(const node& other) { return !(*this == other); }
+    bool operator!=(const node& other) {
+        return !(*this == other);
+    }
 
     /*   ---   Tree construction   ---   */
     std::unique_ptr<node> substitute_with(std::unique_ptr<node> n) {
