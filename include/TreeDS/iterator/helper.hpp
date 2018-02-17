@@ -1,5 +1,4 @@
-#ifndef H0D7AED97_95FE_4380_8923_43A3E5E92A3A
-#define H0D7AED97_95FE_4380_8923_43A3E5E92A3A
+#pragma once
 
 #include <functional>
 #include <type_traits>
@@ -60,5 +59,3 @@ const node<T>* descent(const node<T>& n, Callable call) {
 }
 
 } /* namespace ds */
-
-#endif /* H0D7AED97_95FE_4380_8923_43A3E5E92A3A */

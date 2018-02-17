@@ -1,5 +1,4 @@
-#ifndef H40F7331A_27AB_4B81_A85D_B370D0054AD8
-#define H40F7331A_27AB_4B81_A85D_B370D0054AD8
+#pragma once
 
 #include "helper.hpp"
 
@@ -54,5 +53,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H40F7331A_27AB_4B81_A85D_B370D0054AD8 */

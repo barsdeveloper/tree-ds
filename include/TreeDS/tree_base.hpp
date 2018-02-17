@@ -1,5 +1,4 @@
-#ifndef H89E2543D_D005_4E9B_8B4A_C0BDF8AEC5A8
-#define H89E2543D_D005_4E9B_8B4A_C0BDF8AEC5A8
+#pragma once
 
 #include <TreeDS/node.hpp>
 #include <cstddef> // std::size_t
@@ -180,5 +179,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H89E2543D_D005_4E9B_8B4A_C0BDF8AEC5A8 */

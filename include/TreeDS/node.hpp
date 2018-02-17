@@ -1,5 +1,4 @@
-#ifndef H2FA9DD71_C0FC_409B_82F9_A6BCC3512038
-#define H2FA9DD71_C0FC_409B_82F9_A6BCC3512038
+#pragma once
 
 #include <TreeDS/temporary_node.hpp>
 #include <memory> // std::unique_ptr, std::move()
@@ -130,15 +129,13 @@ public:
     long hash_code() const;
 
     bool operator==(const node& other) {
-        /*
-     * Case when one between this or other has a left or right that is
-* set
-     * while the other doesn't.
-     */
-        if ((this->_left == nullptr) != (other._left == nullptr) || (this->_right == nullptr) != (other._right == nullptr)) {
+        /* Case when one between this or other has a left or right that is set while the other doesn't. */
+        if (
+            (this->_left == nullptr) != (other._left == nullptr)
+            || (this->_right == nullptr) != (other._right == nullptr)) {
             return false;
         }
-        // Test hold value for inequality
+        // Test value for inequality
         if (this->_value != other._value) {
             return false;
         }
@@ -157,7 +154,7 @@ public:
     }
 
     bool operator!=(const node& other) {
-        return !(*this == other);
+        return !(this->operator ==(other));
     }
 
     /*   ---   Tree construction   ---   */
@@ -179,5 +176,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H2FA9DD71_C0FC_409B_82F9_A6BCC3512038 */

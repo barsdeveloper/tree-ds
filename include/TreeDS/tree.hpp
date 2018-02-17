@@ -1,5 +1,4 @@
-#ifndef H454503B6_5C98_4082_8BCC_12BDF76731AE
-#define H454503B6_5C98_4082_8BCC_12BDF76731AE
+#pragma once
 
 #include <TreeDS/iterator/in_order.hpp>
 #include <TreeDS/iterator/post_order.hpp>
@@ -50,7 +49,7 @@ public:
     using pointer        = typename std::allocator_traits<Allocator>::pointer;
     using const_pointer  = typename std::allocator_traits<Allocator>::const_pointer;
     using algorithm_type = Algorithm;
-    using allocator_type = Allocator;
+    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<node_type>;
     /**
 	 * A bi-directional iterator used to traverse the tree.
 	 * @tparam A traversal algorithm used by the iterator
@@ -78,6 +77,9 @@ public:
 	 */
     template <typename A>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
+
+private:
+    allocator_type allocator;
 
 public:
     /**
@@ -247,7 +249,7 @@ private:
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, std::unique_ptr<node_type> n) {
         auto p = position.get_node(); // position
-        if (p) {
+        if (p) {                      // if iterator points to valid node
             p->substitute_with(std::move(n));
         } else if (!this->_root) {
             this->_root = std::move(n);
@@ -293,15 +295,21 @@ public:
 	 */
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, value_type&& value) {
-        return insert(position, std::make_unique<node_type>(std::move(value)));
+        return insert(position, allocate(std::move(value)));
     }
 
     template <typename It, typename... Args>
     iterator<typename It::algorithm_type> emplace(It position, Args&&... args) {
-        return insert(position, std::make_unique<node_type>(args...));
+        return insert(position, allocate(args...));
+    }
+
+    /*   ---   Utility   ---   */
+    template <typename... Args>
+    std::unique_ptr<node_type> allocate(Args&&... args) {
+        auto ptr = std::allocator_traits<allocator_type>::allocate(allocator, 1);
+        std::allocator_traits<allocator_type>::construct(allocator, ptr, args...);
+        return std::unique_ptr<node_type>(ptr);
     }
 };
 
 } /* namespace ds */
-
-#endif /* H454503B6_5C98_4082_8BCC_12BDF76731AE */

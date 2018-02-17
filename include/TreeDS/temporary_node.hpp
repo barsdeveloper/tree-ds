@@ -1,5 +1,4 @@
-#ifndef H1E827EB6_260E_460A_A7C3_98374041137B
-#define H1E827EB6_260E_460A_A7C3_98374041137B
+#pragma once
 
 #include <TreeDS/node.hpp>
 #include <cstddef> // nullptr_t
@@ -49,5 +48,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H1E827EB6_260E_460A_A7C3_98374041137B */

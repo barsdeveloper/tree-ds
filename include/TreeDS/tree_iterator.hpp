@@ -1,5 +1,4 @@
-#ifndef H3B68D6D4_220A_4EFE_8556_D06377C8C61C
-#define H3B68D6D4_220A_4EFE_8556_D06377C8C61C
+#pragma once
 
 #include <iterator>    // std::iterator
 #include <type_traits> // std::conditional, std::enable_if
@@ -60,7 +59,10 @@ public:
 	 * false if we allow implicit conversion between iterators with different
 	 * types. That's the reason of explicit, to limit compiler magics.
 	 */
-    template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
+    template <
+        typename OtherAlgorithm,
+        bool OtherConstant,
+        typename = std::enable_if<!Constant || OtherConstant>>
     explicit tree_iterator(
         const tree_iterator<T, OtherAlgorithm, OtherConstant>& other) :
         _algorithm(),
@@ -158,5 +160,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* H3B68D6D4_220A_4EFE_8556_D06377C8C61C */

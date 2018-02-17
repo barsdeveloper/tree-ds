@@ -27,7 +27,7 @@ private slots:
         QCOMPARE(t.size(), 1);
         QVERIFY(!t.empty());
         QVERIFY(t.begin() != t.end());
-    }
+        }
 };
 
 QTEST_MAIN(PreliminaryTest);

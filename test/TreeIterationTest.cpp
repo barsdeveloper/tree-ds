@@ -106,36 +106,37 @@ void TreeIterationTest::iteration_data() {
                         "7", "6", "5", "4", "3", "2", "1"};
 
     QTest::newRow("Empty String")
-        << tree<string>(n("1")(
-               nullptr,
-               n("2")(
+        << tree<string>(
+               n("1")(
                    nullptr,
-                   n("3")(
+                   n("2")(
                        nullptr,
-                       n("4")(
+                       n("3")(
                            nullptr,
-                           n("5")(
+                           n("4")(
                                nullptr,
-                               n("6")(
+                               n("5")(
                                    nullptr,
-                                   n("7")(
+                                   n("6")(
                                        nullptr,
-                                       n("8")(
+                                       n("7")(
                                            nullptr,
-                                           n("9")(
+                                           n("8")(
                                                nullptr,
-                                               n("10")(
+                                               n("9")(
                                                    nullptr,
-                                                   n("11")(
+                                                   n("10")(
                                                        nullptr,
-                                                       n("12")(
+                                                       n("11")(
                                                            nullptr,
-                                                           n("13")(
+                                                           n("12")(
                                                                nullptr,
-                                                               n("14")(
+                                                               n("13")(
                                                                    nullptr,
-                                                                   n("1"
-                                                                     "5"))))))))))))))))
+                                                                   n("14")(
+                                                                       nullptr,
+                                                                       n("1"
+                                                                         "5"))))))))))))))))
         << 15 << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
         << list<string>{"1", "2", "3", "4", "5", "6", "7", "8",
                         "9", "10", "11", "12", "13", "14", "15"}

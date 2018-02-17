@@ -1,5 +1,4 @@
-#ifndef INCLUDE_TREEDS_ITERATOR_POST_ORDER_HPP_
-#define INCLUDE_TREEDS_ITERATOR_POST_ORDER_HPP_
+#pragma once
 
 #include "helper.hpp"
 
@@ -44,5 +43,3 @@ public:
 };
 
 } /* namespace ds */
-
-#endif /* INCLUDE_TREEDS_ITERATOR_POST_ORDER_HPP_ */
