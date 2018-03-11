@@ -11,4 +11,4 @@ void swap(ds::tree_base<T>& a, ds::tree_base<T>& b) {
     a.swap(b);
 }
 
-} /* namespace std */
+} // namespace std

@@ -5,7 +5,7 @@
 namespace ds {
 
 template <typename T>
-class node;
+class binary_node;
 
 class pre_order final {
 
@@ -14,18 +14,18 @@ public:
     ~pre_order()          = default;
 
     template <typename T>
-    const node<T>* increment(const node<T>& n) const {
-        auto result = n.first_child();
+    const binary_node<T>* increment(const binary_node<T>& node) const {
+        auto result = node.first_child();
         if (result) {
             return result;
         }
-        return cross_bridge_right(n);
+        return cross_bridge_right(node);
     }
 
     template <typename T>
-    const node<T>* decrement(const node<T>& n) const {
-        const node<T>* next = n.parent();
-        const node<T>* prev = &n;
+    const binary_node<T>* decrement(const binary_node<T>& node) const {
+        const binary_node<T>* next = node.parent();
+        const binary_node<T>* prev = &node;
         /*
 		 * The parent is the next node if (REMEMBER: we traverse tree in pre-order and decrement the iterator):
 		 *     1) The passed node is root (its parent is nullptr so the previous value is the end of the reverse iterator).
@@ -34,22 +34,22 @@ public:
         if (!next || prev == next->first_child()) {
             return next;
         }
-        return descent(*next->left_child(), [](const node<T>& n) {
-            return n.last_child();
+        return descent(*next->left_child(), [](const binary_node<T>& node) {
+            return node.last_child();
         });
     }
 
     template <typename T>
-    const node<T>* go_first(const node<T>& root) const {
+    const binary_node<T>* go_first(const binary_node<T>& root) const {
         return &root;
     }
 
     template <typename T>
-    const node<T>* go_last(const node<T>& root) const {
-        return descent(root, [](const node<T>& n) {
+    const binary_node<T>* go_last(const binary_node<T>& root) const {
+        return descent(root, [](const binary_node<T>& n) {
             return n.last_child();
         });
     }
 };
 
-} /* namespace ds */
+} // namespace ds

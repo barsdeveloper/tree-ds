@@ -24,8 +24,6 @@ Q_DECLARE_METATYPE(tree<string>);
 Q_DECLARE_METATYPE(tree<string>::size_type);
 Q_DECLARE_METATYPE(list<string>);
 
-temporary_node<string> n(const char* value) { return {value}; }
-
 class TreeIterationTest : public QObject {
 
     Q_OBJECT;
@@ -48,8 +46,8 @@ void TreeIterationTest::iteration() {
     copy(t.begin<pre_order>(), t.end(), back_inserter(actualPreOrder));
     copy(t.begin<in_order>(), t.end<in_order>(), back_inserter(actualInOrder));
     copy(t.begin<post_order>(), t.end<post_order>(), back_inserter(actualPostOrder));
-    QCOMPARE(expectedSize, actualSize);
-    QCOMPARE(expectedPreOrder, actualPreOrder);
+    QCOMPARE(actualSize, expectedSize);
+    QCOMPARE(actualPreOrder, expectedPreOrder);
 }
 
 void TreeIterationTest::iteration_data() {
@@ -60,108 +58,259 @@ void TreeIterationTest::iteration_data() {
     QTest::addColumn<list<string>>("expectedInOrder");
     QTest::addColumn<list<string>>("expectedPostOrder");
 
-    QTest::newRow("Empty String") << tree<string>(n("")) << 1 << list<string>{""}
-                                  << list<string>{""} << list<string>{""};
-
     QTest::newRow("Empty String")
-        << tree<string>(n("1")(n("2"))) << 2 << list<string>{"1", "2"}
-        << list<string>{"2", "1"} << list<string>{"2", "1"};
+        << tree<string>(n(""))
+        << 1
+        << list<string>{""}
+        << list<string>{""}
+        << list<string>{""};
 
-    QTest::newRow("Empty String")
-        << tree<string>(n("1")(nullptr, n("2"))) << 2 << list<string>{"1", "2"}
-        << list<string>{"1", "2"} << list<string>{"2", "1"};
+    QTest::newRow("Root with a left child")
+        // clang-format off
+        << tree<string>(
+            n("1")({
+                n("2")
+            })
+        )
+        // clang-format on
+        << 2
+        << list<string>{"1", "2"}
+        << list<string>{"2", "1"}
+        << list<string>{"2", "1"};
 
-    QTest::newRow("Empty String")
-        << tree<string>(n("a")(
-               n("b")(n("d")(n("h"),
-                             nullptr // This can be omitted but I want to test it
-                             ),
-                      n("e")),
-               n("c")(n("f")(n("j"), n("k")), n("g"))))
-        << 10 << list<string>{"a", "b", "d", "h", "e", "c", "f", "j", "k", "g"}
+    QTest::newRow("Root with a right child")
+        // clang-format off
+        << tree<string>(
+            n("1")({
+                n(),
+                n("2")
+            })
+        )
+        // clang-format on
+        << 2
+        << list<string>{"1", "2"}
+        << list<string>{"1", "2"}
+        << list<string>{"2", "1"};
+
+    QTest::newRow("Small tree")
+        // clang-format off
+        << tree<string>(
+            n("a")({
+                n("b")({
+                    n("d")({
+                        n("h"),
+                        n() // This can be omitted but I want to test it
+                    }),
+                    n("e")
+                }),
+                n("c")({
+                    n("f")({
+                        n("j"),
+                        n("k")
+                    }),
+                    n("g")
+                })
+            })
+        )
+        // clang-format on
+        << 10
+        << list<string>{"a", "b", "d", "h", "e", "c", "f", "j", "k", "g"}
         << list<string>{"h", "d", "b", "e", "a", "j", "f", "k", "c", "g"}
         << list<string>{"h", "d", "e", "b", "j", "k", "f", "g", "c", "a"};
 
-    QTest::newRow("Empty String")
-        << tree<string>(n("a")(
-               n("b")(
-                   n("c")(n("d")(n("e")(n("f"), n("g")), n("h")(nullptr, n("o"))), n("i")(nullptr, n("n")(nullptr, n("p")))),
-                   n("j")(nullptr, n("m")(nullptr, n("q")(nullptr, n("t"))))),
-               n("k")(nullptr, n("l")(nullptr, n("r")(nullptr, n("s")(nullptr, n("u")))))))
-        << 21
-        << list<string>{"a", "b", "c", "d", "e", "f", "g", "h", "o", "i", "n",
-                        "p", "j", "m", "q", "t", "k", "l", "r", "s", "u"}
-        << list<string>{"f", "e", "g", "d", "h", "o", "c", "i", "n", "p", "b",
-                        "j", "m", "q", "t", "a", "k", "l", "r", "s", "u"}
-        << list<string>{"f", "g", "e", "o", "h", "d", "p", "n", "i", "c", "t",
-                        "q", "m", "j", "b", "u", "s", "r", "l", "k", "a"};
-
-    QTest::newRow("Empty String")
-        << tree<string>(n("1")(n("2")(n("3")(n("4")(n("5")(n("6")(n("7")(n("8")(n(
-               "9")(n("10")(n("11")(n("12")(n("13")(n("14")(n("15"))))))))))))))))
-        << 15 << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8",
-                        "7", "6", "5", "4", "3", "2", "1"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8",
-                        "7", "6", "5", "4", "3", "2", "1"};
-
-    QTest::newRow("Empty String")
+    QTest::newRow("Big tree")
+        // clang-format off
         << tree<string>(
-               n("1")(
-                   nullptr,
-                   n("2")(
-                       nullptr,
-                       n("3")(
-                           nullptr,
-                           n("4")(
-                               nullptr,
-                               n("5")(
-                                   nullptr,
-                                   n("6")(
-                                       nullptr,
-                                       n("7")(
-                                           nullptr,
-                                           n("8")(
-                                               nullptr,
-                                               n("9")(
-                                                   nullptr,
-                                                   n("10")(
-                                                       nullptr,
-                                                       n("11")(
-                                                           nullptr,
-                                                           n("12")(
-                                                               nullptr,
-                                                               n("13")(
-                                                                   nullptr,
-                                                                   n("14")(
-                                                                       nullptr,
-                                                                       n("1"
-                                                                         "5"))))))))))))))))
-        << 15 << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8",
-                        "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8",
-                        "7", "6", "5", "4", "3", "2", "1"};
+            n("a")({
+                n("b")({
+                    n("c")({
+                        n("d")({
+                            n("e")({
+                                n("f"),
+                                n("g")
+                            }),
+                            n("h")({
+                                n(),
+                                n("o")
+                            })
+                        }),
+                        n("i")({
+                            n(),
+                            n("n")({
+                                n(),
+                                n("p")
+                            })
+                        })
+                    }),
+                    n("j")({
+                        n(),
+                        n("m")({
+                            n(),
+                            n("q")({
+                                n(),
+                                n("t")
+                            })
+                        })
+                    })
+                }),
+                n("k")({
+                    n(),
+                    n("l")({
+                        n(),
+                        n("r")({
+                            n(),
+                            n("s")({
+                                n(),
+                                n("u")
+                            })
+                        })
+                    })
+                })
+            })
+        )
+        // clang-format on
+        << 21
+        << list<string>{"a", "b", "c", "d", "e", "f", "g", "h", "o", "i", "n", "p", "j", "m", "q", "t", "k", "l", "r", "s", "u"}
+        << list<string>{"f", "e", "g", "d", "h", "o", "c", "i", "n", "p", "b", "j", "m", "q", "t", "a", "k", "l", "r", "s", "u"}
+        << list<string>{"f", "g", "e", "o", "h", "d", "p", "n", "i", "c", "t", "q", "m", "j", "b", "u", "s", "r", "l", "k", "a"};
 
-    QTest::newRow("Empty String")
-        << tree<string>(n("1")(n("2")(
-               nullptr,
-               n("3")(n("4")(
-                   nullptr,
-                   n("5")(n("6")(
-                       nullptr,
-                       n("7")(n("8")(
-                           nullptr,
-                           n("9")(n("10")(
-                               nullptr,
-                               n("11")(n("12")(
-                                   nullptr,
-                                   n("13")(n("14")(nullptr, n("15"))))))))))))))))
-        << 15 << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"2", "4", "6", "8", "10", "12", "14", "15",
-                        "13", "11", "9", "7", "5", "3", "1"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8",
-                        "7", "6", "5", "4", "3", "2", "1"};
+    QTest::newRow("All left child")
+        // clang-format off
+        << tree<string>(
+            n("1")({
+                n("2")({
+                    n("3")({
+                        n("4")({
+                            n("5")({
+                                n("6")({
+                                    n("7")({
+                                        n("8")({
+                                            n("9")({
+                                                n("10")({
+                                                    n("11")({
+                                                        n("12")({
+                                                            n("13")({
+                                                                n("14")({
+                                                                    n("15")
+                                                                })
+                                                            })
+                                                        })
+                                                    })
+                                                })
+                                            })
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            })
+        )
+        // clang-format on
+        << 15
+        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
+        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
+        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"};
+
+    QTest::newRow("All right child")
+        // clang-format off
+        << tree<string>(
+            n("1")({
+                n(),
+                n("2")({
+                    n(),
+                    n("3")({
+                        n(),
+                        n("4")({
+                            n(),
+                            n("5")({
+                                n(),
+                                n("6")({
+                                    n(),
+                                    n("7")({
+                                        n(),
+                                        n("8")({
+                                            n(),
+                                            n("9")({
+                                                n(),
+                                                n("10")({
+                                                    n(),
+                                                    n("11")({
+                                                        n(),
+                                                        n("12")({
+                                                            n(),
+                                                            n("13")({
+                                                                n(),
+                                                                n("14")({
+                                                                    n(),
+                                                                    n("15")
+                                                                })
+                                                            })
+                                                        })
+                                                    })
+                                                })
+                                            })
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            })
+        )
+        // clang-format on
+        << 15
+        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
+        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
+        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"};
+
+    QTest::newRow("ZigZag")
+        // clang-format off
+        << tree<string>(
+            n("1")({
+                n("2")({
+                    n(),
+                    n("3")({
+                        n("4")({
+                            n(),
+                            n("5")({
+                                n("6")({
+                                    n(),
+                                    n("7")({
+                                        n("8")({
+                                            n(),
+                                            n("9")({
+                                                n("10")({
+                                                    n(),
+                                                    n("11")({
+                                                        n("12")({
+                                                            n(),
+                                                            n("13")({
+                                                                n("14")({
+                                                                    n(),
+                                                                    n("15")
+                                                                })
+                                                            })
+                                                        })
+                                                    })
+                                                })
+                                            })
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            })
+        )
+        // clang-format on
+        << 15
+        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
+        << list<string>{"2", "4", "6", "8", "10", "12", "14", "15", "13", "11", "9", "7", "5", "3", "1"}
+        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"};
 }
 
 QTEST_MAIN(TreeIterationTest);

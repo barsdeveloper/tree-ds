@@ -1,16 +1,16 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8)
 project(TreeDS)
 set(PROJECT_VERSION 1.0)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall --coverage")
 
 include(CTest)
 enable_testing(true)
 
-set(CMAKE_PREFIX_PATH "~/Qt/5.10.0/gcc_64/")# set this to the qt installation path
+set(CMAKE_PREFIX_PATH "~/Qt/latest/gcc_64/")# set this to the qt installation path
 include_directories("./include")
 find_package(Qt5Test REQUIRED)
 file(GLOB TEST_SOURCES test/*.cpp)# get files from test and make a list TEST_SOURCES

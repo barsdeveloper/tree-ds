@@ -5,7 +5,7 @@
 namespace ds {
 
 template <typename T>
-class node;
+class binary_node;
 
 class in_order final {
 
@@ -13,9 +13,9 @@ public:
     constexpr in_order() = default;
 
     template <typename T>
-    const node<T>* increment(const node<T>& n) const {
+    const binary_node<T>* increment(const binary_node<T>& n) const {
         if (n.right_child()) {
-            return descent(*n.right_child(), [](const node<T>& n) {
+            return descent(*n.right_child(), [](const binary_node<T>& n) {
                 return n.left_child();
             });
         }
@@ -32,7 +32,7 @@ public:
     }
 
     template <typename T>
-    const node<T>* decrement(const node<T>& n) const {
+    const binary_node<T>* decrement(const binary_node<T>& n) const {
         if (n.left_child()) {
             return descent_right(*n.left_child());
         }
@@ -49,18 +49,18 @@ public:
     }
 
     template <typename T>
-    const node<T>* go_first(const node<T>& root) const {
-        return descent(root, [](const node<T>& n) {
+    const binary_node<T>* go_first(const binary_node<T>& root) const {
+        return descent(root, [](const binary_node<T>& n) {
             return n.left_child();
         });
     }
 
     template <typename T>
-    const node<T>* go_last(const node<T>& root) const {
-        return descent(root, [](const node<T>& n) {
+    const binary_node<T>* go_last(const binary_node<T>& root) const {
+        return descent(root, [](const binary_node<T>& n) {
             return n.right_child();
         });
     }
 };
 
-} /* namespace ds */
+} // namespace ds

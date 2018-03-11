@@ -1,6 +1,6 @@
 #pragma once
 
-#include <TreeDS/node.hpp>
+#include <TreeDS/binary_node.hpp>
 #include <cstddef> // std::size_t
 #include <memory>  // std::unique_ptr
 
@@ -26,22 +26,16 @@ class tree_base {
     void swap(tree_base<U>& a, tree_base<U>& b);
 
 public:
-    /// @brief The type of elements.
-    using value_type = T;
-    /// @brief Reference to element type.
-    using reference = value_type&;
-    /// @brief Reference to a constant element type.
+    using value_type      = T;
+    using reference       = value_type&;
     using const_reference = const value_type&;
-    /// @brief Type of node in this tree.
-    using node_type = node<T>;
-    /// @brief Type returned by {@link #size()} method.
-    using size_type = std::size_t;
-    /// @brief Type used for difference between iterators.
+    using node_type       = binary_node<T>;
+    using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
 
 protected:
-    ///@brief Owning pointer to the root node.
-    std::unique_ptr<node_type> _root;
+    /// @brief Owning pointer to the root node.
+    node_type* _root;
     /// @brief The number of nodes in the tree.
     size_type _size;
 
@@ -50,22 +44,8 @@ protected:
 	 * @brief Create an empty tree.
 	 */
     constexpr tree_base() :
-        _root(nullptr),
-        _size(0) {
-    }
-
-    // Copy logic is implemented in the sub class tree to use allocator.
-    tree_base(const tree_base& other) = delete;
-
-    /**
-	 * @brief Create a tree by moving the elements from another tree.
-	 * @details The moved tree will have no nodes after this operator and its size will be 0.
-	 * @param other the tree to be moved into this tree.
-	 */
-    tree_base(tree_base&& other) :
-        _root(std::move(other._root)),
-        _size(other._size) {
-        other._size = 0;
+            _root(nullptr),
+            _size(0) {
     }
 
     /**
@@ -73,29 +53,25 @@ protected:
 	 * @param root an owning pointer to the root node
 	 * @param size the size of the tree
 	 */
-    tree_base(std::unique_ptr<node_type> root, size_type size) :
-        _root(std::move(root)),
-        _size(size) {
+    tree_base(node_type* root, size_type size) :
+            _root(root),
+            _size(size) {
     }
 
-    // Copy logic is implemented in the sub class tree to use allocator.
+    // Memory mess up logic is implement in subclass, no particular reason, that's my will, muhahahahaha.
+    tree_base(const tree_base& other) = delete;
+    tree_base(tree_base&& other)      = delete;
     tree_base& operator=(const tree_base&) = delete;
+    tree_base& operator=(tree_base&&) = delete;
 
-    /**
-	 * @brief Move assignment of the other tree to this tree.
-	 * @copydetails #tree_base(tree_base&&)
-	 * @return this tree reference
-	 */
-    tree_base& operator=(tree_base&& other) {
-        _size       = other._size;
-        other._size = 0;
-        _root       = std::move(other._root);
-        return *this;
+    void nullify() {
+        _root = nullptr;
+        _size = 0;
     }
 
-public:
     ~tree_base() = default;
 
+public:
     /**
 	 * @brief Checks whether the container is empty.
 	 * @details If a tree is empty then:
@@ -108,16 +84,6 @@ public:
 	 */
     bool empty() const {
         return _root == nullptr;
-    }
-
-    /**
-	 * @brief Removes all elements from the tree.
-	 * @details Invalidates any references, pointers, or iterators referring to contained elements. Any past-the-last
-	 * element iterator ({@link tree#end() end()}) remains valid.
-	 */
-    void clear() {
-        _root = nullptr;
-        _size = 0;
     }
 
     /**
@@ -144,15 +110,17 @@ public:
 	 * @param other the tree to compare with
 	 * @return true if the trees are lexicographically equal
 	 */
-    bool operator==(const tree_base& other) {
+    bool operator==(const tree_base& other) const {
+        // 1. Test if different size
         if (this->_size != other._size) {
             return false;
         }
-        if (this->_root) {
-            // We are sure that also the other has a _root as we checked _size
-            return *this->_root == *other._root;
+        // 2. Test if one between this or other has a root that is set while the other doesn't.
+        if ((this->_root == nullptr) != (other._root == nullptr)) {
+            return false;
         }
-        return true;
+        // At the end is either null (both) or same as the other.
+        return this->_root == nullptr || *this->_root == *other._root;
     }
 
     /**
@@ -160,7 +128,7 @@ public:
 	 * @param other the tree to compare with
 	 * @return true if the trees are <b>not</b> lexicographically equal
 	 */
-    bool operator!=(const tree_base& other) {
+    bool operator!=(const tree_base& other) const {
         return !(*this == other);
     }
 
@@ -172,10 +140,11 @@ public:
 	 * @param other the tree to swap with
 	 */
     void swap(tree_base<T>& other) {
+        // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
         using namespace std;
         swap(_root, other._root);
         swap(_size, other._size);
     }
 };
 
-} /* namespace ds */
+} // namespace ds

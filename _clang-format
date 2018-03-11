@@ -1,11 +1,25 @@
 BasedOnStyle: WebKit
-BreakBeforeBraces: Custom
-BraceWrapping:
-	AfterFunction: false
-BreakConstructorInitializers: AfterColon
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: true
 AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+BraceWrapping:
+  AfterFunction: false
+BreakBeforeBraces: Custom
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 8
 Cpp11BracedListStyle: true
+FixNamespaceComments: true
+#IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<'
+    Priority: 1
+  - Regex: '^\"'
+    Priority: 2
+PenaltyBreakComment: 1
+ReflowComments: true
 SortUsingDeclarations: true
+Standard: Cpp11

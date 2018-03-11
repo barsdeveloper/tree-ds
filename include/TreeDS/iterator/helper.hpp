@@ -6,12 +6,12 @@
 namespace ds {
 
 template <typename T>
-class node;
+class binary_node;
 
 template <typename T>
-const node<T>* cross_bridge_right(const node<T>& n) {
-    const node<T>* prev = &n;
-    const node<T>* next = n.parent();
+const binary_node<T>* cross_bridge_right(const binary_node<T>& n) {
+    const binary_node<T>* prev = &n;
+    const binary_node<T>* next = n.parent();
     while (next) {
         if (prev != next->last_child()) {
             return next->right_child(); // found
@@ -23,9 +23,9 @@ const node<T>* cross_bridge_right(const node<T>& n) {
 }
 
 template <typename T>
-const node<T>* cross_bridge_left(const node<T>& n) {
-    const node<T>* prev = &n;
-    const node<T>* next = n.parent();
+const binary_node<T>* cross_bridge_left(const binary_node<T>& n) {
+    const binary_node<T>* prev = &n;
+    const binary_node<T>* next = n.parent();
     while (next) {
         if (prev != next->first_child()) {
             return next->left_child(); // found
@@ -37,18 +37,17 @@ const node<T>* cross_bridge_left(const node<T>& n) {
 }
 
 /**
- * This function can be used in iterators to keep calling a specific lambda
- * {@link Callable}. The passed type must be convertible to a function that
- * take a reference to constant node and returns a pointer to constant node.
- * The best is to pass a lambda so that it can be inlined.
+ * This function can be used in iterators to keep calling a specific lambda {@link Callable}. The passed type must be
+ * convertible to a function that take a reference to constant node and returns a pointer to constant node. The best is
+ * to pass a lambda so that it can be inlined.
  */
 template <typename T, typename Callable>
-const node<T>* descent(const node<T>& n, Callable call) {
+const binary_node<T>* descent(const binary_node<T>& n, Callable call) {
     static_assert(
         std::is_convertible<
-            Callable, std::function<const node<T>*(const node<T>&)>>::value,
-        "The Callable argument must be of a type that can be called with a"
-        "constant node reference and returns a pointer to constant node.");
+            Callable, std::function<const binary_node<T>*(const binary_node<T>&)>>::value,
+        "The Callable argument must be of a type that can be called with a constant node reference and returns a pointer"
+        " to constant node.");
     auto temp   = &n;
     auto result = temp;
     do {
@@ -58,4 +57,4 @@ const node<T>* descent(const node<T>& n, Callable call) {
     return result;
 }
 
-} /* namespace ds */
+} // namespace ds
