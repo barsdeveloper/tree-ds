@@ -28,6 +28,7 @@ private slots:
 
         // construct an element
         t.emplace(t.begin(), 67, 93);
+        QCOMPARE(t, n(Foo(67, 93)));
 
         // the tree has 1 element
         QCOMPARE(t.size(), 1);

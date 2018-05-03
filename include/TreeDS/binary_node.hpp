@@ -1,9 +1,10 @@
 #pragma once
 
+#include <TreeDS/temporary_node.hpp>
+#include <TreeDS/utility.hpp>
 #include <cassert> // assert
 #include <memory>  // std::unique_ptr, std::move()
 #include <variant>
-#include "temporary_node.hpp"
 
 namespace ds {
 
@@ -33,7 +34,7 @@ public:
     }
 
     // Value copy constructor
-    binary_node(const T& value) :
+    explicit binary_node(const T& value) :
             _value(value),
             _parent(nullptr),
             _left(nullptr),
@@ -45,7 +46,7 @@ public:
         typename AllocateFn,
         typename = std::enable_if_t<
             std::is_convertible_v<ConvertibleT, T>>>
-    binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
+    explicit binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
             _value(static_cast<T>(other._value)),
             _parent(nullptr),
             _left(other._left ? attach(allocate(*other._left, allocate).release()) : nullptr),
@@ -56,9 +57,8 @@ public:
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
-        typename = std::enable_if_t<
-            std::is_convertible_v<ConvertibleT, T>>>
-    binary_node(const temporary_node<ConvertibleT>& other, AllocateFn allocate) :
+        CHECK_CONVERTIBLE_T>
+    explicit binary_node(const temporary_node<ConvertibleT>& other, AllocateFn allocate) :
             _value(std::move(other.get_value())),
             _parent(nullptr),
             _left(nullptr),
@@ -172,30 +172,48 @@ public:
 
     long hash_code() const;
 
-    bool operator==(const binary_node& other) {
-        // 1. Test if one between this or other has a left or right that is set while the other doesn't.
-        if (
-            (this->_left == nullptr) != (other._left == nullptr)
-            || (this->_right == nullptr) != (other._right == nullptr)) {
+    template <
+        typename ConvertibleT = T,
+        CHECK_CONVERTIBLE_T>
+    bool operator==(const binary_node<ConvertibleT>& other) const {
+        // Trivial case exclusion (for performance reason).
+        if ((_left == nullptr) != (other._left == nullptr)
+            || (_right == nullptr) != (other._right == nullptr)) {
             return false;
         }
-        // 2. Test value for inequality.
+        // Test value for inequality.
         if (this->_value != other._value) {
             return false;
         }
-        // 3. Test children for inequality.
+        // Deep comparison (at this point both are either null or something, only on test before access is enough).
         if (this->_left && *this->_left != *other._left) {
             return false;
         }
+        // Deep comparison (at this point both are either null or something, only on test before access is enough).
         if (this->_right && *this->_right != *other._right) {
             return false;
         }
-        // All the reasons to return false were discarded, then it's true.
+        // All the possible false cases were tested, then it's true.
         return true;
     }
 
-    bool operator!=(const binary_node& other) {
-        return !(this->operator==(other));
+    template <
+        typename ConvertibleT = T,
+        CHECK_CONVERTIBLE_T>
+    bool operator!=(const binary_node<ConvertibleT>& other) const {
+        return !(*this == other);
+    }
+
+    template <
+        typename ConvertibleT = T,
+        CHECK_CONVERTIBLE_T>
+    bool operator==(const temporary_node<ConvertibleT>& other) const {
+        // Too large tree
+        if (other.children_number() > 2) {
+            return false;
+        }
+        // All the possible false cases were tested, then it's true.
+        return true;
     }
 
     /*   ---   Tree construction   ---   */
@@ -211,6 +229,6 @@ public:
             _parent = nullptr;
         }
     }
-}; // namespace ds
+};
 
 } // namespace ds

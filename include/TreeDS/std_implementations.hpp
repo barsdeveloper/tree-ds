@@ -2,13 +2,8 @@
 
 #include <memory>
 
-#include <TreeDS/tree_base.hpp>
+#include <TreeDS/tree.hpp>
 
 namespace std {
-
-template <typename T>
-void swap(ds::tree_base<T>& a, ds::tree_base<T>& b) {
-    a.swap(b);
-}
 
 } // namespace std

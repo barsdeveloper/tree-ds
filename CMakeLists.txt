@@ -21,12 +21,31 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     add_test(${TEST_NAME} ${TEST_NAME})
 endforeach(TEST_SOURCE ${TEST_SOURCES})
 
-add_custom_target(
-    SonarQube
-    # coverage generation
-    COMMAND kcov --include-path=${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/coverage ${CMAKE_BINARY_DIR}/tests
-    # sonar scan
-    COMMAND sonar-scanner
-    DEPENDS tests
+add_custom_target(SonarQube)
+
+foreach(TEST_SOURCE ${TEST_SOURCES})
+    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+    add_custom_command(
+        TARGET SonarQube
+        PRE_BUILD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Collecting coverage data for \"${TEST_NAME}\"."
+        COMMAND kcov --collect-only --include-path=${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/coverage ${CMAKE_BINARY_DIR}/${TEST_NAME}
+    )
+endforeach(TEST_SOURCE ${TEST_SOURCES})
+
+add_custom_command(
+    TARGET SonarQube
+    PRE_BUILD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Reporting coverage data to \"${CMAKE_BINARY_DIR}/${coverage}\""
+    COMMAND kcov --report-only ${CMAKE_BINARY_DIR}/coverage
+)
+
+add_custom_command(
+    TARGET SonarQube
+    PRE_BUILD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Calling \"sonar-scanner\""
+    COMMAND sonar-scanner
 )

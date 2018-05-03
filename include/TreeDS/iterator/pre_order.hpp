@@ -11,7 +11,6 @@ class pre_order final {
 
 public:
     constexpr pre_order() = default;
-    ~pre_order()          = default;
 
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& node) const {

@@ -6,26 +6,34 @@
 
 namespace ds {
 
-template <typename>
-class tree_base;
 template <typename, typename, typename>
 class tree;
-template <typename>
-class binary_node;
 
-template <typename T, typename Algorithm, bool Constant = false>
-class tree_iterator : public std::iterator<std::bidirectional_iterator_tag, T> {
+template <typename Tree, typename Algorithm, bool Constant = false>
+class tree_iterator {
 
-    // const and non const are each other friends
-    // friend class tree_iterator<T, Algorithm, !Constant>;
     template <typename, typename, typename>
     friend class tree;
 
 public:
-    using value_type     = typename std::conditional<Constant, const T, T>::type;
-    using node_type      = typename std::conditional<Constant, const binary_node<T>, binary_node<T>>::type;
-    using tree_type      = typename std::conditional<Constant, const tree_base<T>, tree_base<T>>::type;
+    using tree_type = std::conditional_t<
+        Constant,
+        const Tree,
+        Tree>;
+    using node_type = std::conditional_t<
+        Constant,
+        const typename tree_type::node_type,
+        typename tree_type::node_type>;
     using algorithm_type = const Algorithm;
+    // Iterators mandatory type declarations
+    using value_type = std::conditional_t<
+        Constant,
+        const typename tree_type::value_type,
+        typename tree_type::value_type>;
+    using difference_type   = std::ptrdiff_t;
+    using pointer           = value_type*;
+    using reference         = value_type&;
+    using iterator_category = std::bidirectional_iterator_tag;
 
 protected:
     algorithm_type _algorithm;
@@ -38,14 +46,30 @@ protected:
     }
 
 public:
+    ~tree_iterator() = default;
+
+    // Iterators must be default constructible
     constexpr tree_iterator() :
             _algorithm(),
             _tree(nullptr),
             _current(nullptr) {
     }
 
+    // Iterators must be CopyConstructible
     tree_iterator(const tree_iterator&) = default;
+    // Iterators must be CopyAssignable
+    tree_iterator& operator=(const tree_iterator&) = default;
 
+    tree_iterator(tree_type& tree, bool go_first = true) :
+            _algorithm(),
+            _tree(&tree),
+            _current(nullptr) {
+        if (go_first) {
+            ++(*this); // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
+        }
+    }
+
+    /*   ---   Enlarged construction/assignment   ---   */
     /*
 	 * This will enable conversion between templates with different a Algorithm but the same T. Also this allows a
 	 * general conversion between any (but having the same parameter T) const_iterator to any iterator.
@@ -55,32 +79,18 @@ public:
 	 * That means that it1 == it2 implies ++it1 == ++it2. Obviously this would be false if we allow implicit conversion
 	 * between iterators with different algorithm types. That's the reason of explicit, to limit compiler magics.
 	 */
-    template <
-        typename OtherAlgorithm,
-        bool OtherConstant,
-        typename = std::enable_if<!Constant || OtherConstant>>
-    explicit tree_iterator(
-        const tree_iterator<T, OtherAlgorithm, OtherConstant>& other) :
+    template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
+    explicit tree_iterator(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) :
             _algorithm(),
             _tree(other.tree),
             _current(other.current) {
     }
 
-    tree_iterator& operator=(const tree_iterator& other) {
+    template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
+    tree_iterator& operator=(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) {
         _tree    = other._tree;
         _current = other._current;
         return *this;
-    }
-
-    ~tree_iterator() = default;
-
-    tree_iterator(tree_type& tree, bool go_first = true) :
-            _algorithm(),
-            _tree(&tree),
-            _current(nullptr) {
-        if (go_first) {
-            ++(*this);
-        }
     }
 
     node_type* get_node() const {
@@ -96,12 +106,12 @@ public:
     }
 
     template <bool OtherConst>
-    bool operator==(const tree_iterator<T, Algorithm, OtherConst>& other) const {
+    bool operator==(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
         return _tree == other._tree && _current == other._current;
     }
 
     template <bool OtherConst>
-    bool operator!=(const tree_iterator<T, Algorithm, OtherConst>& other) const {
+    bool operator!=(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
         return !(*this == other);
     }
 

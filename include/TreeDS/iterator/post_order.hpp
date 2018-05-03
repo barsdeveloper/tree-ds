@@ -10,7 +10,6 @@ class binary_node;
 class post_order final {
 public:
     constexpr post_order() = default;
-    ~post_order()          = default;
 
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& n) const {
