@@ -175,7 +175,7 @@ public:
         typename ConvertibleT,
         typename OtherAlg,
         typename OtherAlloc,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit tree(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) :
             _root(
                 other._root
@@ -193,7 +193,7 @@ public:
         typename ConvertibleT,
         typename OtherAlg,
         typename OtherAlloc,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(tree<ConvertibleT, OtherAlg, OtherAlloc>&& other) :
             _root(std::move(other._root)),
             _size(other._size) {
@@ -204,7 +204,9 @@ public:
      * {@link node_type} will be allocated for each node in the structure passed. The allocation will use the allocator.
      * @param root the root of the newly created tree 
      */
-    template <typename ConvertibleT, CHECK_CONVERTIBLE_T>
+    template <
+        typename ConvertibleT,
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(temporary_node<ConvertibleT>&& root) :
             _root(
                 std::move(
@@ -458,7 +460,7 @@ public:
         typename ConvertibleT = T,
         typename OtherAlg,
         typename OtherAlloc,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const tree<T, OtherAlg, OtherAlloc>& other) const {
         // 1. Test if different size
         if (this->_size != other._size) {
@@ -476,12 +478,12 @@ public:
         typename ConvertibleT = T,
         typename OtherAlg,
         typename OtherAlloc,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator!=(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) const {
         return !(*this == other);
     }
 
-    template <typename ConvertibleT, CHECK_CONVERTIBLE_T>
+    template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const temporary_node<ConvertibleT>& other) const {
         // Test if different size (trivial case for performance)
         if (this->_size != other.get_size()) {
@@ -491,7 +493,7 @@ public:
         return _root && *_root == other;
     }
 
-    template <typename ConvertibleT, CHECK_CONVERTIBLE_T>
+    template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator!=(const temporary_node<ConvertibleT>& other) const {
         return !(*this == other);
     }

@@ -4,6 +4,7 @@
 #include <TreeDS/utility.hpp>
 #include <cassert> // assert
 #include <memory>  // std::unique_ptr, std::move()
+#include <type_traits>
 #include <variant>
 
 namespace ds {
@@ -25,7 +26,7 @@ protected:
 
 public:
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T hold into this node.
-    template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
+    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
     explicit binary_node(Args&&... args) :
             _value(std::forward<Args>(args)...),
             _parent(nullptr),
@@ -44,8 +45,7 @@ public:
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
-        typename = std::enable_if_t<
-            std::is_convertible_v<ConvertibleT, T>>>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
             _value(static_cast<T>(other._value)),
             _parent(nullptr),
@@ -57,7 +57,7 @@ public:
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(const temporary_node<ConvertibleT>& other, AllocateFn allocate) :
             _value(std::move(other.get_value())),
             _parent(nullptr),
@@ -174,7 +174,7 @@ public:
 
     template <
         typename ConvertibleT = T,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const binary_node<ConvertibleT>& other) const {
         // Trivial case exclusion (for performance reason).
         if ((_left == nullptr) != (other._left == nullptr)
@@ -199,14 +199,14 @@ public:
 
     template <
         typename ConvertibleT = T,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator!=(const binary_node<ConvertibleT>& other) const {
         return !(*this == other);
     }
 
     template <
         typename ConvertibleT = T,
-        CHECK_CONVERTIBLE_T>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const temporary_node<ConvertibleT>& other) const {
         // Too large tree
         if (other.children_number() > 2) {
