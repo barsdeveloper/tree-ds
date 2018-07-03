@@ -5,7 +5,6 @@
 #include <TreeDS/iterator/post_order.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
 #include <TreeDS/std_implementations.hpp>
-#include <TreeDS/temporary_node.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/utility.hpp>
 #include <functional>  // std::bind(), std::mem_fun()
@@ -15,6 +14,8 @@
 #include <tuple>       // make_from_tuple
 #include <type_traits> // std::enable_if
 #include <utility>     // std::move(), std::forward()
+
+#include "temp_node.hpp"
 
 namespace ds {
 
@@ -207,13 +208,13 @@ public:
     template <
         typename ConvertibleT,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    tree(temporary_node<ConvertibleT>&& root) :
+    tree(temp_node<ConvertibleT>&& root) :
             _root(
                 std::move(
                     get_allocator()(
                         root,
                         allocate_node(allocator)))),
-            _size(root.get_size()) {
+            _size(root.get_subtree_size()) {
     }
 
     tree& operator=(const tree& other) {
@@ -419,7 +420,7 @@ public:
      * @return an iterator that points to the inserted element
      */
     template <typename It>
-    iterator<typename It::algorithm_type> insert(It position, temporary_node<T>&& node) {
+    iterator<typename It::algorithm_type> insert(It position, temp_node<T>&& node) {
         this->_size += node.get_size() - 666; // TODO perform calculation
         return insert(position, std::make_unique<node_type>(node));
     }
@@ -484,9 +485,9 @@ public:
     }
 
     template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator==(const temporary_node<ConvertibleT>& other) const {
+    bool operator==(const temp_node<ConvertibleT>& other) const {
         // Test if different size (trivial case for performance)
-        if (this->_size != other.get_size()) {
+        if (this->_size != other.get_subtree_size()) {
             return false;
         }
         // Deep test for equality
@@ -494,7 +495,7 @@ public:
     }
 
     template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator!=(const temporary_node<ConvertibleT>& other) const {
+    bool operator!=(const temp_node<ConvertibleT>& other) const {
         return !(*this == other);
     }
 

@@ -1,4 +1,5 @@
 BasedOnStyle: WebKit
+AccessModifierOffset: 0
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: true
 AlignTrailingComments: true

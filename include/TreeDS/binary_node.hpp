@@ -1,16 +1,20 @@
 #pragma once
 
-#include <TreeDS/temporary_node.hpp>
+#include <TreeDS/node.hpp>
+#include <TreeDS/temp_node.hpp>
 #include <TreeDS/utility.hpp>
 #include <cassert> // assert
-#include <memory>  // std::unique_ptr, std::move()
+#include <memory>  // std::unique_ptr
 #include <type_traits>
+#include <utility> // std::move(), std::forward()
 #include <variant>
 
 namespace ds {
 
 template <typename T>
-class binary_node {
+class binary_node : public node<T, binary_node<T>> {
+
+    using node_t = node<T, binary_node<T>>;
 
     template <typename, typename, bool>
     friend class tree_iterator;
@@ -18,37 +22,19 @@ class binary_node {
     template <typename, typename, typename>
     friend class tree;
 
-protected:
-    T _value;
-    binary_node<T>* _parent;
+    protected:
     binary_node<T>* _left;
     binary_node<T>* _right;
 
-public:
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T hold into this node.
-    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
-    explicit binary_node(Args&&... args) :
-            _value(std::forward<Args>(args)...),
-            _parent(nullptr),
-            _left(nullptr),
-            _right(nullptr) {
-    }
-
-    // Value copy constructor
-    explicit binary_node(const T& value) :
-            _value(value),
-            _parent(nullptr),
-            _left(nullptr),
-            _right(nullptr) {
-    }
+    public:
+    using node_t::node;
 
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
-            _value(static_cast<T>(other._value)),
-            _parent(nullptr),
+            node_t(static_cast<T>(other._value)),
             _left(other._left ? attach(allocate(*other._left, allocate).release()) : nullptr),
             _right(other._right ? attach(allocate(*other._right, allocate).release()) : nullptr) {
     }
@@ -58,9 +44,8 @@ public:
         typename ConvertibleT = T,
         typename AllocateFn,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    explicit binary_node(const temporary_node<ConvertibleT>& other, AllocateFn allocate) :
-            _value(std::move(other.get_value())),
-            _parent(nullptr),
+    explicit binary_node(const temp_node<ConvertibleT>& other, AllocateFn allocate) :
+            node_t(std::move(other.get_value())),
             _left(nullptr),
             _right(nullptr) {
         if (!other.has_children()) {
@@ -69,20 +54,20 @@ public:
         assert(other.children_number() <= 2);
         auto it = other.begin();
         {
-            _left = std::holds_alternative<temporary_node<ConvertibleT>>(*it)
+           this->_left = std::holds_alternative<temp_node<ConvertibleT>>(*it)
                 ? attach(
                       allocate(
-                          std::get<temporary_node<ConvertibleT>>(*it),
+                          std::get<temp_node<ConvertibleT>>(*it),
                           allocate)
                           .release())
                 : nullptr;
             ++it;
         }
         if (it != other.end()) {
-            _right = std::holds_alternative<temporary_node<ConvertibleT>>(*it)
+           this->_right = std::holds_alternative<temp_node<ConvertibleT>>(*it)
                 ? attach(
                       allocate(
-                          std::get<temporary_node<ConvertibleT>>(*it),
+                          std::get<temp_node<ConvertibleT>>(*it),
                           allocate)
                           .release())
                 : nullptr;
@@ -93,8 +78,7 @@ public:
 
     // Move constructor
     binary_node(binary_node&& other) :
-            _value(other._value),
-            _parent(other._parent),
+            node_t(other._value),
             _left(other._left),
             _right(other._right) {
         other.move_resources_to(*this);
@@ -102,7 +86,7 @@ public:
 
     ~binary_node() = default;
 
-protected:
+    protected:
     binary_node* attach(binary_node* node) {
         assert(node != nullptr);
         node->_parent = this;
@@ -110,60 +94,48 @@ protected:
     }
 
     void move_resources_to(binary_node& node) {
-        if (_parent) {
-            if (_parent->_left == this) {
-                _parent->_left = &node;
+        if (this->_parent) {
+            if (this->_parent->_left == this) {
+                this->_parent->_left = &node;
             }
-            if (_parent->_right == this) {
-                _parent->_right = &node;
+            if (this->_parent->_right == this) {
+                this->_parent->_right = &node;
             }
         }
-        if (_left) {
-            _left->_parent = &node;
+        if (this->_left) {
+            this->_left->_parent = &node;
         }
-        if (_right) {
-            _right->_parent = &node;
+        if (this->_right) {
+            this->_right->_parent = &node;
         }
-        _parent = nullptr;
-        _left   = nullptr;
-        _right  = nullptr;
+        this->_parent = nullptr;
+        this->_left   = nullptr;
+        this->_right  = nullptr;
     }
 
-public:
-    /*   ---   Getters   ---   */
-    const T value() const {
-        return _value;
-    }
-    T value() {
-        return _value;
-    }
-
-    const binary_node* parent() const {
-        return _parent;
-    }
-
+    public:
     const binary_node* left_child() const {
-        return _left;
+        return this->_left;
     }
 
     const binary_node* right_child() const {
-        return _right;
+        return this->_right;
     }
 
     const binary_node* first_child() const {
-        return _left ? _left : _right;
+        return this->_left ? this->_left : this->_right;
     }
 
     const binary_node* last_child() const {
-        return _right ? _right : _left;
+        return this->_right ? this->_right : this->_left;
     }
 
     bool is_left_child() const {
-        return _parent ? this == _parent->_left : false;
+        return this->_parent ? this == this->_parent->_left : false;
     }
 
     bool is_right_child() const {
-        return _parent ? this == _parent->_right : false;
+        return this->_parent ? this == this->_parent->_right : false;
     }
 
     bool is_unique_child() const {
@@ -177,8 +149,8 @@ public:
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const binary_node<ConvertibleT>& other) const {
         // Trivial case exclusion (for performance reason).
-        if ((_left == nullptr) != (other._left == nullptr)
-            || (_right == nullptr) != (other._right == nullptr)) {
+        if ((this->_left == nullptr) != (other._left == nullptr)
+            || (this->_right == nullptr) != (other._right == nullptr)) {
             return false;
         }
         // Test value for inequality.
@@ -207,7 +179,7 @@ public:
     template <
         typename ConvertibleT = T,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator==(const temporary_node<ConvertibleT>& other) const {
+    bool operator==(const temp_node<ConvertibleT>& other) const {
         // Too large tree
         if (other.children_number() > 2) {
             return false;
@@ -218,15 +190,15 @@ public:
 
     /*   ---   Tree construction   ---   */
     void replace_with(binary_node& node) {
-        if (_parent) {
-            node._parent = _parent;
-            if (this == _parent->_left) {
-                _parent->_left = &node;
+        if (this->_parent) {
+            node._parent = this->_parent;
+            if (this ==this->_parent->_left) {
+                this->_parent->_left = &node;
             }
-            if (this == _parent->_right) {
-                _parent->_right = &node;
+            if (this ==this->_parent->_right) {
+                this->_parent->_right = &node;
             }
-            _parent = nullptr;
+            this->_parent = nullptr;
         }
     }
 };
