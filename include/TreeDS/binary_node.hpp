@@ -23,8 +23,8 @@ class binary_node : public node<T, binary_node<T>> {
     friend class tree;
 
     protected:
-    binary_node<T>* _left;
-    binary_node<T>* _right;
+    binary_node<T>* _left = nullptr;
+    binary_node<T>* _right = nullptr;
 
     public:
     using node_t::node;
