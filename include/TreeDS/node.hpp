@@ -15,8 +15,8 @@ class node {
     public:
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T hold into this node.
     template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
-    explicit node(Args&&... args) :
-            _value(std::forward<Args>(args)...) {
+    explicit node(Args... args) :
+            _value(args...) {
     }
 
     public:

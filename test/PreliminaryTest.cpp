@@ -9,9 +9,9 @@ Q_DECLARE_METATYPE(tree<Foo>);
 
 class PreliminaryTest : public QObject {
 
-    Q_OBJECT;
+    Q_OBJECT
 
-private slots:
+    private slots:
     void objectCreation() {
 
         tree<Foo> t;
@@ -25,6 +25,10 @@ private slots:
         QVERIFY(t.cbegin() == t.cend());
         QVERIFY(t.rbegin() == t.rend());
         QVERIFY(t.crbegin() == t.crend());
+
+        // iterator to const_iterator equality compatibility
+        QVERIFY(t.cbegin() == t.end());
+        QVERIFY(t.crbegin() == t.rend());
 
         // construct an element
         t.emplace(t.begin(), 67, 93);

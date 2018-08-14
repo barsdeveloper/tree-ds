@@ -68,9 +68,9 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Root with a left child")
         // clang-format off
         << tree<string>(
-            n("1")({
+            n("1")(
                 n("2")
-            })
+            )
         )
         // clang-format on
         << 2
@@ -81,10 +81,10 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Root with a right child")
         // clang-format off
         << tree<string>(
-            n("1")({
+            n("1")(
                 n(),
                 n("2")
-            })
+            )
         )
         // clang-format on
         << 2
@@ -95,22 +95,22 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Small tree")
         // clang-format off
         << tree<string>(
-            n("a")({
-                n("b")({
-                    n("d")({
+            n("a")(
+                n("b")(
+                    n("d")(
                         n("h"),
                         n() // This can be omitted but I want to test it
-                    }),
+                    ),
                     n("e")
-                }),
-                n("c")({
-                    n("f")({
+                ),
+                n("c")(
+                    n("f")(
                         n("j"),
                         n("k")
-                    }),
+                    ),
                     n("g")
-                })
-            })
+                )
+            )
         )
         // clang-format on
         << 10
@@ -121,52 +121,52 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Big tree")
         // clang-format off
         << tree<string>(
-            n("a")({
-                n("b")({
-                    n("c")({
-                        n("d")({
-                            n("e")({
+            n("a")(
+                n("b")(
+                    n("c")(
+                        n("d")(
+                            n("e")(
                                 n("f"),
                                 n("g")
-                            }),
-                            n("h")({
+                            ),
+                            n("h")(
                                 n(),
                                 n("o")
-                            })
-                        }),
-                        n("i")({
+                            )
+                        ),
+                        n("i")(
                             n(),
-                            n("n")({
+                            n("n")(
                                 n(),
                                 n("p")
-                            })
-                        })
-                    }),
-                    n("j")({
+                            )
+                        )
+                    ),
+                    n("j")(
                         n(),
-                        n("m")({
+                        n("m")(
                             n(),
-                            n("q")({
+                            n("q")(
                                 n(),
                                 n("t")
-                            })
-                        })
-                    })
-                }),
-                n("k")({
+                            )
+                        )
+                    )
+                ),
+                n("k")(
                     n(),
-                    n("l")({
+                    n("l")(
                         n(),
-                        n("r")({
+                        n("r")(
                             n(),
-                            n("s")({
+                            n("s")(
                                 n(),
                                 n("u")
-                            })
-                        })
-                    })
-                })
-            })
+                            )
+                        )
+                    )
+                )
+            )
         )
         // clang-format on
         << 21
@@ -177,35 +177,35 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("All left child")
         // clang-format off
         << tree<string>(
-            n("1")({
-                n("2")({
-                    n("3")({
-                        n("4")({
-                            n("5")({
-                                n("6")({
-                                    n("7")({
-                                        n("8")({
-                                            n("9")({
-                                                n("10")({
-                                                    n("11")({
-                                                        n("12")({
-                                                            n("13")({
-                                                                n("14")({
+            n("1")(
+                n("2")(
+                    n("3")(
+                        n("4")(
+                            n("5")(
+                                n("6")(
+                                    n("7")(
+                                        n("8")(
+                                            n("9")(
+                                                n("10")(
+                                                    n("11")(
+                                                        n("12")(
+                                                            n("13")(
+                                                                n("14")(
                                                                     n("15")
-                                                                })
-                                                            })
-                                                        })
-                                                    })
-                                                })
-                                            })
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
         )
         // clang-format on
         << 15
@@ -216,49 +216,49 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("All right child")
         // clang-format off
         << tree<string>(
-            n("1")({
+            n("1")(
                 n(),
-                n("2")({
+                n("2")(
                     n(),
-                    n("3")({
+                    n("3")(
                         n(),
-                        n("4")({
+                        n("4")(
                             n(),
-                            n("5")({
+                            n("5")(
                                 n(),
-                                n("6")({
+                                n("6")(
                                     n(),
-                                    n("7")({
+                                    n("7")(
                                         n(),
-                                        n("8")({
+                                        n("8")(
                                             n(),
-                                            n("9")({
+                                            n("9")(
                                                 n(),
-                                                n("10")({
+                                                n("10")(
                                                     n(),
-                                                    n("11")({
+                                                    n("11")(
                                                         n(),
-                                                        n("12")({
+                                                        n("12")(
                                                             n(),
-                                                            n("13")({
+                                                            n("13")(
                                                                 n(),
-                                                                n("14")({
+                                                                n("14")(
                                                                     n(),
                                                                     n("15")
-                                                                })
-                                                            })
-                                                        })
-                                                    })
-                                                })
-                                            })
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
         )
         // clang-format on
         << 15
@@ -269,42 +269,42 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("ZigZag")
         // clang-format off
         << tree<string>(
-            n("1")({
-                n("2")({
+            n("1")(
+                n("2")(
                     n(),
-                    n("3")({
-                        n("4")({
+                    n("3")(
+                        n("4")(
                             n(),
-                            n("5")({
-                                n("6")({
+                            n("5")(
+                                n("6")(
                                     n(),
-                                    n("7")({
-                                        n("8")({
+                                    n("7")(
+                                        n("8")(
                                             n(),
-                                            n("9")({
-                                                n("10")({
+                                            n("9")(
+                                                n("10")(
                                                     n(),
-                                                    n("11")({
-                                                        n("12")({
+                                                    n("11")(
+                                                        n("12")(
                                                             n(),
-                                                            n("13")({
-                                                                n("14")({
+                                                            n("13")(
+                                                                n("14")(
                                                                     n(),
                                                                     n("15")
-                                                                })
-                                                            })
-                                                        })
-                                                    })
-                                                })
-                                            })
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
         )
         // clang-format on
         << 15

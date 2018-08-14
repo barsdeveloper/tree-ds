@@ -52,7 +52,7 @@ const binary_node<T>* descent(const binary_node<T>& n, Callable call) {
     auto result = temp;
     do {
         result = temp;
-        temp   = call(*temp); // called once per iteration, maximum efficiency
+        temp   = call(*temp);
     } while (temp);
     return result;
 }

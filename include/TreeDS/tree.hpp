@@ -5,6 +5,7 @@
 #include <TreeDS/iterator/post_order.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
 #include <TreeDS/std_implementations.hpp>
+#include <TreeDS/temp_node.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/utility.hpp>
 #include <functional>  // std::bind(), std::mem_fun()
@@ -14,8 +15,6 @@
 #include <tuple>       // make_from_tuple
 #include <type_traits> // std::enable_if
 #include <utility>     // std::move(), std::forward()
-
-#include "temp_node.hpp"
 
 namespace ds {
 
@@ -46,7 +45,7 @@ class tree {
 
     friend class binary_node<T>;
 
-public:
+    public:
     /*   ---   Types declarations   ---   */
 
     // General
@@ -123,14 +122,14 @@ public:
         }
     };
 
-protected:
+    protected:
     allocator_type allocator;
     /// @brief Owning pointer to the root node.
     std::unique_ptr<node_type, delete_node> _root;
     /// @brief The number of nodes in the tree.
     size_type _size;
 
-public:
+    public:
     /**
      * Create an empty tree.
      */
@@ -149,7 +148,7 @@ public:
     tree(const tree& other) :
             _root(
                 other._root
-                    ? std::move(get_allocator()(*other._root, allocate_node(allocator)))
+                    ? std::move(get_allocator()(*other._root, get_allocator()))
                     : decltype(_root){}),
             _size(other._size) {
     }
@@ -180,7 +179,7 @@ public:
     explicit tree(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) :
             _root(
                 other._root
-                    ? std::move(get_allocator()(*other._root, allocate_node(*this)))
+                    ? std::move(get_allocator()(*other._root, get_allocator()))
                     : nullptr),
             _size(other._size) {
     }
@@ -203,28 +202,29 @@ public:
     /**
      * Create a tree by copying the nodes structure starting from the {@link temporary_node} passed as argument. A new
      * {@link node_type} will be allocated for each node in the structure passed. The allocation will use the allocator.
-     * @param root the root of the newly created tree 
+     * @param root the root of the newly created tree
      */
     template <
         typename ConvertibleT,
+        typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    tree(temp_node<ConvertibleT>&& root) :
+    tree(temp_node<ConvertibleT, Children...>&& root) :
             _root(
                 std::move(
                     get_allocator()(
                         root,
-                        allocate_node(allocator)))),
+                        get_allocator()))),
             _size(root.get_subtree_size()) {
     }
 
     tree& operator=(const tree& other) {
-        this->_root = std::move(get_allocator()(*other._root, allocate_node(allocator)));
+        this->_root = std::move(get_allocator()(*other._root, get_allocator()));
         this->_size = other._size;
         return *this;
     }
 
     tree& operator=(tree&& other) {
-        this->_root = other._root;
+        this->_root = std::move(other._root);
         this->_size = other._size;
         other.nullify();
         return *this;
@@ -332,7 +332,7 @@ public:
     }
 
     /*   ---   Capacity   ---   */
-public:
+    public:
     /**
      * @brief Checks whether the container is empty.
      * @details If a tree is empty then:
@@ -367,7 +367,7 @@ public:
     }
 
     /*   ---   Modifiers   ---   */
-private:
+    private:
     void nullify() {
         _root = nullptr;
         _size = 0;
@@ -387,7 +387,7 @@ private:
         return iterator<typename It::algorithm_type>(this, node.get());
     }
 
-public:
+    public:
     /**
      * @brief Removes all elements from the tree.
      * @details Invalidates any references, pointers, or iterators referring to contained elements. Any past-the-last
@@ -419,8 +419,8 @@ public:
      * @param node an r-value reference to a temporary_node
      * @return an iterator that points to the inserted element
      */
-    template <typename It>
-    iterator<typename It::algorithm_type> insert(It position, temp_node<T>&& node) {
+    template <typename It, typename... Children>
+    iterator<typename It::algorithm_type> insert(It position, temp_node<T, Children...>&& node) {
         this->_size += node.get_size() - 666; // TODO perform calculation
         return insert(position, std::make_unique<node_type>(node));
     }
@@ -484,8 +484,8 @@ public:
         return !(*this == other);
     }
 
-    template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator==(const temp_node<ConvertibleT>& other) const {
+    template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>
+    bool operator==(const temp_node<ConvertibleT, Children...>& other) const {
         // Test if different size (trivial case for performance)
         if (this->_size != other.get_subtree_size()) {
             return false;
@@ -494,12 +494,12 @@ public:
         return _root && *_root == other;
     }
 
-    template <typename ConvertibleT, CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator!=(const temp_node<ConvertibleT>& other) const {
+    template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>
+    bool operator!=(const temp_node<ConvertibleT, Children...>& other) const {
         return !(*this == other);
     }
 
-public:
+    public:
     /*   ---   Memory management functors   ---   */
     allocate_node get_allocator() {
         return {allocator};

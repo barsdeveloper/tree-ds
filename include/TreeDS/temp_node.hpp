@@ -1,123 +1,110 @@
 #pragma once
 
-#include <initializer_list>
-#include <optional>
-#include <utility>
-#include <variant>
+#include <cstddef> // std::size_t
+#include <tuple>
 
 namespace ds {
 
-template <typename>
+template <typename, typename...>
 class temp_node;
 
 template <typename T>
 temp_node<T> n(T);
 
-template <typename T>
+template <typename T, typename... Children>
 class temp_node {
 
-    friend temp_node n<T>(T);
+    friend temp_node<T> n<T>(T);
+    template <typename, typename...>
+    friend class temp_node;
 
     public:
-    using alternative_t = std::variant<temp_node<T>, std::monostate>;
-    using children_t    = std::initializer_list<alternative_t>;
+    using children_t = const std::tuple<Children...>;
+    using value_t    = T;
 
-    private:
-    T value;
-    size_t subtree_size;  // Number of nodes of the tree considering this one as root.
-    size_t subtree_arity; // Arity of the tree having this node as root.
+    public:
+    value_t value;
+    std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
+    std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
     children_t children;
 
     private:
-    // This is private because the object must be constructed using function n().
-    template <
-        typename... Args,
-        typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
-    temp_node(Args... args) :
-            value(args...),
-            subtree_size(1),
-            subtree_arity(0),
-            children() {
+    // Constructors are private because the instances must be constructed using function n().
+    temp_node(const T& value, Children&&... children) :
+            value(value),
+            children(std::forward<Children>(children)...) {
+        std::size_t size  = 1;
+        std::size_t arity = 0;
+        auto call         = [&](auto& node) {
+            if constexpr (
+                std::is_same_v<
+                    typename std::remove_reference_t<decltype(node)>::value_t,
+                    std::nullptr_t>) {
+                return;
+            }
+            size += node.get_subtree_size();
+            arity = std::max(arity, node.get_subtree_arity());
+        };
+        (call(children), ...);
+        this->subtree_arity = arity;
+        this->subtree_size  = size;
     }
 
     public:
     ~temp_node() = default;
 
-    temp_node(temp_node&& other) :
-            value(std::move(other.value)),
+    temp_node(const temp_node& other) :
+            value(other.value),
             subtree_size(other.subtree_size),
             subtree_arity(other.subtree_arity),
             children(other.children) {
-        other.subtree_size = 0;
-    }
-
-    constexpr auto begin() const {
-        return this->children.begin();
-    }
-
-    constexpr auto end() const {
-        return this->children.end();
     }
 
     constexpr bool has_children() const {
         return children_number() > 0;
     }
 
-    constexpr unsigned children_number() const {
-        int result = 0;
-        for (const auto& child : this->children) {
-            if (std::holds_alternative<temp_node, temp_node, std::monostate>(child)) {
-                ++result;
-            }
-        }
-        return result;
-    }
-
-    const temp_node* get_child(unsigned index) const {
-        if (index >= children.size()) {
-            return nullptr;
-        }
-        auto it = children.begin();
-        std::advance(it, index);
-        return std::get_if<temp_node>(it);
+    constexpr std::size_t children_number() const {
+        return std::tuple_size_v<children_t>;
     }
 
     constexpr T get_value() const {
         return this->value;
     }
 
-    constexpr size_t get_subtree_size() const {
+    constexpr std::size_t get_subtree_size() const {
         return this->subtree_size;
     }
 
-    constexpr size_t get_subtree_arity() const {
+    constexpr std::size_t get_subtree_arity() const {
         return this->subtree_arity;
     }
 
-    constexpr temp_node&& operator()(children_t nodes) {
-        this->children = nodes;
-        for (const auto& child : this->children) {
-            if (std::holds_alternative<temp_node>(child)) {
-                this->subtree_size += std::get<temp_node>(child).subtree_size;
-            }
-        }
-        return std::move(*this);
+    template <typename... Nodes>
+    constexpr temp_node<T, Nodes...> operator()(Nodes&&... nodes) const {
+        return std::move(temp_node<T, Nodes...>(this->value, std::forward<Nodes>(nodes)...));
     }
 };
+
+template <std::size_t index, typename T, typename... Children>
+std::tuple_element_t<index, std::tuple<Children...>>
+get_child(const temp_node<T, Children...>& node) {
+    return std::get<index>(node.children);
+}
 
 // Functions to generate temporary_node objects.
 template <typename T>
 temp_node<T> n(T value) {
-    return temp_node<T>(value);
+    return std::move(temp_node<T>(value));
 }
 
 template <typename... Args>
 temp_node<std::tuple<Args...>> n(Args... args) {
-    return n(std::make_tuple(args...));
+    return std::move(n(std::make_tuple(args...)));
 }
 
-std::monostate n() {
-    return std::monostate{};
+temp_node<std::nullptr_t> n() {
+    return std::move(n(nullptr));
 }
 
 } // namespace ds

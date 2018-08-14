@@ -15,7 +15,10 @@ class tree_iterator {
     template <typename, typename, typename>
     friend class tree;
 
-public:
+    template <typename, typename, bool>
+    friend class tree_iterator;
+
+    public:
     using tree_type = std::conditional_t<
         Constant,
         const Tree,
@@ -35,7 +38,7 @@ public:
     using reference         = value_type&;
     using iterator_category = std::bidirectional_iterator_tag;
 
-protected:
+    protected:
     algorithm_type _algorithm;
     tree_type* _tree;    // nullptr => no container associated (default iterator)
     node_type* _current; // nullptr => end()
@@ -45,7 +48,7 @@ protected:
             _current(current) {
     }
 
-public:
+    public:
     ~tree_iterator() = default;
 
     // Iterators must be default constructible
@@ -121,11 +124,11 @@ public:
             _current = const_cast<node_type*>(_algorithm.increment(*_current));
         } else if (_tree && _tree->_root) {
             /*
-			 * If iterator is at the end():
-			 *     normal iterator  => incremented from end() => go to its first element (rewind)
-			 *     reverse iterator	=> decremented from end() => go to its last element (before end())
-			 * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
-			 */
+             * If iterator is at the end():
+             *     normal iterator  => incremented from end() => go to its first element (rewind)
+             *     reverse iterator	=> decremented from end() => go to its last element (before end())
+             * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
+             */
             // const_cast needed in case node_type is non const
             _current = const_cast<node_type*>(_algorithm.go_first(*_tree->_root));
         }

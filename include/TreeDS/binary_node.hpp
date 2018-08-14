@@ -7,14 +7,11 @@
 #include <memory>  // std::unique_ptr
 #include <type_traits>
 #include <utility> // std::move(), std::forward()
-#include <variant>
 
 namespace ds {
 
 template <typename T>
 class binary_node : public node<T, binary_node<T>> {
-
-    using node_t = node<T, binary_node<T>>;
 
     template <typename, typename, bool>
     friend class tree_iterator;
@@ -23,18 +20,18 @@ class binary_node : public node<T, binary_node<T>> {
     friend class tree;
 
     protected:
-    binary_node<T>* _left = nullptr;
+    binary_node<T>* _left  = nullptr;
     binary_node<T>* _right = nullptr;
 
     public:
-    using node_t::node;
+    using node<T, binary_node<T>>::node;
 
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
-            node_t(static_cast<T>(other._value)),
+            node<T, binary_node<T>>(static_cast<T>(other._value)),
             _left(other._left ? attach(allocate(*other._left, allocate).release()) : nullptr),
             _right(other._right ? attach(allocate(*other._right, allocate).release()) : nullptr) {
     }
@@ -42,43 +39,27 @@ class binary_node : public node<T, binary_node<T>> {
     // Construct from temporary_node using allocator
     template <
         typename ConvertibleT = T,
+        typename... Nodes,
         typename AllocateFn,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    explicit binary_node(const temp_node<ConvertibleT>& other, AllocateFn allocate) :
-            node_t(std::move(other.get_value())),
-            _left(nullptr),
-            _right(nullptr) {
-        if (!other.has_children()) {
-            return;
-        }
+    explicit binary_node(const temp_node<ConvertibleT, Nodes...>& other, AllocateFn allocate) :
+            node<T, binary_node<T>>(other.get_value()) {
         assert(other.children_number() <= 2);
-        auto it = other.begin();
-        {
-           this->_left = std::holds_alternative<temp_node<ConvertibleT>>(*it)
-                ? attach(
-                      allocate(
-                          std::get<temp_node<ConvertibleT>>(*it),
-                          allocate)
-                          .release())
-                : nullptr;
-            ++it;
+        if constexpr (sizeof...(Nodes) >= 1) {
+            if constexpr (!std::is_same_v<decltype(get_child<0>(other).get_value()), std::nullptr_t>) {
+                this->_left = attach(allocate(get_child<0>(other), allocate).release());
+            }
         }
-        if (it != other.end()) {
-           this->_right = std::holds_alternative<temp_node<ConvertibleT>>(*it)
-                ? attach(
-                      allocate(
-                          std::get<temp_node<ConvertibleT>>(*it),
-                          allocate)
-                          .release())
-                : nullptr;
-            ++it;
+        if constexpr (sizeof...(Nodes) >= 2) {
+            if constexpr (!std::is_same_v<decltype(get_child<1>(other).get_value()), std::nullptr_t>) {
+                this->_right = attach(allocate(get_child<1>(other), allocate).release());
+            }
         }
-        assert(it == other.end());
     }
 
     // Move constructor
     binary_node(binary_node&& other) :
-            node_t(other._value),
+            node<T, binary_node<T>>(other._value),
             _left(other._left),
             _right(other._right) {
         other.move_resources_to(*this);
@@ -178,8 +159,9 @@ class binary_node : public node<T, binary_node<T>> {
 
     template <
         typename ConvertibleT = T,
+        typename... Nodes,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator==(const temp_node<ConvertibleT>& other) const {
+    bool operator==(const temp_node<ConvertibleT, Nodes...>& other) const {
         // Too large tree
         if (other.children_number() > 2) {
             return false;
@@ -192,10 +174,10 @@ class binary_node : public node<T, binary_node<T>> {
     void replace_with(binary_node& node) {
         if (this->_parent) {
             node._parent = this->_parent;
-            if (this ==this->_parent->_left) {
+            if (this == this->_parent->_left) {
                 this->_parent->_left = &node;
             }
-            if (this ==this->_parent->_right) {
+            if (this == this->_parent->_right) {
                 this->_parent->_right = &node;
             }
             this->_parent = nullptr;
