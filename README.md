@@ -1,3 +1,5 @@
+![Readability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=reliability_rating) ![Security](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=security_rating) ![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=sqale_rating) ![Coverage](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=coverage)
+
 # TreeDS - work in progress
 TreeDS (tree data structure) is an STL-like tree container type for C++17. It is a header only library that provides two types of trees: tree and binary_tree.
 
@@ -30,6 +32,7 @@ using namespace std;
 int main() {
     ds::tree<string> t; // empty tree created
     cout << t.size() << endl; // 0
+}
 ```
       
 you can add elements to the tree in the usual way
