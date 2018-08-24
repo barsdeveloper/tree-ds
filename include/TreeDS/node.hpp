@@ -9,28 +9,28 @@ template <typename T, typename Node>
 class node {
 
     protected:
-    T _value;
-    Node* _parent = nullptr;
+    T value;
+    Node* parent = nullptr;
 
     public:
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T hold into this node.
     template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
     explicit node(Args... args) :
-            _value(args...) {
+            value(args...) {
     }
 
     public:
     /*   ---   Getters   ---   */
-    const T value() const {
-        return _value;
+    const T get_value() const {
+        return value;
     }
 
-    T value() {
-        return _value;
+    T get_value() {
+        return value;
     }
 
-    const Node* parent() const {
-        return _parent;
+    const Node* get_parent() const {
+        return parent;
     }
 };
 

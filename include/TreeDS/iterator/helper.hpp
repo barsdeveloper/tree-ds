@@ -11,13 +11,13 @@ class binary_node;
 template <typename T>
 const binary_node<T>* cross_bridge_right(const binary_node<T>& n) {
     const binary_node<T>* prev = &n;
-    const binary_node<T>* next = n.parent();
+    const binary_node<T>* next = n.get_parent();
     while (next) {
         if (prev != next->last_child()) {
-            return next->right_child(); // found
+            return next->get_right(); // found
         }
         prev = next;
-        next = next->parent();
+        next = next->get_parent();
     }
     return next;
 }

@@ -39,13 +39,13 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    algorithm_type _algorithm;
-    tree_type* _tree;    // nullptr => no container associated (default iterator)
-    node_type* _current; // nullptr => end()
+    algorithm_type algorithm;
+    tree_type* iterated_tree;    // nullptr => no container associated (default iterator)
+    node_type* current_node; // nullptr => end()
 
     tree_iterator(tree_type* tree, node_type* current = nullptr) :
-            _tree(tree),
-            _current(current) {
+            iterated_tree(tree),
+            current_node(current) {
     }
 
     public:
@@ -53,9 +53,9 @@ class tree_iterator {
 
     // Iterators must be default constructible
     constexpr tree_iterator() :
-            _algorithm(),
-            _tree(nullptr),
-            _current(nullptr) {
+            algorithm(),
+            iterated_tree(nullptr),
+            current_node(nullptr) {
     }
 
     // Iterators must be CopyConstructible
@@ -64,9 +64,9 @@ class tree_iterator {
     tree_iterator& operator=(const tree_iterator&) = default;
 
     tree_iterator(tree_type& tree, bool go_first = true) :
-            _algorithm(),
-            _tree(&tree),
-            _current(nullptr) {
+            algorithm(),
+            iterated_tree(&tree),
+            current_node(nullptr) {
         if (go_first) {
             ++(*this); // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
         }
@@ -84,33 +84,33 @@ class tree_iterator {
 	 */
     template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
     explicit tree_iterator(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) :
-            _algorithm(),
-            _tree(other.tree),
-            _current(other.current) {
+            algorithm(),
+            iterated_tree(other.tree),
+            current_node(other.current) {
     }
 
     template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) {
-        _tree    = other._tree;
-        _current = other._current;
+        iterated_tree    = other.iterated_tree;
+        current_node = other.current_node;
         return *this;
     }
 
     node_type* get_node() const {
-        return _current;
+        return current_node;
     }
 
     value_type& operator*() const {
-        return _current->_value;
+        return current_node->value;
     }
 
     value_type* operator->() const {
-        return &(_current->_value);
+        return &(current_node->value);
     }
 
     template <bool OtherConst>
     bool operator==(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
-        return _tree == other._tree && _current == other._current;
+        return iterated_tree == other.iterated_tree && current_node == other.current_node;
     }
 
     template <bool OtherConst>
@@ -119,10 +119,10 @@ class tree_iterator {
     }
 
     tree_iterator& operator++() {
-        if (_current) {
+        if (current_node) {
             // const_cast needed in case node_type is non const
-            _current = const_cast<node_type*>(_algorithm.increment(*_current));
-        } else if (_tree && _tree->_root) {
+            current_node = const_cast<node_type*>(algorithm.increment(*current_node));
+        } else if (iterated_tree && iterated_tree->_root) {
             /*
              * If iterator is at the end():
              *     normal iterator  => incremented from end() => go to its first element (rewind)
@@ -130,7 +130,7 @@ class tree_iterator {
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
             // const_cast needed in case node_type is non const
-            _current = const_cast<node_type*>(_algorithm.go_first(*_tree->_root));
+            current_node = const_cast<node_type*>(algorithm.go_first(*iterated_tree->_root));
         }
         return *this;
     }
@@ -142,10 +142,10 @@ class tree_iterator {
     }
 
     tree_iterator& operator--() {
-        if (_current) {
+        if (current_node) {
             // const_cast needed in case node_type is non constant
-            _current = const_cast<node_type*>(_algorithm.decrement(*_current));
-        } else if (_tree && _tree->_root) {
+            current_node = const_cast<node_type*>(algorithm.decrement(*current_node));
+        } else if (iterated_tree && iterated_tree->_root) {
             /*
 			 * If iterator is at the end():
 			 *     normal iterator  => decremented from end() => go to its last element (before end())
@@ -153,7 +153,7 @@ class tree_iterator {
 			 * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
 			 */
             // const_cast needed in case node_type is non const
-            _current = const_cast<node_type*>(_algorithm.go_last(*_tree->_root));
+            current_node = const_cast<node_type*>(algorithm.go_last(*iterated_tree->_root));
         }
         return *this;
     }

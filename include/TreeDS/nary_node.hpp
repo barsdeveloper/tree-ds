@@ -1,8 +1,9 @@
 #pragma once
-#include <TreeDS/temp_node.hpp>
 #include <TreeDS/utility.hpp>
 #include <TreeDS/node.hpp>
 #include <utility> // std::move(), std::forward()
+
+#include "struct_node.hpp"
 
 namespace ds {
 

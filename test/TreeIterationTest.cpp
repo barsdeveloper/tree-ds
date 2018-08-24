@@ -28,7 +28,7 @@ class TreeIterationTest : public QObject {
 
     Q_OBJECT;
 
-private slots:
+    private slots:
     void iteration();
     void iteration_data();
 };
@@ -39,7 +39,7 @@ void TreeIterationTest::iteration() {
     QFETCH(list<string>, expectedPreOrder);
     QFETCH(list<string>, expectedInOrder);
     QFETCH(list<string>, expectedPostOrder);
-    int actualSize = (int)t.size();
+    int actualSize = static_cast<int>(t.size());
     list<string> actualPreOrder;
     list<string> actualInOrder;
     list<string> actualPostOrder;

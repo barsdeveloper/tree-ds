@@ -23,7 +23,7 @@ public:
 
     template <typename T>
     const binary_node<T>* decrement(const binary_node<T>& node) const {
-        const binary_node<T>* next = node.parent();
+        const binary_node<T>* next = node.get_parent();
         const binary_node<T>* prev = &node;
         /*
 		 * The parent is the next node if (REMEMBER: we traverse tree in pre-order and decrement the iterator):
@@ -33,7 +33,7 @@ public:
         if (!next || prev == next->first_child()) {
             return next;
         }
-        return descent(*next->left_child(), [](const binary_node<T>& node) {
+        return descent(*next->get_left(), [](const binary_node<T>& node) {
             return node.last_child();
         });
     }

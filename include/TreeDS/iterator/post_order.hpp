@@ -14,11 +14,11 @@ public:
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& n) const {
         auto prev = &n;
-        auto next = n.parent();
+        auto next = n.get_parent();
         if (!next || prev == next->last_child()) {
             return next; // found
         }
-        return descent(*next->right_child(), [](const binary_node<T>& n) { return n.first_child(); });
+        return descent(*next->get_right(), [](const binary_node<T>& n) { return n.first_child(); });
     }
 
     template <typename T>

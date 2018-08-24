@@ -9,7 +9,7 @@ Q_DECLARE_METATYPE(tree<Foo>);
 
 class PreliminaryTest : public QObject {
 
-    Q_OBJECT
+    Q_OBJECT;
 
     private slots:
     void objectCreation() {
@@ -32,6 +32,7 @@ class PreliminaryTest : public QObject {
 
         // construct an element
         t.emplace(t.begin(), 67, 93);
+        QCOMPARE(*t.begin(), Foo(67, 93));
         QCOMPARE(t, n(Foo(67, 93)));
 
         // the tree has 1 element
@@ -68,6 +69,15 @@ class PreliminaryTest : public QObject {
         QVERIFY(t.cbegin() == t.cend());
         QVERIFY(t.rbegin() == t.rend());
         QVERIFY(t.crbegin() == t.crend());
+
+        // create by insert
+        t.insert(t.begin(), Foo(45, 900));
+        QCOMPARE(*t.begin(), Foo(45, 900));
+        QCOMPARE(t, n(Foo(45, 900)));
+
+        // the tree has 1 element again
+        QCOMPARE(t.size(), 1);
+        QVERIFY(!t.empty());
     }
 };
 
