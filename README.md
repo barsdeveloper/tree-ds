@@ -1,5 +1,5 @@
 # TreeDS - work in progress
-TreeDS (tree data structure) is an STL-like tree container type for C++11. It is a header only library that provides the most generic type of binary tree where every node can have at most two children.
+TreeDS (tree data structure) is an STL-like tree container type for C++17. It is a header only library that provides two types of trees: tree and binary_tree.
 
 Please feel free to modify it and contribute to the code if you want.
 
@@ -17,14 +17,8 @@ The library is header only, to start using it you just have to add the "include"
 #include <TreeDS/tree.hpp>
 ```
 
-you can alternatively
-
-```c++
-#include <TreeDS/tree>
-```
-
 ## Example
-Here's a small example of utilization, for a more complete reference look at html doxygen-produced documentation (./html/index.html). You can merge and compile the code snippets.
+Here's a small example of utilization (you can merge and compile the code snippets).
 
 ```c++
 #include <string>
@@ -45,18 +39,12 @@ t.insert(t.begin(), "hello");
 cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
 ```
 
-The most simple way to use this library is to create inline trees. To to this just take a reference to `tree<int>::produce_node` and call the operator () (function call operator). Look at the following example.
-
-```c++
-auto& n = ds::tree<int>::produce_node;
-```
-
-Now, calling n(some integer) will return a `temporary_node<int>` that can be passed to insert method or to the tree constructor itself. Let's create a more complex tree.
+The simplest way to use this library is to create inline trees. Use the function n(something) to obtain a `temporary_node<something_t>` that can be passed to the insert method or to the tree constructor itself. Look at the following example. .
 
 ```c++
 ds::tree<int> myTree(
     n(100)(             // root node
-        nullptr,        // left child of root (no child)
+        n(),            // left child of root (it is empty: no child)
         n(200)(         // right child of root
             n(300)(     // left child of 200
                 n(500), // left child of 300
@@ -120,7 +108,7 @@ ds::tree<int, ds::in_order> inOrder(move(myTree));
 //            ^^^^^^^^^^^^
 ```
 
-We moved the content from myTree (which now is empty) to inOrder, we could also copy the tree using copy constructor. That makes a deep copy (slow, avoid whenever you can).
+We moved the content from myTree (which now is empty) to the tree named: "inOrder", we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
 
 ```c++
 // In-order: 100, -20, -10, -40, -30, 200, 400,
