@@ -1,7 +1,7 @@
-![Readability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=reliability_rating) ![Security](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=security_rating) ![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=sqale_rating) ![Coverage](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=coverage)
+![Security](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=security_rating) ![Readability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=reliability_rating) ![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=sqale_rating) ![Coverage](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=coverage)
 
 # TreeDS - work in progress
-TreeDS (tree data structure) is an STL-like tree container type for C++17. It is a header only library that provides two types of trees: tree and binary_tree.
+TreeDS (tree data structure) is an STL-like tree container library for C++17 that provides two types of trees: nary and binary tree.
 
 Please feel free to modify it and contribute to the code if you want.
 
@@ -13,14 +13,14 @@ Please feel free to modify it and contribute to the code if you want.
 * Expandable with custom iterator types.
 
 ## Getting started
-The library is header only, to start using it you just have to add the "include" directory to the include paths and then include it in your C++ file:
+The library is header only, to start using it you just have to add the "./include" directory to the include paths and then `#include` it in your .cpp file:
 
 ```c++
 #include <TreeDS/tree.hpp>
 ```
 
 ## Example
-Here's a small example of utilization (you can merge and compile the code snippets).
+Here's a small example of utilization (you can append and compile the code snippets).
 
 ```c++
 #include <string>
@@ -32,7 +32,6 @@ using namespace std;
 int main() {
     ds::tree<string> t; // empty tree created
     cout << t.size() << endl; // 0
-}
 ```
       
 you can add elements to the tree in the usual way
@@ -42,7 +41,7 @@ t.insert(t.begin(), "hello");
 cout << "size: " << t.size() << " (" << *t.begin() << ")" << endl;
 ```
 
-The simplest way to use this library is to create inline trees. Use the function n(something) to obtain a `temporary_node<something_t>` that can be passed to the insert method or to the tree constructor itself. Look at the following example. .
+The simplest way to use this library is to create inline trees. Use the function n(something) to obtain a `struct_node<something_t>` that can be passed to the insert/emplace method or to the tree constructor itself. Look at the following example. .
 
 ```c++
 ds::tree<int> myTree(
@@ -77,7 +76,7 @@ You can use the same pattern also for the insert method, let's substitute the no
 
 ```c++
 myTree.insert(
-    find(myTree.begin(), myTree.end(), 300), // find (first) position of node 300
+    find(myTree.begin(), myTree.end(), 300), // iterator to the (first) position of node 300
     n(-10)(
         n(-20),
         n(-30)(
@@ -111,7 +110,7 @@ ds::tree<int, ds::in_order> inOrder(move(myTree));
 //            ^^^^^^^^^^^^
 ```
 
-We moved the content from myTree (which now is empty) to the tree named: "inOrder", we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
+We moved the content from myTree (which now is empty) to the tree named: `inOrder`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
 
 ```c++
 // In-order: 100, -20, -10, -40, -30, 200, 400,
@@ -132,4 +131,5 @@ ds::tree<int>::iterator<ds::post_order> it(inOrder);
 while(it != inOrder.end<ds::post_order>()) {
     cout << *it++ << ", ";
 }
+}// end of main
 ```
