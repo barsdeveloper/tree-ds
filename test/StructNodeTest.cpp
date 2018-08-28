@@ -66,7 +66,7 @@ class StructNodeTest : public QObject {
             singleNode(
                 leftChild,
                 rightChild,
-                emptyNode, // remember that empty nodes not participate to size nor arity
+                emptyNode, // remember that empty nodes not participate to size_value nor arity
                 fourChildren,
                 threeChildren,
                 fourChildren

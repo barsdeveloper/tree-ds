@@ -1,9 +1,10 @@
 #pragma once
 
-#include <TreeDS/binary_node.hpp>
 #include <TreeDS/iterator/in_order.hpp>
 #include <TreeDS/iterator/post_order.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
+#include <TreeDS/node/binary_node.hpp>
+#include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/std_implementations.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/utility.hpp>
@@ -14,8 +15,6 @@
 #include <tuple>       // make_from_tuple
 #include <type_traits> // std::enable_if
 #include <utility>     // std::move(), std::forward()
-
-#include "struct_node.hpp"
 
 namespace ds {
 
@@ -128,21 +127,17 @@ class tree {
     };
 
     protected:
-    allocator_type allocator;
+    allocator_type allocator{};
     /// @brief Owning pointer to the root node.
-    std::unique_ptr<node_type, delete_node> _root;
+    std::unique_ptr<node_type, delete_node> root{};
     /// @brief The number of nodes in the tree.
-    size_type _size;
+    size_type size_value = 0u;
 
     public:
     /**
      * Create an empty tree.
      */
-    constexpr tree() :
-            allocator(),
-            _root(),
-            _size(0u) {
-    }
+    constexpr tree() = default;
 
     /**
      * Copy constructor. Create a tree by copying the tree passed as argument. Remember that this involves deep copy
@@ -151,11 +146,11 @@ class tree {
      * @param other the tree to be copied from
      */
     tree(const tree& other) :
-            _root(
-                other._root
-                    ? std::move(get_allocator()(*other._root, get_allocator()))
-                    : decltype(_root){}),
-            _size(other._size) {
+            root(
+                other.root
+                    ? std::move(get_allocator()(*other.root, get_allocator()))
+                    : decltype(root){}),
+            size_value(other.size_value) {
     }
 
     /**
@@ -165,8 +160,8 @@ class tree {
      * @param other the tree to be copied from
      */
     tree(tree&& other) :
-            _root(std::move(other._root)),
-            _size(other._size) {
+            root(std::move(other.root)),
+            size_value(other.size_value) {
         other.nullify();
     }
 
@@ -182,11 +177,11 @@ class tree {
         typename OtherAlloc,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit tree(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) :
-            _root(
-                other._root
-                    ? std::move(get_allocator()(*other._root, get_allocator()))
+            root(
+                other.root
+                    ? std::move(get_allocator()(*other.root, get_allocator()))
                     : nullptr),
-            _size(other._size) {
+            size_value(other.size_value) {
     }
 
     /**
@@ -200,8 +195,8 @@ class tree {
         typename OtherAlloc,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(tree<ConvertibleT, OtherAlg, OtherAlloc>&& other) :
-            _root(std::move(other._root)),
-            _size(other._size) {
+            root(std::move(other.root)),
+            size_value(other.size_value) {
     }
 
     /**
@@ -214,23 +209,23 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(struct_node<ConvertibleT, Children...>&& root) :
-            _root(
+            root(
                 std::move(
                     get_allocator()(
                         root,
                         get_allocator()))),
-            _size(root.get_subtree_size()) {
+            size_value(root.get_subtree_size()) {
     }
 
     tree& operator=(const tree& other) {
-        this->_root = std::move(get_allocator()(*other._root, get_allocator()));
-        this->_size = other._size;
+        this->root = std::move(get_allocator()(*other.root, get_allocator()));
+        this->size = other.size;
         return *this;
     }
 
     tree& operator=(tree&& other) {
-        this->_root = std::move(other._root);
-        this->_size = other._size;
+        this->root       = std::move(other.root);
+        this->size_value = other.size_value;
         other.nullify();
         return *this;
     }
@@ -349,7 +344,7 @@ class tree {
      * @return true if the tree is empty
      */
     bool empty() const {
-        return _root == nullptr;
+        return root == nullptr;
     }
 
     /**
@@ -357,7 +352,7 @@ class tree {
      * @return the number of nodes
      */
     size_type size() const {
-        return _size;
+        return size_value;
     }
 
     /**
@@ -374,8 +369,8 @@ class tree {
     /*   ---   Modifiers   ---   */
     private:
     void nullify() {
-        _root = nullptr;
-        _size = 0;
+        root       = nullptr;
+        size_value = 0u;
     }
 
     template <typename It>
@@ -384,8 +379,8 @@ class tree {
         node_type* target = position.get_node();
         if (target) { // if iterator points to valid node
             target->move_resources_to(*node);
-        } else if (!this->_root) {
-            this->_root = std::move(node);
+        } else if (!this->root) {
+            this->root = std::move(node);
         } else {
             throw std::logic_error("Tried to insert node in a not valid position.");
         }
@@ -413,8 +408,8 @@ class tree {
     void swap(tree<T, OtherAlg, OtherAlloc>& other) {
         // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
         using namespace std;
-        swap(_root, other._root);
-        swap(_size, other._size);
+        swap(root, other.root);
+        swap(size_value, other.size_value);
     }
 
     /**
@@ -426,7 +421,7 @@ class tree {
      */
     template <typename It, typename... Children>
     iterator<typename It::algorithm_type> insert(It position, struct_node<T, Children...>&& node) {
-        this->_size += node.get_size() - 666; // TODO perform calculation
+        this->size_value += node.get_subtree_size() - 666; // TODO perform calculation
         return insert(position, std::make_unique<node_type>(node));
     }
 
@@ -439,7 +434,7 @@ class tree {
      */
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, const_reference value) {
-        ++this->_size;
+        ++this->size_value;
         return insert(position, std::make_unique<node_type>(value));
     }
 
@@ -451,13 +446,13 @@ class tree {
      */
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, value_type&& value) {
-        ++this->_size;
+        ++this->size_value;
         return insert(position, get_allocator()(std::move(value)));
     }
 
     template <typename It, typename... Args>
     iterator<typename It::algorithm_type> emplace(It position, Args&&... args) {
-        ++this->_size;
+        ++this->size_value;
         return insert(position, get_allocator()(std::forward<Args>(args)...));
     }
 
@@ -468,16 +463,16 @@ class tree {
         typename OtherAlloc,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const tree<T, OtherAlg, OtherAlloc>& other) const {
-        // 1. Test if different size
-        if (this->_size != other._size) {
+        // 1. Test if different size_value
+        if (this->size_value != other.size_value) {
             return false;
         }
         // 2. Test if one between this or other has a root that is set while the other doesn't.
-        if ((this->_root == nullptr) != (other._root == nullptr)) {
+        if ((this->root == nullptr) != (other.root == nullptr)) {
             return false;
         }
         // At the end is either null (both) or same as the other.
-        return this->_root == nullptr || *this->_root == *other._root;
+        return this->root == nullptr || *this->root == *other.root;
     }
 
     template <
@@ -491,12 +486,12 @@ class tree {
 
     template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
-        // Test if different size (trivial case for performance)
-        if (this->_size != other.get_subtree_size()) {
+        // Test if different size_value (trivial case for performance)
+        if (this->size_value != other.get_subtree_size()) {
             return false;
         }
         // Deep test for equality
-        return _root && *_root == other;
+        return root && *root == other;
     }
 
     template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>

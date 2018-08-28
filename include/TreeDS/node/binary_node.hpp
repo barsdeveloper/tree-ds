@@ -1,13 +1,12 @@
 #pragma once
 
-#include <TreeDS/node.hpp>
+#include <TreeDS/node/node.hpp>
+#include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/utility.hpp>
 #include <cassert> // assert
 #include <memory>  // std::unique_ptr
 #include <type_traits>
 #include <utility> // std::move(), std::forward()
-
-#include "struct_node.hpp"
 
 namespace ds {
 
@@ -27,14 +26,21 @@ class binary_node : public node<T, binary_node<T>> {
     public:
     using node<T, binary_node<T>>::node;
 
+    /*   ---   Wide acceptance Copy Constructor   ---   */
     template <
         typename ConvertibleT = T,
         typename AllocateFn,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(const binary_node<ConvertibleT>& other, AllocateFn allocate) :
             node<T, binary_node<T>>(static_cast<T>(other.value)),
-            left(other.left ? attach(allocate(*other.left, allocate).release()) : nullptr),
-            right(other.right ? attach(allocate(*other.right, allocate).release()) : nullptr) {
+            left(
+                other.left
+                    ? attach(allocate(*other.left, allocate).release())
+                    : nullptr),
+            right(
+                other.right
+                    ? attach(allocate(*other.right, allocate).release())
+                    : nullptr) {
     }
 
     // Construct from temporary_node using allocator
@@ -50,19 +56,13 @@ class binary_node : public node<T, binary_node<T>> {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children");
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = get_child<0>(other);
-            if constexpr (
-                !std::is_same_v<
-                    decltype(left.get_value()),
-                    empty>) {
+            if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
                 this->left = attach(allocate(left, allocate).release());
             }
         }
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = get_child<1>(other);
-            if constexpr (
-                !std::is_same_v<
-                    empty,
-                    decltype(right.get_value())>) {
+            if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
                 this->right = attach(allocate(right, allocate).release());
             }
         }
@@ -70,7 +70,7 @@ class binary_node : public node<T, binary_node<T>> {
 
     // Move constructor
     binary_node(binary_node&& other) :
-            node<T, binary_node<T>>(other._value),
+            node<T, binary_node<T>>(other.value),
             left(other.left),
             right(other.right) {
         other.move_resources_to(*this);
@@ -115,23 +115,27 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     const binary_node* first_child() const {
-        return this->left ? this->left : this->right;
+        return this->left
+            ? this->left
+            : this->right;
     }
 
     const binary_node* last_child() const {
-        return this->right ? this->right : this->left;
+        return this->right
+            ? this->right
+            : this->left;
     }
 
     bool is_left_child() const {
-        return this->parent ? this == this->parent->left : false;
+        return this->parent
+            ? this == this->parent->left
+            : false;
     }
 
     bool is_right_child() const {
-        return this->parent ? this == this->parent->right : false;
-    }
-
-    bool is_unique_child() const {
-        return this == first_child() && this == last_child();
+        return this->parent
+            ? this == this->parent->right
+            : false;
     }
 
     long hash_code() const;
@@ -140,20 +144,20 @@ class binary_node : public node<T, binary_node<T>> {
         typename ConvertibleT = T,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     bool operator==(const binary_node<ConvertibleT>& other) const {
-        // Trivial case exclusion (for performance reason).
+        // Trivial case exclusion.
         if ((this->left == nullptr) != (other.left == nullptr)
             || (this->right == nullptr) != (other.right == nullptr)) {
             return false;
         }
         // Test value for inequality.
-        if (this->_value != other.value) {
+        if (this->value != other.value) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something, only on test before access is enough).
+        // Deep comparison (at this point both are either null or something).
         if (this->left && *this->left != *other.left) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something, only on test before access is enough).
+        // Deep comparison (at this point both are either null or something).
         if (this->right && *this->right != *other.right) {
             return false;
         }

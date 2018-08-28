@@ -5,24 +5,30 @@
 
 namespace ds {
 
-struct empty {};
-
 template <typename, typename...>
 class struct_node;
+
+template <std::size_t index, typename T, typename... Children>
+const auto& get_child(const struct_node<T, Children...>&);
 
 template <typename T>
 struct_node<T> n(T);
 
-struct_node<empty> n();
+struct_node<std::nullptr_t> n();
 
 template <typename T, typename... Children>
 class struct_node {
 
     //   ---   FRIENDS   ---
     template <typename, typename...>
-    friend class struct_node;      // other instantiations of this template
-    friend struct_node<T> n<T>(T); // node creator function
-    friend struct_node<empty> n(); // empty node creator function
+    friend class struct_node; // other instantiations of this template
+
+    friend struct_node<std::nullptr_t> n(); // empty node function creator
+
+    friend struct_node<T> n<T>(T); // node function creator
+
+    template <std::size_t index, typename OtherT, typename... OtherChildren>
+    friend const auto& get_child(const struct_node<OtherT, OtherChildren...>&); // node children getter
 
     //   ---   TYPES   ---
     public:
@@ -30,10 +36,11 @@ class struct_node {
     using value_t    = T;
 
     //   ---   ATTRIBUTES   ---
+    private:
     value_t value;
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
-    children_t children;
+    children_t children{};
 
     //   ---   METHODS   ---
     private:
@@ -41,25 +48,19 @@ class struct_node {
     constexpr struct_node(const T& value, Children... children) :
             value(value),
             children(children...) {
-        std::size_t size           = std::is_same_v<T, empty> ? 0 : 1;
+        std::size_t size           = std::is_same_v<T, std::nullptr_t> ? 0 : 1;
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
             auto call = [&](auto& node) {
-                if constexpr (
-                    std::is_same_v<
-                        typename std::remove_reference_t<decltype(node)>::value_t,
-                        empty>) {
+                constexpr bool is_empty = std::is_same_v<decltype(node), struct_node<std::nullptr_t>&>;
+                if constexpr (is_empty) {
                     return;
+                } else {
+                    children_count += 1;
                 }
                 size += node.get_subtree_size();
                 prev_arity = std::max(prev_arity, node.get_subtree_arity());
-                children_count
-                    += std::is_same_v<
-                           typename std::remove_reference_t<decltype(node)>::value_t,
-                           empty>
-                    ? 0
-                    : 1;
             };
             // If you don't understand this, check: https://en.cppreference.com/w/cpp/language/fold
             (call(children), ...);
@@ -115,8 +116,8 @@ struct_node<std::tuple<Args...>> n(Args... args) {
     return {std::make_tuple(args...)};
 }
 
-struct_node<empty> n() {
-    return {empty()};
+struct_node<std::nullptr_t> n() {
+    return {nullptr};
 }
 
 template <std::size_t index, typename T, typename... Children>
