@@ -5,7 +5,7 @@ set(PROJECT_VERSION 1.0)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall --coverage")
+set(CMAKE_CXX_FLAGS_DEBUG "--coverage -g3 -O0 -Wall")
 
 include(CTest)
 enable_testing(true)
@@ -30,7 +30,7 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
         PRE_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Collecting coverage data for \"${TEST_NAME}\"."
-        COMMAND kcov --collect-only --include-path=${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/coverage ${CMAKE_BINARY_DIR}/${TEST_NAME}
+        COMMAND kcov --include-path=${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/coverage ${CMAKE_BINARY_DIR}/${TEST_NAME}
     )
 endforeach(TEST_SOURCE ${TEST_SOURCES})
 
@@ -38,14 +38,6 @@ add_custom_command(
     TARGET SonarQube
     PRE_BUILD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Reporting coverage data to \"${CMAKE_BINARY_DIR}/${coverage}\""
-    COMMAND kcov --report-only ${CMAKE_BINARY_DIR}/coverage
-)
-
-add_custom_command(
-    TARGET SonarQube
-    PRE_BUILD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Calling \"sonar-scanner\""
-    COMMAND sonar-scanner
+    COMMENT "Calling the sonar scanner (\"sonar.sh\")"
+    COMMAND ./sonar.sh
 )
