@@ -8,7 +8,7 @@ template <typename T>
 class binary_node;
 
 class post_order final {
-public:
+    public:
     constexpr post_order() = default;
 
     template <typename T>
@@ -18,7 +18,7 @@ public:
         if (!next || prev == next->last_child()) {
             return next; // found
         }
-        return descent(*next->get_right(), [](const binary_node<T>& n) { return n.first_child(); });
+        return descent(next->get_right(), std::mem_fn(&binary_node<T>::first_child));
     }
 
     template <typename T>
@@ -32,7 +32,7 @@ public:
 
     template <typename T>
     const binary_node<T>* go_first(const binary_node<T>& root) const {
-        return descent(root, [](const binary_node<T>& n) { return n.first_child(); });
+        return descent(&root, std::mem_fn(&binary_node<T>::first_child));
     }
 
     template <typename T>

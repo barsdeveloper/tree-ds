@@ -1,7 +1,8 @@
 #pragma once
 
 #include <functional>
-#include "helper.hpp"
+
+#include <TreeDS/iterator/helper.hpp>
 
 namespace ds {
 
@@ -16,9 +17,7 @@ class in_order final {
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& n) const {
         if (n.get_right()) {
-            return descent(*n.get_right(), [](const binary_node<T>& n) {
-                return n.get_left();
-            });
+            return descent(n.get_right(), std::mem_fn(&binary_node<T>::get_left));
         } else {
             auto prev = &n;
             auto next = n.get_parent();
@@ -52,9 +51,7 @@ class in_order final {
 
     template <typename T>
     const binary_node<T>* go_first(const binary_node<T>& root) const {
-        return descent(root, [](const binary_node<T>& n) {
-            return n.get_left();
-        });
+        return descent(&root, std::mem_fn(&binary_node<T>::get_left));
     }
 
     template <typename T>

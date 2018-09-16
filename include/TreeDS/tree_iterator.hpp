@@ -1,18 +1,19 @@
 #pragma once
 
-#include <TreeDS/node/binary_node.hpp>
 #include <iterator>    // std::iterator
 #include <type_traits> // std::conditional, std::enable_if
 
+#include <TreeDS/node/binary_node.hpp>
+
 namespace ds {
 
-template <typename, typename, typename>
+template <typename, template <typename> class, typename, typename>
 class tree;
 
 template <typename Tree, typename Algorithm, bool Constant = false>
 class tree_iterator {
 
-    template <typename, typename, typename>
+    template <typename, template <typename> class, typename, typename>
     friend class tree;
 
     template <typename, typename, bool>
@@ -68,7 +69,8 @@ class tree_iterator {
             iterated_tree(&tree),
             current_node(nullptr) {
         if (go_first) {
-            ++(*this); // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
+            // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
+            this->operator++();
         }
     }
 
@@ -115,7 +117,7 @@ class tree_iterator {
 
     template <bool OtherConst>
     bool operator!=(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
-        return !(*this == other);
+        return !this->operator==(other);
     }
 
     tree_iterator& operator++() {
@@ -137,7 +139,7 @@ class tree_iterator {
 
     tree_iterator operator++(int) {
         tree_iterator it(*this);
-        ++(*this);
+        this->operator++();
         return it;
     }
 
@@ -160,7 +162,7 @@ class tree_iterator {
 
     tree_iterator operator--(int) {
         tree_iterator it(*this);
-        --(*this);
+        this->operator--();
         return it;
     }
 };

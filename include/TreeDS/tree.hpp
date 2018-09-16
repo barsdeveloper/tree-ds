@@ -1,13 +1,5 @@
 #pragma once
 
-#include <TreeDS/iterator/in_order.hpp>
-#include <TreeDS/iterator/post_order.hpp>
-#include <TreeDS/iterator/pre_order.hpp>
-#include <TreeDS/node/binary_node.hpp>
-#include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/std_implementations.hpp>
-#include <TreeDS/tree_iterator.hpp>
-#include <TreeDS/utility.hpp>
 #include <functional>  // std::bind(), std::mem_fun()
 #include <limits>      // std::numeric_limits()
 #include <memory>      // std::unique_ptr, std::allocator_traits
@@ -16,10 +8,20 @@
 #include <type_traits> // std::enable_if
 #include <utility>     // std::move(), std::forward()
 
+#include <TreeDS/allocator_utility.hpp>
+#include <TreeDS/binary_tree.hpp>
+#include <TreeDS/iterator/in_order.hpp>
+#include <TreeDS/iterator/post_order.hpp>
+#include <TreeDS/iterator/pre_order.hpp>
+#include <TreeDS/node/binary_node.hpp>
+#include <TreeDS/node/struct_node.hpp>
+#include <TreeDS/tree_iterator.hpp>
+#include <TreeDS/utility.hpp>
+
 namespace ds {
 
 /**
- * @brief A binary tree data structure.
+ * @brief A generic tree class that uses a custom node type.
  * @details A binary tree structured as a hierarchy of {@link node}. Every node
  * keeps an object of type T and can have a most two nodes as children. This
  * class is compatible with STL containers. For example you can insert an
@@ -33,20 +35,21 @@ namespace ds {
  * @tparam T type of element hold by the tree
  * @tparam Algorithm default iterator algorithm used to traverse the tree in a range-based for loop
  * @tparam Allocator allocator type used to allocate new nodes
+ * 
+ * @sa binary_tree
  */
 template <
     typename T,
-    typename Algorithm = pre_order,
-    typename Allocator = std::allocator<T>>
+    template <typename> class Node,
+    typename Algorithm,
+    typename Allocator>
 class tree {
 
-    template <typename, typename, typename>
+    template <typename, template <typename> class, typename, typename>
     friend class tree;
 
     template <typename, typename, bool>
     friend class tree_iterator;
-
-    friend class binary_node<T>;
 
     public:
     /*   ---   Types declarations   ---   */
@@ -55,7 +58,7 @@ class tree {
     using value_type      = T;
     using reference       = value_type&;
     using const_reference = const value_type&;
-    using node_type       = binary_node<T>;
+    using node_type       = Node<T>;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
     using pointer         = typename std::allocator_traits<Allocator>::pointer;
@@ -66,70 +69,17 @@ class tree {
     // Iterators
     template <typename A>
     using iterator = tree_iterator<tree, A, false>;
-
     template <typename A>
     using const_iterator = tree_iterator<tree, A, true>;
-
     template <typename A>
     using reverse_iterator = std::reverse_iterator<iterator<A>>;
-
     template <typename A>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
-
-    public:
-    // Deleter functor
-    struct delete_node {
-        allocator_type allocator;
-        constexpr delete_node() :
-                allocator() {
-        }
-        delete_node(const delete_node&) = default;
-        delete_node(allocator_type allocator) :
-                allocator(allocator) {
-        }
-        void operator()(node_type* node) {
-            assert(node != nullptr);
-            // recursively delete children
-            if (node->left) {
-                (*this)(node->left);
-            }
-            if (node->right) {
-                (*this)(node->right);
-            }
-            // destroy
-            std::allocator_traits<allocator_type>::destroy(allocator, node);
-            // deallocate
-            std::allocator_traits<allocator_type>::deallocate(allocator, node, 1);
-        }
-    };
-
-    // Allocator functor
-    struct allocate_node {
-        allocator_type allocator;
-        constexpr allocate_node() :
-                allocator() {
-        }
-        allocate_node(const allocate_node&) = default;
-        allocate_node(allocator_type allocator) :
-                allocator(allocator) {
-        }
-
-        template <typename... Args>
-        std::unique_ptr<node_type, delete_node> operator()(Args&&... args) {
-            using al = std::allocator_traits<allocator_type>;
-            // allocate
-            node_type* ptr = al::allocate(allocator, 1);
-            // construct
-            al::construct(allocator, ptr, std::forward<Args>(args)...);
-            // return result
-            return std::unique_ptr<node_type, delete_node>(ptr, {allocator});
-        }
-    };
 
     protected:
     allocator_type allocator{};
     /// @brief Owning pointer to the root node.
-    std::unique_ptr<node_type, delete_node> root{};
+    std::unique_ptr<node_type, deleter<allocator_type>> root{};
     /// @brief The number of nodes in the tree.
     size_type size_value = 0u;
 
@@ -141,23 +91,22 @@ class tree {
 
     /**
      * Copy constructor. Create a tree by copying the tree passed as argument. Remember that this involves deep copy
-     * (use std::move() whenever you can). A new {@link node_type} will be allocated for each node in the other tree.
-     * The allocation will use the allocator.
+     * (use std::move() whenever you can). A new {@link node_type} will be allocated for each node of the other tree.
+     * The allocator will be used.
      * @param other the tree to be copied from
      */
     tree(const tree& other) :
             root(
                 other.root
-                    ? std::move(get_allocator()(*other.root, get_allocator()))
+                    ? std::move(allocate(allocator, *other.root, allocator))
                     : decltype(root){}),
             size_value(other.size_value) {
     }
 
     /**
-     * Move constructor. Create a tree by copying the tree passed as argument. Remember that this involves deep copy
-     * (use std::move() whenever you can). A new {@link node_type} will be allocated for each node in the other tree.
-     * The allocation will use the allocator.
-     * @param other the tree to be copied from
+     * Move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument will be empty
+     * after this operation.
+     * @param other the tree to be moved
      */
     tree(tree&& other) :
             root(std::move(other.root)),
@@ -165,39 +114,10 @@ class tree {
         other.nullify();
     }
 
-    /**
-     * Create a tree by copying the tree passed as argument. Remember that this involves deep copy (use std::move()
-     * whenever you can). A new {@link node_type} will be allocated for each node in the other tree. The allocation will
-     * use the allocator.
-     * @param other the tree to be copied from
+    /*
+     * Destruct all the nodes and deallocate the memory owned by this tree.
      */
-    template <
-        typename ConvertibleT,
-        typename OtherAlg,
-        typename OtherAlloc,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    explicit tree(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) :
-            root(
-                other.root
-                    ? std::move(get_allocator()(*other.root, get_allocator()))
-                    : nullptr),
-            size_value(other.size_value) {
-    }
-
-    /**
-     * Create a tree by moving the tree passed as argment. After this method, the tree passed as argument will be empty,
-     * it's node will (logically) belong to this tree. This operation has constant time complexity.
-     * @param other the tree to be moved
-     */
-    template <
-        typename ConvertibleT,
-        typename OtherAlg,
-        typename OtherAlloc,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    tree(tree<ConvertibleT, OtherAlg, OtherAlloc>&& other) :
-            root(std::move(other.root)),
-            size_value(other.size_value) {
-    }
+    ~tree() = default;
 
     /**
      * Create a tree by copying the nodes structure starting from the {@link temporary_node} passed as argument. A new
@@ -207,18 +127,14 @@ class tree {
     template <
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    tree(struct_node<ConvertibleT, Children...>&& root) :
-            root(
-                std::move(
-                    get_allocator()(
-                        root,
-                        get_allocator()))),
+        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
+    tree(const struct_node<ConvertibleT, Children...>& root) :
+            root(std::move(allocate(allocator, root, allocator))),
             size_value(root.get_subtree_size()) {
     }
 
     tree& operator=(const tree& other) {
-        this->root = std::move(get_allocator()(*other.root, get_allocator()));
+        this->root = std::move(allocate(allocator, *other.root, allocator));
         this->size = other.size;
         return *this;
     }
@@ -230,8 +146,6 @@ class tree {
         return *this;
     }
 
-    ~tree() = default;
-
     /*   ---   Iterators   ---   */
     /**
      * @brief Returns an iterator to the beginning.
@@ -239,7 +153,7 @@ class tree {
      * algorithm used to traverse the tree.
      * @return iterator to the first element
      */
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     iterator<A> begin() {
         // Incremented to get it to the first element
         return ++iterator<A>(this);
@@ -251,7 +165,7 @@ class tree {
      * algorithm used to traverse the tree. Using this iterator you can't modify the container.
      * @return constant iterator to the first element
      */
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_iterator<A> begin() const {
         return cbegin();
     }
@@ -259,7 +173,7 @@ class tree {
     /**
      * @copydoc #begin() const
      */
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_iterator<A> cbegin() const {
         // Incremented to get it to the first element
         return ++const_iterator<A>(this);
@@ -273,27 +187,27 @@ class tree {
      * element.
      * @return iterator the element following the last element
      */
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     iterator<A> end() {
         return iterator<A>(this);
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_iterator<A> end() const {
         return cend();
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_iterator<A> cend() const {
         return const_iterator<A>(this);
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     reverse_iterator<A> rbegin() {
         return reverse_iterator<A>(iterator<A>(this));
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_reverse_iterator<A> rbegin() const {
         /*
          * Why we don'_tree increment the reverse_iterator as we do with iterator?
@@ -308,24 +222,24 @@ class tree {
         return crbegin();
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_reverse_iterator<A> crbegin() const {
         return const_reverse_iterator<A>(const_iterator<A>(this));
     }
 
     // reverse end
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     reverse_iterator<A> rend() {
         // reverse_iterator takes an iterator as argument, we construct it using {this}
         return --reverse_iterator<A>(iterator<A>(this));
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_reverse_iterator<A> rend() const {
         return crend();
     }
 
-    template <typename A = Algorithm>
+    template <typename A = algorithm_type>
     const_reverse_iterator<A> crend() const {
         // reverse_iterator takes an iterator as argument, we construcit using {this}
         return --const_reverse_iterator<A>(const_iterator<A>(this));
@@ -367,7 +281,7 @@ class tree {
     }
 
     /*   ---   Modifiers   ---   */
-    private:
+    protected:
     void nullify() {
         root       = nullptr;
         size_value = 0u;
@@ -375,7 +289,7 @@ class tree {
 
     template <typename It>
     iterator<typename It::algorithm_type>
-    insert(It position, std::unique_ptr<node_type, delete_node> node) {
+    insert(It position, decltype(root) node) {
         node_type* target = position.get_node();
         if (target) { // if iterator points to valid node
             target->move_resources_to(*node);
@@ -384,7 +298,7 @@ class tree {
         } else {
             throw std::logic_error("Tried to insert node in a not valid position.");
         }
-        return iterator<typename It::algorithm_type>(this, node.get());
+        return {this, node.get()};
     }
 
     public:
@@ -404,8 +318,7 @@ class tree {
      * not. Do not use iterator after you swapped trees.
      * @param other the tree to swap with
      */
-    template <typename OtherAlg, typename OtherAlloc>
-    void swap(tree<T, OtherAlg, OtherAlloc>& other) {
+    void swap(tree& other) {
         // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
         using namespace std;
         swap(root, other.root);
@@ -419,8 +332,13 @@ class tree {
      * @param node an r-value reference to a temporary_node
      * @return an iterator that points to the inserted element
      */
-    template <typename It, typename... Children>
-    iterator<typename It::algorithm_type> insert(It position, struct_node<T, Children...>&& node) {
+    template <
+        typename It,
+        typename ConvertibleT,
+        typename... Children,
+        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
+    iterator<typename It::algorithm_type>
+    insert(It position, const struct_node<ConvertibleT, Children...>& node) {
         this->size_value += node.get_subtree_size() - 666; // TODO perform calculation
         return insert(position, std::make_unique<node_type>(node));
     }
@@ -447,22 +365,17 @@ class tree {
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, value_type&& value) {
         ++this->size_value;
-        return insert(position, get_allocator()(std::move(value)));
+        return insert(position, allocate(allocator, std::move(value)));
     }
 
     template <typename It, typename... Args>
     iterator<typename It::algorithm_type> emplace(It position, Args&&... args) {
         ++this->size_value;
-        return insert(position, get_allocator()(std::forward<Args>(args)...));
+        return insert(position, allocate(allocator, std::forward<Args>(args)...));
     }
 
     /*   ---   Equality comparison   ---   */
-    template <
-        typename ConvertibleT = T,
-        typename OtherAlg,
-        typename OtherAlloc,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator==(const tree<T, OtherAlg, OtherAlloc>& other) const {
+    bool operator==(const tree& other) const {
         // 1. Test if different size_value
         if (this->size_value != other.size_value) {
             return false;
@@ -476,38 +389,17 @@ class tree {
     }
 
     template <
-        typename ConvertibleT = T,
-        typename OtherAlg,
-        typename OtherAlloc,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator!=(const tree<ConvertibleT, OtherAlg, OtherAlloc>& other) const {
-        return !(*this == other);
-    }
-
-    template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename ConvertibleT,
+        typename... Children,
+        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
         // Test if different size_value (trivial case for performance)
         if (this->size_value != other.get_subtree_size()) {
             return false;
         }
         // Deep test for equality
-        return root && *root == other;
+        return root && root->operator==(other);
     }
-
-    template <typename ConvertibleT, typename... Children, CHECK_CONVERTIBLE(ConvertibleT, T)>
-    bool operator!=(const struct_node<ConvertibleT, Children...>& other) const {
-        return !(*this == other);
-    }
-
-    public:
-    /*   ---   Memory management functors   ---   */
-    allocate_node get_allocator() {
-        return {allocator};
-    }
-
-    delete_node get_deleter() {
-        return {allocator};
-    };
 };
 
 } // namespace ds

@@ -9,12 +9,12 @@ template <typename, typename...>
 class struct_node;
 
 template <std::size_t index, typename T, typename... Children>
-const auto& get_child(const struct_node<T, Children...>&);
+constexpr const auto& get_child(const struct_node<T, Children...>&);
 
 template <typename T>
-struct_node<T> n(T);
+constexpr struct_node<T> n(T);
 
-struct_node<std::nullptr_t> n();
+constexpr struct_node<std::nullptr_t> n();
 
 template <typename T, typename... Children>
 class struct_node {
@@ -23,12 +23,9 @@ class struct_node {
     template <typename, typename...>
     friend class struct_node; // other instantiations of this template
 
-    friend struct_node<std::nullptr_t> n(); // empty node function creator
+    friend constexpr struct_node<std::nullptr_t> n(); // empty node function creator
 
-    friend struct_node<T> n<T>(T); // node function creator
-
-    template <std::size_t index, typename OtherT, typename... OtherChildren>
-    friend const auto& get_child(const struct_node<OtherT, OtherChildren...>&); // node children getter
+    friend constexpr struct_node<T> n<T>(T); // node function creator
 
     //   ---   TYPES   ---
     public:
@@ -103,26 +100,30 @@ class struct_node {
     constexpr struct_node<T, Nodes...> operator()(Nodes&&... nodes) const {
         return {this->value, std::forward<Nodes>(nodes)...};
     }
+
+    constexpr const children_t& get_children() const {
+        return this->children;
+    }
 };
 
 // Functions to generate temporary_node objects.
 template <typename T>
-struct_node<T> n(T value) {
+constexpr struct_node<T> n(T value) {
     return {value};
 }
 
 template <typename... Args>
-struct_node<std::tuple<Args...>> n(Args... args) {
+constexpr struct_node<std::tuple<Args...>> n(Args... args) {
     return {std::make_tuple(args...)};
 }
 
-struct_node<std::nullptr_t> n() {
+constexpr struct_node<std::nullptr_t> n() {
     return {nullptr};
 }
 
 template <std::size_t index, typename T, typename... Children>
-const auto& get_child(const struct_node<T, Children...>& node) {
-    return std::get<index>(node.children);
+constexpr const auto& get_child(const struct_node<T, Children...>& node) {
+    return std::get<index>(node.get_children());
 }
 
 } // namespace ds

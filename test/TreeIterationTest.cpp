@@ -1,28 +1,16 @@
 #include <QtTest/QtTest>
-#include <TreeDS/tree.hpp>
 #include <algorithm>
 #include <iterator>
 #include <list>
 #include <string>
 
+#include <TreeDS/tree.hpp>
+
 using namespace std;
 using namespace ds;
 
-template <typename T>
-struct TreeTest {
-    tree<T> t;
-    typename tree<T>::size_type size;
-    struct TraversalResult {
-        list<T> pre_order;
-        list<T> in_order;
-        list<T> post_order;
-    } expected;
-};
-
-Q_DECLARE_METATYPE(TreeTest<string>);
-Q_DECLARE_METATYPE(tree<string>);
-Q_DECLARE_METATYPE(tree<string>::size_type);
 Q_DECLARE_METATYPE(list<string>);
+Q_DECLARE_METATYPE(binary_tree<string>);
 
 class TreeIterationTest : public QObject {
 
@@ -34,7 +22,7 @@ class TreeIterationTest : public QObject {
 };
 
 void TreeIterationTest::iteration() {
-    QFETCH(tree<string>, t);
+    QFETCH(binary_tree<string>, t);
     QFETCH(int, expectedSize);
     QFETCH(list<string>, expectedPreOrder);
     QFETCH(list<string>, expectedInOrder);
@@ -52,22 +40,24 @@ void TreeIterationTest::iteration() {
 
 void TreeIterationTest::iteration_data() {
 
-    QTest::addColumn<tree<string>>("t");
+    QTest::addColumn<binary_tree<string>>("t");
     QTest::addColumn<int>("expectedSize");
     QTest::addColumn<list<string>>("expectedPreOrder");
     QTest::addColumn<list<string>>("expectedInOrder");
     QTest::addColumn<list<string>>("expectedPostOrder");
 
+    /******************************************************************************************************************/
     QTest::newRow("Empty String")
-        << tree<string>(n(""))
+        << binary_tree<string>(n(""))
         << 1
         << list<string>{""}
         << list<string>{""}
         << list<string>{""};
 
+    /******************************************************************************************************************/
     QTest::newRow("Root with a left child")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("1")(
                 n("2")
             )
@@ -78,9 +68,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"2", "1"}
         << list<string>{"2", "1"};
 
+    /******************************************************************************************************************/
     QTest::newRow("Root with a right child")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("1")(
                 n(),
                 n("2")
@@ -92,9 +83,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"1", "2"}
         << list<string>{"2", "1"};
 
+    /******************************************************************************************************************/
     QTest::newRow("Small tree")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("a")(
                 n("b")(
                     n("d")(
@@ -118,9 +110,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"h", "d", "b", "e", "a", "j", "f", "k", "c", "g"}
         << list<string>{"h", "d", "e", "b", "j", "k", "f", "g", "c", "a"};
 
+    /******************************************************************************************************************/
     QTest::newRow("Big tree")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("a")(
                 n("b")(
                     n("c")(
@@ -174,9 +167,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"f", "e", "g", "d", "h", "o", "c", "i", "n", "p", "b", "j", "m", "q", "t", "a", "k", "l", "r", "s", "u"}
         << list<string>{"f", "g", "e", "o", "h", "d", "p", "n", "i", "c", "t", "q", "m", "j", "b", "u", "s", "r", "l", "k", "a"};
 
+    /******************************************************************************************************************/
     QTest::newRow("All left child")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("1")(
                 n("2")(
                     n("3")(
@@ -213,9 +207,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
         << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"};
 
+    /******************************************************************************************************************/
     QTest::newRow("All right child")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("1")(
                 n(),
                 n("2")(
@@ -266,9 +261,10 @@ void TreeIterationTest::iteration_data() {
         << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
         << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"};
 
+    /******************************************************************************************************************/
     QTest::newRow("ZigZag")
         // clang-format off
-        << tree<string>(
+        << binary_tree<string>(
             n("1")(
                 n("2")(
                     n(),

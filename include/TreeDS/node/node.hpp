@@ -1,7 +1,8 @@
 #pragma once
 
-#include <TreeDS/utility.hpp>
 #include <utility> // std::forward()
+
+#include <TreeDS/utility.hpp>
 
 namespace ds {
 
@@ -30,10 +31,6 @@ class node {
     }
 
     const Node* get_parent() const {
-        return parent;
-    }
-
-    Node* get_parent() {
         return parent;
     }
 

@@ -5,7 +5,7 @@
 using namespace std;
 using namespace ds;
 
-Q_DECLARE_METATYPE(tree<Foo>);
+Q_DECLARE_METATYPE(binary_tree<Foo>);
 
 class PreliminaryTest : public QObject {
 
@@ -14,7 +14,7 @@ class PreliminaryTest : public QObject {
     private slots:
     void objectCreation() {
 
-        tree<Foo> t;
+        binary_tree<Foo> t;
 
         // the tree is empty
         QCOMPARE(t.size(), 0);

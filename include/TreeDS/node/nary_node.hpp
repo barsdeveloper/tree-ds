@@ -1,9 +1,10 @@
 #pragma once
 
+#include <utility> // std::move(), std::forward()
+
 #include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/utility.hpp>
-#include <utility> // std::move(), std::forward()
 
 namespace ds {
 

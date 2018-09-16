@@ -14,12 +14,12 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 8
 Cpp11BracedListStyle: true
 FixNamespaceComments: true
-#IncludeBlocks: Regroup
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^<'
-    Priority: 1
-  - Regex: '^\"'
-    Priority: 2
+  - Regex:     '^<TreeDS'
+    Priority:  10
+  - Regex:     '^\".+'
+    Priority:  20
 PenaltyBreakComment: 1
 ReflowComments: true
 SortUsingDeclarations: true

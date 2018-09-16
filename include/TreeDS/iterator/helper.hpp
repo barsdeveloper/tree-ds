@@ -36,25 +36,34 @@ const binary_node<T>* cross_bridge_left(const binary_node<T>& n) {
     return next;
 }
 
+template <typename Node, typename Call, typename Test, typename Result>
+const Node* descent(const Node* from, Call call, Test test, Result result) {
+    const Node* prev = from;
+    const Node* next = call(from);
+    while (next != nullptr) {
+        if (test(prev, next)) {
+            return result(next);
+        }
+        next = prev;
+        next = call(prev);
+    }
+    return prev;
+}
+
 /**
  * This function can be used in iterators to keep calling a specific lambda {@link Callable}. The passed type must be
  * convertible to a function that take a reference to constant node and returns a pointer to constant node. The best is
  * to pass a lambda so that it can be inlined.
  */
-template <typename T, typename Callable>
-const binary_node<T>* descent(const binary_node<T>& n, Callable call) {
-    static_assert(
-        std::is_convertible<
-            Callable, std::function<const binary_node<T>*(const binary_node<T>&)>>::value,
-        "The Callable argument must be of a type that can be called with a constant node reference and returns a pointer"
-        " to constant node.");
-    auto temp   = &n;
-    auto result = temp;
-    do {
-        result = temp;
-        temp   = call(*temp);
-    } while (temp);
-    return result;
+template <typename Node, typename Callable>
+const Node* descent(const Node* from, Callable call) {
+    const Node* prev = from;
+    const Node* next = call(from);
+    while (next != nullptr) {
+        prev = next;
+        next = call(next);
+    }
+    return prev;
 }
 
 } // namespace ds

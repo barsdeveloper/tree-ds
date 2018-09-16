@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtTest/QtTest>
+#include <string>
 
 struct Foo {
     int a;
@@ -32,10 +33,38 @@ struct Bar {
     }
 };
 
-struct NotDefaultConstructuble {
-    int value;
-    NotDefaultConstructuble() = delete;
-    NotDefaultConstructuble(int value) :
+struct ConvertibleFrom {
+    std::string value;
+    ConvertibleFrom(std::string value) :
             value(value) {
+    }
+    bool operator==(const ConvertibleFrom& other) const {
+        return this->value == other.value;
+    }
+};
+
+struct Target {
+    std::string value;
+    Target(std::string value) :
+            value(value) {
+    }
+    Target(ConvertibleFrom other) :
+            value(other.value) {
+    }
+    bool operator==(const Target& other) const {
+        return this->value == other.value;
+    }
+};
+
+struct ConvertibleTo {
+    std::string value;
+    ConvertibleTo(std::string value) :
+            value(value) {
+    }
+    bool operator==(const ConvertibleTo& other) const {
+        return this->value == other.value;
+    }
+    operator Target() const {
+        return {value};
     }
 };

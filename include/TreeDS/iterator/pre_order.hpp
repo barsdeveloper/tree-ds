@@ -1,24 +1,30 @@
 #pragma once
 
-#include "helper.hpp"
+#include <functional>
+
+#include <TreeDS/iterator/helper.hpp>
 
 namespace ds {
 
-template <typename T>
+template <typename>
 class binary_node;
+
+template <typename, typename>
+class node;
 
 class pre_order final {
 
-public:
+    public:
     constexpr pre_order() = default;
 
     template <typename T>
-    const binary_node<T>* increment(const binary_node<T>& node) const {
-        auto result = node.first_child();
+    const binary_node<T>* increment(const binary_node<T>& from) const {
+        auto result = from.first_child();
         if (result) {
             return result;
+        } else {
+            return cross_bridge_right(from);
         }
-        return cross_bridge_right(node);
     }
 
     template <typename T>
@@ -33,9 +39,7 @@ public:
         if (!next || prev == next->first_child()) {
             return next;
         }
-        return descent(*next->get_left(), [](const binary_node<T>& node) {
-            return node.last_child();
-        });
+        return descent(next->get_left(), std::mem_fn(&binary_node<T>::last_child));
     }
 
     template <typename T>
@@ -45,9 +49,7 @@ public:
 
     template <typename T>
     const binary_node<T>* go_last(const binary_node<T>& root) const {
-        return descent(root, [](const binary_node<T>& n) {
-            return n.last_child();
-        });
+        return descent(&root, std::mem_fn(&binary_node<T>::last_child));
     }
 };
 
