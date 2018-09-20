@@ -18,6 +18,11 @@ Please feel free to modify it and contribute to the code if you want.
 * Expandable with custom iterator types.
 * Tree pattern matching (conceptually similar to Regex).
 
+## Design goals
+This library is designed with **performance** in mind. It will avoid expensive features like virtual member functions, memory allocations and type erarsure whenever possible, in general I followed the style of the standard library that prefers template parameters over runtime entities. Consider that I have a decently good understanding of C++ mechanics yet I'm far from being an expert.
+
+To sum up this library is pretty interesting in what it can do, maybe more complex that the average tree library but it offers a stupid simple and intuitive interface.
+
 ## Getting started
 The library is header only, to start using it you just have to add the "./include" directory to the include paths and
 then `#include` it in your .cpp file:
