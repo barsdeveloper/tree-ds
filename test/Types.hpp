@@ -14,7 +14,7 @@ struct Foo {
         return a == other.a && b == other.b;
     }
     bool operator!=(const Foo& other) const {
-        return !(*this == other);
+        return !this->operator==(other);
     }
 };
 
@@ -29,7 +29,7 @@ struct Bar {
         return c == other.c && d == other.d;
     }
     bool operator!=(const Bar& other) const {
-        return !(*this == other);
+        return !this->operator==(other);
     }
 };
 
@@ -40,6 +40,9 @@ struct ConvertibleFrom {
     }
     bool operator==(const ConvertibleFrom& other) const {
         return this->value == other.value;
+    }
+    bool operator!=(const ConvertibleFrom& other) const {
+        return !this->operator==(other);
     }
 };
 
@@ -54,6 +57,9 @@ struct Target {
     bool operator==(const Target& other) const {
         return this->value == other.value;
     }
+    bool operator!=(const Target& other) const {
+        return !this->operator==(other);
+    }
 };
 
 struct ConvertibleTo {
@@ -63,6 +69,9 @@ struct ConvertibleTo {
     }
     bool operator==(const ConvertibleTo& other) const {
         return this->value == other.value;
+    }
+    bool operator!=(const ConvertibleTo& other) const {
+        return !this->operator==(other);
     }
     operator Target() const {
         return {value};

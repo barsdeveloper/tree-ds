@@ -14,7 +14,7 @@ Q_DECLARE_METATYPE(binary_tree<string>);
 
 class TreeIterationTest : public QObject {
 
-    Q_OBJECT;
+    Q_OBJECT
 
     private slots:
     void iteration();
@@ -27,15 +27,41 @@ void TreeIterationTest::iteration() {
     QFETCH(list<string>, expectedPreOrder);
     QFETCH(list<string>, expectedInOrder);
     QFETCH(list<string>, expectedPostOrder);
-    int actualSize = static_cast<int>(t.size());
+
     list<string> actualPreOrder;
     list<string> actualInOrder;
     list<string> actualPostOrder;
-    copy(t.begin<pre_order>(), t.end(), back_inserter(actualPreOrder));
+    int actualSize = static_cast<int>(t.size());
+
+    copy(t.begin<pre_order>(), t.end<pre_order>(), back_inserter(actualPreOrder));
     copy(t.begin<in_order>(), t.end<in_order>(), back_inserter(actualInOrder));
     copy(t.begin<post_order>(), t.end<post_order>(), back_inserter(actualPostOrder));
+
     QCOMPARE(actualSize, expectedSize);
     QCOMPARE(actualPreOrder, expectedPreOrder);
+    QCOMPARE(actualInOrder, expectedInOrder);
+    QCOMPARE(actualPostOrder, expectedPostOrder);
+
+    /*   ---   Reverse order test   ---   */
+    list<string> actualReversePreOrder;
+    list<string> actualReverseInOrder;
+    list<string> actualReversePostOrder;
+
+    list<string> expectedReversePreOrder;
+    list<string> expectedReverseInOrder;
+    list<string> expectedReversePostOrder;
+
+    copy(t.rbegin<pre_order>(), t.rend<pre_order>(), back_inserter(actualReversePreOrder));
+    copy(t.rbegin<in_order>(), t.rend<in_order>(), back_inserter(actualReverseInOrder));
+    copy(t.rbegin<post_order>(), t.rend<post_order>(), back_inserter(actualReversePostOrder));
+
+    copy(expectedPreOrder.rbegin(), expectedPreOrder.rend(), back_inserter(expectedReversePreOrder));
+    copy(expectedInOrder.rbegin(), expectedInOrder.rend(), back_inserter(expectedReverseInOrder));
+    copy(expectedPostOrder.rbegin(), expectedPostOrder.rend(), back_inserter(expectedReversePostOrder));
+
+    QCOMPARE(actualReversePreOrder, expectedReversePreOrder);
+    QCOMPARE(actualReverseInOrder, expectedReverseInOrder);
+    QCOMPARE(actualReversePostOrder, expectedReversePostOrder);
 }
 
 void TreeIterationTest::iteration_data() {

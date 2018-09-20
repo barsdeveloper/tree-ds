@@ -1,5 +1,7 @@
 #include <QtTest/QtTest>
+
 #include <TreeDS/tree.hpp>
+
 #include "Types.hpp"
 
 using namespace std;
@@ -7,7 +9,7 @@ using namespace ds;
 
 class StructNodeTest : public QObject {
 
-    Q_OBJECT;
+    Q_OBJECT
 
     private slots:
     void smallTrees() {
@@ -123,22 +125,22 @@ class StructNodeTest : public QObject {
                 ),
                 n(3),
                 n(4),
-				n(),
+                n(),
                 n(6),
                 n(7),
                 n(8)(
                     n(6574),
-					n(),
+                    n(),
                     n(98235),
                     n(564)
                 ),
                 n(9),
                 n(10),
-				n(),
+                n(),
                 n(12),
                 n(13),
                 n(14),
-				n()
+                n()
             )
         );
         // clang-format on
@@ -148,14 +150,14 @@ class StructNodeTest : public QObject {
         QCOMPARE(get_child<0>(tree).get_value(), 8001);
         // clang-format off
         QCOMPARE(
-        	get_child<2>(
-				get_child<7>(
-					get_child<0>(tree)
-				)
-			)
-			.get_value(),
-			98235
-		);
+            get_child<2>(
+                get_child<7>(
+                    get_child<0>(tree)
+                )
+            )
+            .get_value(),
+            98235
+        );
         // clang-format on
     }
 };
