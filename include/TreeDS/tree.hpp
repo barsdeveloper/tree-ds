@@ -14,6 +14,7 @@
 #include <TreeDS/iterator/post_order.hpp>
 #include <TreeDS/iterator/pre_order.hpp>
 #include <TreeDS/node/binary_node.hpp>
+#include <TreeDS/node/nary_node.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/utility.hpp>
@@ -35,7 +36,7 @@ namespace ds {
  * @tparam T type of element hold by the tree
  * @tparam Algorithm default iterator algorithm used to traverse the tree in a range-based for loop
  * @tparam Allocator allocator type used to allocate new nodes
- * 
+ *
  * @sa binary_tree
  */
 template <
@@ -339,8 +340,9 @@ class tree {
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     iterator<typename It::algorithm_type>
     insert(It position, const struct_node<ConvertibleT, Children...>& node) {
-        this->size_value += node.get_subtree_size() - 666; // TODO perform calculation
-        return insert(position, std::make_unique<node_type>(node));
+        std::size_t lost_nodes = tree(position.get_node()).size();
+        this->size_value += node.get_subtree_size() - lost_nodes;
+        return insert(position, allocate(allocator, node));
     }
 
     /**
@@ -353,7 +355,7 @@ class tree {
     template <typename It>
     iterator<typename It::algorithm_type> insert(It position, const_reference value) {
         ++this->size_value;
-        return insert(position, std::make_unique<node_type>(value));
+        return insert(position, allocate(allocator, value));
     }
 
     /**
