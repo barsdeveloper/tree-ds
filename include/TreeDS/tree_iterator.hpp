@@ -40,9 +40,9 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    algorithm_type algorithm;
-    tree_type* iterated_tree; // nullptr => no container associated (default iterator)
-    node_type* current_node;  // nullptr => end()
+    algorithm_type algorithm{};
+    tree_type* iterated_tree = nullptr; // nullptr => no container associated (default iterator)
+    node_type* current_node  = nullptr; // nullptr => end()
 
     tree_iterator(tree_type* tree, node_type* current = nullptr) :
             iterated_tree(tree),
@@ -53,11 +53,7 @@ class tree_iterator {
     ~tree_iterator() = default;
 
     // Iterators must be default constructible
-    constexpr tree_iterator() :
-            algorithm(),
-            iterated_tree(nullptr),
-            current_node(nullptr) {
-    }
+    constexpr tree_iterator() = default;
 
     // Iterators must be CopyConstructible
     tree_iterator(const tree_iterator&) = default;
@@ -65,9 +61,7 @@ class tree_iterator {
     tree_iterator& operator=(const tree_iterator&) = default;
 
     tree_iterator(tree_type& tree, bool go_first = true) :
-            algorithm(),
-            iterated_tree(&tree),
-            current_node(nullptr) {
+            iterated_tree(&tree) {
         if (go_first) {
             // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
             this->operator++();
@@ -76,17 +70,16 @@ class tree_iterator {
 
     /*   ---   Enlarged construction/assignment   ---   */
     /*
-	 * This will enable conversion between templates with different a Algorithm but the same T. Also this allows a
-	 * general conversion between any (but having the same parameter T) const_iterator to any iterator.
-	 * Why explicit?
-	 * Iterator must satisfy the multipass guarantee:
-	 * http://en.cppreference.com/w/cpp/concept/ForwardIterator
-	 * That means that it1 == it2 implies ++it1 == ++it2. Obviously this would be false if we allow implicit conversion
-	 * between iterators with different algorithm types. That's the reason of explicit, to limit compiler magics.
-	 */
+     * This will enable conversion between templates with different a Algorithm but the same T. Also this allows a
+     * general conversion between any (but having the same parameter T) const_iterator to any iterator.
+     * Why explicit?
+     * Iterator must satisfy the multipass guarantee:
+     * http://en.cppreference.com/w/cpp/concept/ForwardIterator
+     * That means that it1 == it2 implies ++it1 == ++it2. Obviously this would be false if we allow implicit conversion
+     * between iterators with different algorithm types. That's the reason of explicit, to limit compiler magics.
+     */
     template <typename OtherAlgorithm, bool OtherConstant, typename = std::enable_if<!Constant || OtherConstant>>
     explicit tree_iterator(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) :
-            algorithm(),
             iterated_tree(other.iterated_tree),
             current_node(other.current_node) {
     }
@@ -149,11 +142,11 @@ class tree_iterator {
             current_node = const_cast<node_type*>(algorithm.decrement(*current_node));
         } else if (iterated_tree && iterated_tree->root) {
             /*
-			 * If iterator is at the end():
-			 *     normal iterator  => decremented from end() => go to its last element (before end())
-			 *     reverse iterator => incremented from end() => go to its first element (rewind)
-			 * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
-			 */
+             * If iterator is at the end():
+             *     normal iterator  => decremented from end() => go to its last element (before end())
+             *     reverse iterator => incremented from end() => go to its first element (rewind)
+             * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
+             */
             // const_cast needed in case node_type is non const
             current_node = const_cast<node_type*>(algorithm.go_last(*iterated_tree->root));
         }
