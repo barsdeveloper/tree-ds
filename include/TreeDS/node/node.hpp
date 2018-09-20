@@ -20,6 +20,13 @@ class node {
             value(args...) {
     }
 
+    protected:
+    Node* attach(Node* node) {
+        assert(node != nullptr);
+        node->parent = static_cast<Node*>(this);
+        return node;
+    }
+
     public:
     /*   ---   Getters   ---   */
     const T& get_value() const {
@@ -36,19 +43,19 @@ class node {
 
     bool is_first_child() const {
         return parent
-            ? this == parent->first_child()
+            ? this == parent->get_first_child()
             : false;
     }
 
     bool is_last_child() const {
         return parent
-            ? this == parent->last_child()
+            ? this == parent->get_last_child()
             : false;
     }
 
     bool is_unique_child() const {
         return parent
-            ? this == parent->first_child() && this == parent->last_child()
+            ? this == parent->get_first_child() && this == parent->get_last_child()
             : false;
     }
 };

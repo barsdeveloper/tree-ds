@@ -32,9 +32,9 @@ class binary_node : public node<T, binary_node<T>> {
     binary_node* right = nullptr;
 
     public:
-    using node<T, binary_node>::node;
+    using node<T, binary_node<T>>::node;
 
-    /*   ---   Wide acceptance Copy Constructor using allocator   ---   */
+    /*   ---   Wide acceptance copy constructor using allocator   ---   */
     template <
         typename ConvertibleT = T,
         typename Allocator    = std::allocator<binary_node>,
@@ -45,15 +45,15 @@ class binary_node : public node<T, binary_node<T>> {
             node<T, binary_node<T>>(static_cast<T>(other.value)),
             left(
                 other.left
-                    ? attach(allocate(allocator, *other.left, allocator).release())
+                    ? this->attach(allocate(allocator, *other.left, allocator).release())
                     : nullptr),
             right(
                 other.right
-                    ? attach(allocate(allocator, *other.right, allocator).release())
+                    ? this->attach(allocate(allocator, *other.right, allocator).release())
                     : nullptr) {
     }
 
-    // Construct from struct_node using allocator
+    /*   ---   Construct from struct_node using allocator   ---   */
     template <
         typename ConvertibleT = T,
         typename... Nodes,
@@ -62,7 +62,7 @@ class binary_node : public node<T, binary_node<T>> {
     explicit binary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<binary_node>()) :
-            node<T, binary_node<T>>(other.get_value()) {
+            node<T, binary_node>(other.get_value()) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = get_child<0>(other);
@@ -70,7 +70,7 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
                     "The struct_node passed has a LEFT child with a value that is not compatible with T.");
-                this->left = attach(allocate(allocator, left, allocator).release());
+                this->left = this->attach(allocate(allocator, left, allocator).release());
             }
         }
         if constexpr (sizeof...(Nodes) >= 2) {
@@ -79,12 +79,12 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
                     "The struct_node passed has a RIGHT child with a value that is not compatible with T.");
-                this->right = attach(allocate(allocator, right, allocator).release());
+                this->right = this->attach(allocate(allocator, right, allocator).release());
             }
         }
     }
 
-    // Move constructor
+    /*   ---   Move constructor   ---   */
     binary_node(binary_node&& other) :
             node<T, binary_node<T>>(other.value),
             left(other.left),
@@ -95,21 +95,7 @@ class binary_node : public node<T, binary_node<T>> {
     ~binary_node() = default;
 
     protected:
-    binary_node* attach(binary_node* node) {
-        assert(node != nullptr);
-        node->parent = this;
-        return node;
-    }
-
     void move_resources_to(binary_node& node) {
-        if (this->parent) {
-            if (this->parent->left == this) {
-                this->parent->left = &node;
-            }
-            if (this->parent->right == this) {
-                this->parent->right = &node;
-            }
-        }
         if (this->left) {
             this->left->parent = &node;
         }
@@ -122,21 +108,21 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     public:
-    const binary_node* get_left() const {
+    const binary_node* get_left_child() const {
         return this->left;
     }
 
-    const binary_node* get_right() const {
+    const binary_node* get_right_child() const {
         return this->right;
     }
 
-    const binary_node* first_child() const {
+    const binary_node* get_first_child() const {
         return this->left
             ? this->left
             : this->right;
     }
 
-    const binary_node* last_child() const {
+    const binary_node* get_last_child() const {
         return this->right
             ? this->right
             : this->left;
@@ -148,6 +134,18 @@ class binary_node : public node<T, binary_node<T>> {
             if (this == parent->left) return parent->right;
         }
         return nullptr;
+    }
+
+    const binary_node* get_prev_sibling() const {
+        auto parent = this->parent;
+        if (parent) {
+            if (this == parent->right) return parent->left;
+        }
+        return nullptr;
+    }
+
+    auto get_posessed_resources() {
+        return std::make_tuple(this->left, this->right);
     }
 
     bool is_left_child() const {
@@ -205,7 +203,7 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
                     "The struct_node passed has a LEFT child with a value that is not compatible with T.");
-                if (!this->left || !this->left->operator==(left)) {
+                if (!this->left || *this->left != left) {
                     return false;
                 }
             } else if (this->left) {
@@ -220,7 +218,7 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
                     "The struct_node passed has a RIGHT child with a value that is not compatible with T.");
-                if (!this->right || !this->right->operator==(right)) {
+                if (!this->right || *this->right != right) {
                     return false;
                 }
             } else if (this->right) {

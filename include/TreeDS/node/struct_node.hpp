@@ -50,8 +50,7 @@ class struct_node {
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
             auto call = [&](auto& node) {
-                constexpr bool is_empty = std::is_same_v<decltype(node), struct_node<std::nullptr_t>&>;
-                if constexpr (is_empty) {
+                if constexpr (std::is_same_v<decltype(node.get_value()), std::nullptr_t>) {
                     return;
                 } else {
                     children_count += 1;
@@ -59,7 +58,6 @@ class struct_node {
                 size += node.get_subtree_size();
                 prev_arity = std::max(prev_arity, node.get_subtree_arity());
             };
-            // If you don't understand this, check: https://en.cppreference.com/w/cpp/language/fold
             (call(children), ...);
         }
         this->subtree_size  = size;
@@ -82,6 +80,21 @@ class struct_node {
 
     constexpr std::size_t children_count() const {
         return std::tuple_size_v<children_t>;
+    }
+
+    constexpr std::size_t valid_children_count() const {
+        auto count           = 0;
+        auto check_not_empty = [&](auto& child) {
+            if constexpr (!std::is_same_v<decltype(child.get_value()), std::nullptr_t>) {
+                ++count;
+            }
+        };
+        std::apply(
+            [&](auto&... nodes) {
+                (check_not_empty(nodes), ...);
+            },
+            this->children);
+        return count;
     }
 
     constexpr T get_value() const {
