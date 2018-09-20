@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <TreeDS/iterator/helper.hpp>
+#include <TreeDS/utility.hpp>
 
 namespace ds {
 
@@ -16,13 +16,13 @@ class in_order final {
 
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& n) const {
-        if (n.get_right()) {
-            return descent(n.get_right(), std::mem_fn(&binary_node<T>::get_left));
+        if (n.get_right_child()) {
+            return descent(n.get_right_child(), std::mem_fn(&binary_node<T>::get_left_child));
         } else {
             auto prev = &n;
             auto next = n.get_parent();
             while (next) {
-                if (prev == next->get_left()) {
+                if (prev == next->get_left_child()) {
                     return next; // found
                 }
                 prev = next;
@@ -34,31 +34,29 @@ class in_order final {
 
     template <typename T>
     const binary_node<T>* decrement(const binary_node<T>& n) const {
-        if (n.get_left()) {
-            return descent_right(*n.get_left());
+        if (n.get_left_child()) {
+            return descent(n.get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
         }
         auto prev = &n;
-        auto next = n.parent();
+        auto next = n.get_parent();
         while (next) {
-            if (prev == next->get_right()) {
+            if (prev == next->get_right_child()) {
                 return next; // found
             }
             prev = next;
-            next = next->parent();
+            next = next->get_parent();
         }
         return next;
     }
 
     template <typename T>
     const binary_node<T>* go_first(const binary_node<T>& root) const {
-        return descent(&root, std::mem_fn(&binary_node<T>::get_left));
+        return descent(&root, std::mem_fn(&binary_node<T>::get_left_child));
     }
 
     template <typename T>
     const binary_node<T>* go_last(const binary_node<T>& root) const {
-        return descent(root, [](const binary_node<T>& n) {
-            return n.get_right();
-        });
+        return descent(&root, std::mem_fn(&binary_node<T>::get_right_child));
     }
 };
 

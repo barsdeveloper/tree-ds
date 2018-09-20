@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helper.hpp"
+#include <TreeDS/utility.hpp>
 
 namespace ds {
 
@@ -15,15 +15,15 @@ class post_order final {
     const binary_node<T>* increment(const binary_node<T>& n) const {
         auto prev = &n;
         auto next = n.get_parent();
-        if (!next || prev == next->last_child()) {
+        if (!next || prev == next->get_last_child()) {
             return next; // found
         }
-        return descent(next->get_right(), std::mem_fn(&binary_node<T>::first_child));
+        return descent(next->get_right_child(), std::mem_fn(&binary_node<T>::get_first_child));
     }
 
     template <typename T>
     const binary_node<T>* decrement(const binary_node<T>& n) const {
-        auto result = n.last_child();
+        auto result = n.get_last_child();
         if (result) {
             return result;
         }
@@ -32,7 +32,7 @@ class post_order final {
 
     template <typename T>
     const binary_node<T>* go_first(const binary_node<T>& root) const {
-        return descent(&root, std::mem_fn(&binary_node<T>::first_child));
+        return descent(&root, std::mem_fn(&binary_node<T>::get_first_child));
     }
 
     template <typename T>
