@@ -15,10 +15,10 @@ namespace ds {
 template <typename T>
 class nary_node : public node<T, nary_node<T>> {
 
-    template <typename, typename, bool>
+    template <typename, template <typename> class, bool>
     friend class tree_iterator;
 
-    template <typename, template <typename> class, typename, typename>
+    template <typename, template <typename> class, template <typename> class, typename>
     friend class tree;
 
     protected:
@@ -36,7 +36,7 @@ class nary_node : public node<T, nary_node<T>> {
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit nary_node(
         const nary_node<ConvertibleT>& other,
-        Allocator allocator) :
+        Allocator&& allocator = std::allocator<nary_node>()) :
             node<T, nary_node<T>>(static_cast<T>(other.value)),
             first_child(
                 other.first_child
@@ -54,6 +54,39 @@ class nary_node : public node<T, nary_node<T>> {
             first_child(other.first_child),
             next_sibling(other.next_sibling) {
         other.move_resources_to(*this);
+    }
+
+    /*   ---   Construct from struct_node using allocator   ---   */
+    template <
+        typename ConvertibleT = T,
+        typename... Nodes,
+        typename Allocator = std::allocator<nary_node>,
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
+    explicit nary_node(
+        const struct_node<ConvertibleT, Nodes...>& other,
+        Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node>(other.get_value()) {
+        // pointer to the considered child (which is itself a pointer to nary_node)
+        nary_node** current_child = &this->first_child;
+        // lambda that assigns one child at time
+        auto assign_child = [&](auto&& node) {
+            *current_child           = node.release();                  // assign child
+            (*current_child)->parent = this;                            // set the parent of that child
+            current_child            = &(*current_child)->next_sibling; // go to next child
+        };
+        // lambda that constructs (by calling allocate) a nary_node from a struct_node
+        auto allocate_child = [&](auto& structure_node) {
+            static_assert(
+                !std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>,
+                "ds::nary_node does not accept struct_node with empty nodes");
+            assign_child(allocate(allocator, structure_node, allocator));
+        };
+        std::apply(
+            [&](auto&... nodes) {
+                // call allocate_child for each element in the tuple other.get_children()
+                (allocate_child(nodes), ...);
+            },
+            other.get_children());
     }
 
     protected:
@@ -75,73 +108,51 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     const nary_node* get_last_child() const {
-        return descent(this->first_child, std::mem_fn(&nary_node::get_next_sibling));
+        return this->first_child
+            ? keep_calling(*this->first_child, std::mem_fn(&nary_node::get_next_sibling))
+            : nullptr;
     }
 
     const nary_node* get_prev_sibling() const {
-        auto identity = [](auto& value) -> auto& {
-            return value;
-        };
-        using namespace std::placeholders;
-        return this->parent
-            ? descent(
-                  this->parent->get_first_child(),           // starting from
-                  std::mem_fn(&nary_node::get_next_sibling), // keep calling
-                  std::bind(std::equal_to{}, _2, this),      // until next equals this
-                  std::bind(identity, _1))                   // and return the prev
-            : nullptr;
+        if (this->parent && this->parent->first_child) {
+            const nary_node* first = this->parent->first_child;
+            if (first == this) {
+                return nullptr;
+            }
+            return keep_calling(
+                // starting from
+                *first,
+                // keep calling
+                [](const nary_node& node) {
+                    return node.get_next_sibling();
+                },
+                // until
+                [=](const nary_node&, const nary_node& next) {
+                    return &next == this;
+                },
+                // then return
+                [](const nary_node& prev, const nary_node&) {
+                    return &prev;
+                });
+        } else {
+            return nullptr;
+        }
     }
 
     const nary_node* get_next_sibling() const {
         return this->next_sibling;
     }
 
-    const nary_node& get_child(int index) const {
+    const nary_node* get_child(int index) const {
         const nary_node* const* current = &this->first_child;
-        for (int i = 0; i < index; ++i) {
-            if (*current == nullptr) {
-                throw std::out_of_range("The children requested does not exist.");
-            }
+        for (int i = 0; i < index && *current != nullptr; ++i) {
             current = &(*current)->next_sibling;
         }
-        return **current;
+        return *current;
     }
 
-    auto get_posessed_resources() {
+    auto release() {
         return std::make_tuple(this->first_child, this->next_sibling);
-    }
-
-    // Construct from struct_node using allocator
-    template <
-        typename ConvertibleT = T,
-        typename... Nodes,
-        typename Allocator = std::allocator<nary_node>,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    explicit nary_node(
-        const struct_node<ConvertibleT, Nodes...>& other,
-        Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()) {
-        // pointer to the considered child (which is itself a pointer to nary_node)
-        nary_node** current_child = &this->first_child;
-        // lambda that assigns one child at time
-        auto assign_child = [&](std::unique_ptr<nary_node, auto>&& node) {
-            *current_child           = node.release();                  // assign child
-            (*current_child)->parent = this;                            // set the parent of that child
-            current_child            = &(*current_child)->next_sibling; // go to next child
-        };
-        // lambda that constructs (by calling allocate) a nary_node from a struct_node
-        auto allocate_child = [&](auto& structure_node) {
-            static_assert(
-                !std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>,
-                "ds::nary_node does not accept struct_node with empty nodes");
-            assign_child(allocate(allocator, structure_node, allocator));
-        };
-        std::apply(
-            [&](auto&... nodes) {
-                // call allocate_child for each element in the tuple other.get_children()
-                (allocate_child(nodes), ...);
-            },
-            other.get_children());
     }
 
     bool operator==(const nary_node& other) const {
@@ -199,6 +210,11 @@ class nary_node : public node<T, nary_node<T>> {
                    },
                    other.get_children())
             && *current_child == nullptr;
+    }
+
+    template <typename MatcherNode>
+    bool accept(const MatcherNode& matcher) {
+        return matcher.match(*this);
     }
 };
 

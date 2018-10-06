@@ -2,6 +2,7 @@
 
 #include <cassert> // assert()
 #include <memory>  // std::unique_ptr, std::allocator_traits
+#include <tuple>
 
 namespace ds {
 
@@ -23,7 +24,7 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
         return;
     }
     // first deallocate nodes that this node is responsible for
-    auto resources_to_deallocate = ptr->get_posessed_resources();
+    auto resources_to_deallocate = ptr->release();
     std::apply(
         [&](auto&... pointers) {
             (deallocate(allocator, pointers), ...);

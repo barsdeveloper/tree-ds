@@ -41,6 +41,10 @@ class node {
         return parent;
     }
 
+    bool is_root() const {
+        return parent == nullptr;
+    }
+
     bool is_first_child() const {
         return parent
             ? this == parent->get_first_child()

@@ -2,8 +2,10 @@
 
 #include <cassert> // assert
 #include <memory>  // std::unique_ptr
+#include <tuple>   // std::make_tuple()
 #include <type_traits>
 #include <utility> // std::move(), std::forward()
+#include <variant>
 
 #include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/node/node.hpp>
@@ -15,10 +17,10 @@ namespace ds {
 template <typename T>
 class binary_node : public node<T, binary_node<T>> {
 
-    template <typename, typename, bool>
+    template <typename, template <typename> class, bool>
     friend class tree_iterator;
 
-    template <typename, template <typename> class, typename, typename>
+    template <typename, template <typename> class, template <typename> class, typename>
     friend class tree;
 
     template <typename A>
@@ -64,6 +66,7 @@ class binary_node : public node<T, binary_node<T>> {
         Allocator&& allocator = std::allocator<binary_node>()) :
             node<T, binary_node>(other.get_value()) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
+
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = get_child<0>(other);
             if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
@@ -144,7 +147,7 @@ class binary_node : public node<T, binary_node<T>> {
         return nullptr;
     }
 
-    auto get_posessed_resources() {
+    auto release() {
         return std::make_tuple(this->left, this->right);
     }
 
@@ -160,16 +163,24 @@ class binary_node : public node<T, binary_node<T>> {
             : false;
     }
 
+    bool has_left_child() const {
+        return this->left != nullptr;
+    }
+
+    bool has_right_child() const {
+        return this->right != nullptr;
+    }
+
     long hash_code() const;
 
     bool operator==(const binary_node& other) const {
         // Trivial case exclusion.
-        if ((this->left == nullptr) != (other.left == nullptr)
-            || (this->right == nullptr) != (other.right == nullptr)) {
+        if (this->has_left_child() != other.has_left_child()
+            || this->has_right_child() != other.has_right_child()) {
             return false;
         }
         // Test value for inequality.
-        if (!(this->value == other.value)) {
+        if (this->value != other.value) {
             return false;
         }
         // Deep comparison (at this point both are either null or something).
@@ -230,6 +241,7 @@ class binary_node : public node<T, binary_node<T>> {
         // All the possible false cases were tested, then it's true.
         return true;
     }
+
 }; // namespace ds
 
 /*   ---   Expected equality properties  ---   */
