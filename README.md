@@ -16,7 +16,7 @@ Please feel free to modify it and contribute to the code if you want.
 * Permissive license.
 * Iterators provided: pre-order, in-order, post-order
 * Expandable with custom iterator types.
-* Tree pattern matching (conceptually similar to Regex).
+* Tree pattern matching (conceptually similar to regex).
 
 ## Design goals
 This library is designed with **performance** in mind. It will avoid expensive features like virtual member functions, memory allocations and type erarsure whenever possible, in general I followed the style of the standard library that prefers template parameters over runtime entities. Consider that I have a decently good understanding of C++ mechanics yet I'm far from being an expert.
@@ -49,14 +49,13 @@ int main() {
 Add elements to the tree in the usual way:
 ```c++
 t.insert(t.begin(), "hello");
-// size_value: 1 (hello)
+// size: 1 (hello)
 cout << "size: " << t.size_value() << " (" << *t.begin() << ")" << endl;
 ```
 
 The simplest way to use this library is to create anonymous nodes. Use the function ```n(something)``` to obtain a
 `struct_node<something_t>`, then use the function call operator to add (and replace) children to a node. The value
-obtained has a complex type, don't to refer to it directly, just feed it to the insert/emplace method or the tree
-constructor itself. Look at the following example.
+obtained has a complex type, don't to refer to it directly, just feed it to the constructor itself. Look at the following example.
 
 ```c++
 ds::tree<int> myTree(
@@ -86,7 +85,7 @@ ds::tree<int> myTree(
  */
 ```
 
-Use the same pattern also for the insert method, let's substitute the node 300 (the whole subtree):
+Use the same approach also for the insert method, let's substitute the node 300 (the whole subtree):
 
 ```c++
 myTree.insert(
@@ -121,10 +120,10 @@ parameter. This algorithm will be the default choice (used in the range based lo
 
 ```c++
 ds::tree<int, ds::in_order> inOrder(move(myTree)); // mytree is empty at this point
-//            ^^^^^^^^^^^^
+//            ^^^^^^^^^^^^ default algorithm used to iterate the tree
 ```
 
-We moved the content from `myTree` (which now is empty) to `inOrder`, we could also copy the tree using copy
+At this point moved the content from `myTree` (which now is empty) to `inOrder`, we could also copy the tree using copy
 constructor. That makes a deep copy (**slow**, avoid whenever you can).
 
 ```c++
