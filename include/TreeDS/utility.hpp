@@ -1,40 +1,25 @@
 #pragma once
 
+#include <functional>
+#include <utility> // std::forward()
+
 namespace ds {
 
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(FROM, TO) typename = std::enable_if_t<std::is_constructible_v<FROM, TO>>
 
-template <typename T>
-struct singleton {
-    T& instance;
-    template <typename... Args>
-    singleton(Args&&... args) :
-            instance(singleton::instantiate(std::forward<Args>(args)...)) {
-    }
-    T& get_instance() {
-        return instance;
-    }
-    template <typename... Args>
-    static T& instantiate(Args&&... args) {
-        // Unique T across all instances of singleton
-        static T instance(std::forward<Args>(args)...);
-        return instance;
-    }
-};
-
 template <typename Node, typename Call, typename Test, typename Result>
-const Node* descent(const Node* from, Call call, Test test, Result result) {
-    const Node* prev = nullptr;
-    const Node* next = from;
+const Node* keep_calling(const Node& from, Call call, Test test, Result result) {
+    const Node* prev = &from;
+    const Node* next = call(*prev);
     while (next != nullptr) {
-        if (test(prev, next)) {
-            return result(prev, next);
+        if (test(*prev, *next)) {
+            return result(*prev, *next);
         }
         prev = next;
-        next = call(next);
+        next = call(*prev);
     }
-    return prev;
+    return prev; // returns something only if test() succeeds
 }
 
 /**
@@ -45,45 +30,145 @@ const Node* descent(const Node* from, Call call, Test test, Result result) {
  * The case from == nullptr is correctly managed.
  */
 template <typename Node, typename Callable>
-const Node* descent(const Node* from, Callable call) {
-    const Node* prev = nullptr;
-    const Node* next = from;
+const Node* keep_calling(const Node& from, Callable call) {
+    const Node* prev = &from;
+    const Node* next = call(*prev);
     while (next != nullptr) {
         prev = next;
-        next = call(next);
+        next = call(*prev);
     }
     return prev;
 }
 
-template <typename>
-class binary_node;
-
 template <typename Node>
-const Node* cross_bridge_right(const Node& n) {
-    const Node* prev = &n;
-    const Node* next = n.get_parent();
-    while (next) {
-        if (prev != next->get_last_child()) {
-            return prev->get_next_sibling(); // found
+const Node* prev_branch_sibling(const Node& from) {
+    int relative_level             = 0;
+    const Node* deepest_last_child = &from;
+    const Node* left_crossed;
+    do {
+        // Climb up the tree until a node with a previous sibling is found, thne return that previous sibling
+        left_crossed = keep_calling(
+            // from
+            *deepest_last_child,
+            // keep calling
+            std::mem_fn(&Node::get_parent),
+            // until
+            [&](const Node& child, const Node&) {
+                --relative_level;
+                return !child.is_first_child();
+            },
+            // then return
+            [&](const Node& child, const Node&) {
+                // because it considers the child
+                ++relative_level;
+                // always present because it's the first child
+                return child.get_prev_sibling();
+            });
+        if (left_crossed->is_root()) {
+            return nullptr;
+        } else if (relative_level == 0) {
+            return left_crossed;
         }
-        prev = next;
-        next = next->get_parent();
-    }
-    return next;
+        // Descend the tree following the last children until level is reached or no more children
+        deepest_last_child = keep_calling(
+            // from
+            *left_crossed,
+            // keep calling
+            std::mem_fn(&Node::get_last_child),
+            // until
+            [&](const Node&, const Node&) {
+                ++relative_level;
+                return relative_level >= 0;
+            },
+            // the return
+            [](const Node&, const Node& child) {
+                return &child;
+            });
+    } while (relative_level < 0);
+    return deepest_last_child;
 }
 
 template <typename Node>
-const Node* cross_bridge_left(const Node& n) {
-    const Node* prev = &n;
-    const Node* next = n.get_parent();
-    while (next) {
-        if (prev != next->get_first_child()) {
-            return next->get_left_child(); // found
-        }
-        prev = next;
-        next = next->get_parent();
+const Node* upper_row_rightmost(const Node& from) {
+    if (from.is_root()) {
+        return nullptr;
     }
-    return next;
+    int relative_level = 0;
+    const Node* deepest_last_child;
+    // Climb the tree up to the root
+    const Node* left_crossed = keep_calling(
+        // from
+        from,
+        // keep calling
+        std::mem_fn(&Node::get_parent),
+        // until
+        [&](const Node&, const Node& parent) {
+            --relative_level;
+            return parent.is_root();
+        },
+        // then return
+        [](const Node&, const Node& root) {
+            return &root;
+        });
+    // if it climbed just once, then this is a child of the root anche the root is its upper_row_rightmost's
+    if (relative_level == -1) {
+        return left_crossed;
+    }
+    do {
+        // Descend the tree keeping right (last child)
+        deepest_last_child = keep_calling(
+            // from
+            *left_crossed,
+            // keep calling
+            std::mem_fn(&Node::get_last_child),
+            // until
+            [&](const Node&, const Node&) {
+                ++relative_level;
+                return relative_level >= -1;
+            },
+            // the return
+            [](const Node&, const Node& child) {
+                return &child;
+            });
+        if (relative_level == -1) {
+            return deepest_last_child;
+        }
+        // Go to the node that is on the left and at the same level
+        left_crossed = prev_branch_sibling(*deepest_last_child);
+    } while (relative_level < -1);
+    return deepest_last_child;
+}
+
+template <typename Node>
+const Node* deepest_rightmost_child(const Node& root) {
+    int current_level        = 0;
+    int deepest_level        = 0;
+    const Node* current_node = &root;
+    const Node* deepest_node = &root;
+    do {
+        // Descend the tree keeping right (last child)
+        current_node = keep_calling(
+            // from
+            *current_node,
+            // keep calling
+            std::mem_fn(&Node::get_last_child),
+            // until
+            [&](const Node&, const Node&) {
+                ++current_level;
+                return false;
+            },
+            // the return
+            [](const Node&, const Node& child) {
+                return &child;
+            });
+        if (current_level > deepest_level) {
+            deepest_level = current_level;
+            deepest_node  = current_node;
+        }
+        // Go to the node that is on the left and at the same level
+        current_node = prev_branch_sibling(*current_node);
+    } while (current_node != nullptr);
+    return deepest_node;
 }
 
 } // namespace ds
