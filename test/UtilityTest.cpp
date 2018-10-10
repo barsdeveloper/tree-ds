@@ -228,6 +228,7 @@ void UtilityTest::advancedNary() {
     const nary_node<int>* n27 = n26->get_child(0);
 
     QCOMPARE(prev_branch_sibling(*n10), n9);
+    QCOMPARE(prev_branch_sibling(*n12), nullptr);
     QCOMPARE(prev_branch_sibling(*n15), n14);
     QCOMPARE(prev_branch_sibling(*n20), n19);
     QCOMPARE(prev_branch_sibling(*n23), nullptr);

@@ -45,22 +45,9 @@ class node {
         return parent == nullptr;
     }
 
-    bool is_first_child() const {
-        return parent
-            ? this == parent->get_first_child()
-            : false;
-    }
-
-    bool is_last_child() const {
-        return parent
-            ? this == parent->get_last_child()
-            : false;
-    }
-
     bool is_unique_child() const {
-        return parent
-            ? this == parent->get_first_child() && this == parent->get_last_child()
-            : false;
+        return static_cast<const Node*>(this)->is_first_child()
+            && static_cast<const Node*>(this)->is_last_child();
     }
 };
 

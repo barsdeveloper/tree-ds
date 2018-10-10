@@ -17,22 +17,21 @@ class breadth_first final {
 
     private:
     std::deque<const Node*> open_nodes{};
-    const Node* root = nullptr;
 
     public:
     breadth_first() = default;
 
     // formward puhes into open back and pops front
-    const Node* increment() {
+    const Node* increment(const Node&) {
         if (open_nodes.empty()) return nullptr;
         // pop front the element to return
         const Node* result = open_nodes.front();
         open_nodes.pop_front();
         const Node* first = result->get_first_child();
-        // push back the children
+        // push back its children
         if (first) {
             keep_calling(
-                *first, // descent takes care to not call the next lambda if null
+                *first,
                 [&](const Node& node) {
                     open_nodes.push_back(&node);
                     return node.get_next_sibling();
@@ -41,43 +40,54 @@ class breadth_first final {
         return result;
     }
 
-    const Node* decrement() {
-        const Node* result;
-        if (open_nodes.empty()) {
-            result = deepest_rightmost_child(*root);
-            open_nodes.push_front(result);
-            return result;
-        } else {
-            const Node* front = open_nodes.front(); // never nullptr
-            result            = prev_branch_sibling(*front);
-            if (!result) {
-                result = upper_row_rightmost(*front);
-            }
+    const Node* decrement(const Node& from) {
+        // calculate the previous element
+        const Node* result = prev_branch_sibling(from);
+        if (!result) {
+            result = upper_row_rightmost(from);
         }
-        // pop back the children
-        if (result) {
+        // delete the children of current node from open_nodes
+        if (from.get_first_child() != nullptr) {
+            // pop back the children of the previous element
             const Node* last = open_nodes.back();
-            while (!open_nodes.empty() && last->get_parent() == result) {
+            while (!open_nodes.empty() && last->get_parent() == &from) {
                 open_nodes.pop_back();
                 last = open_nodes.back();
             }
-            // push front the result to return
-            open_nodes.push_front(result);
         }
+        // push front the current (so that it will be the next from a forward iterator POV
+        open_nodes.push_front(&from);
         return result;
     }
 
     const Node* go_first(const Node& root) {
-        this->root = &root;
         open_nodes.clear();
         open_nodes.push_back(&root);
-        return increment();
+        return increment(root);
     }
 
     const Node* go_last(const Node& root) {
-        this->root = &root;
         open_nodes.clear();
-        return decrement();
+        return deepest_rightmost_child(root);
+    }
+
+    void update(const Node& previous, const Node& replacement) {
+        // delete children of the previous nodes from open_nodes (invariants garantee that they are the last elements)
+        while (!open_nodes.empty()) {
+            const Node* last = open_nodes.back();
+            if (last->parent() == &previous) {
+                open_nodes.pop_back();
+                last = open_nodes.back();
+            } else {
+                break;
+            }
+        }
+        // push from back the children of the replacement node
+        const Node* child = replacement.get_first_child();
+        while (child != nullptr) {
+            open_nodes.push_back(child);
+            child = child->get_next_sibling();
+        }
     }
 };
 

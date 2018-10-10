@@ -2,26 +2,25 @@
 
 #include <functional>
 
-#include <TreeDS/traversal_policy/current_state_traversal.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace ds {
 
-template <typename Node>
-class pre_order final : public current_state_traversal<Node, pre_order> {
-
-    using current_state_traversal<Node, pre_order>::current_state_traversal;
+class pre_order final {
 
     public:
-    const Node* increment_impl() {
-        auto result = this->get_current()->get_first_child();
+    constexpr pre_order() = default;
+
+    template <typename Node>
+    const Node* increment(const Node& from) {
+        const Node* result = from.get_first_child();
         if (result != nullptr) {
             return result;
         }
         // cross to another branch (on the right)
         result = keep_calling(
             // from
-            *this->get_current(),
+            from,
             // keep calling
             std::mem_fn(&Node::get_parent),
             // until
@@ -39,9 +38,10 @@ class pre_order final : public current_state_traversal<Node, pre_order> {
         }
     }
 
-    const Node* decrement_impl() {
-        const Node* next = this->get_current()->get_parent();
-        const Node* prev = this->get_current();
+    template <typename Node>
+    const Node* decrement(const Node& from) {
+        const Node* next = from.get_parent();
+        const Node* prev = &from;
         /*
          * The parent is the next node if (REMEMBER: we traverse tree in pre-order and decrement the iterator):
          *   1) The passed node is root (its parent is nullptr so the previous value is the end of the reverse iterator)
@@ -56,11 +56,13 @@ class pre_order final : public current_state_traversal<Node, pre_order> {
             : nullptr;
     }
 
-    const Node* go_first_impl(const Node& root) {
+    template <typename Node>
+    const Node* go_first(const Node& root) {
         return &root;
     }
 
-    const Node* go_last_impl(const Node& root) {
+    template <typename Node>
+    const Node* go_last(const Node& root) {
         return keep_calling(root, std::mem_fn(&Node::get_last_child));
     }
 };

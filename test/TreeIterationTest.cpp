@@ -2,15 +2,14 @@
 #include <algorithm>
 #include <iterator>
 #include <list>
-#include <string>
 
 #include <TreeDS/binary_tree>
 
 using namespace std;
 using namespace ds;
 
-Q_DECLARE_METATYPE(list<string>);
-Q_DECLARE_METATYPE(binary_tree<string>);
+Q_DECLARE_METATYPE(list<char>);
+Q_DECLARE_METATYPE(binary_tree<char>);
 
 class TreeIterationTest : public QObject {
 
@@ -22,23 +21,26 @@ class TreeIterationTest : public QObject {
 };
 
 void TreeIterationTest::iteration() {
-    QFETCH(binary_tree<string>, t);
+    QFETCH(binary_tree<char>, t);
     QFETCH(int, expectedSize);
-    QFETCH(list<string>, expectedPreOrder);
-    QFETCH(list<string>, expectedInOrder);
-    QFETCH(list<string>, expectedPostOrder);
-    QFETCH(list<string>, expectedBreadthFirst);
+    QFETCH(list<char>, expectedPreOrder);
+    QFETCH(list<char>, expectedInOrder);
+    QFETCH(list<char>, expectedPostOrder);
+    QFETCH(list<char>, expectedBreadthFirst);
 
-    list<string> actualPreOrder;
-    list<string> actualInOrder;
-    list<string> actualPostOrder;
-    list<string> actualBreadthFirst;
+    list<char> actualPreOrder;
+    list<char> actualInOrder;
+    list<char> actualPostOrder;
+    list<char> actualBreadthFirst;
     int actualSize = static_cast<int>(t.size());
 
     copy(t.begin<pre_order>(), t.end<pre_order>(), back_inserter(actualPreOrder));
     copy(t.begin<in_order>(), t.end<in_order>(), back_inserter(actualInOrder));
     copy(t.begin<post_order>(), t.end<post_order>(), back_inserter(actualPostOrder));
-    copy(t.begin<breadth_first>(), t.end<breadth_first>(), back_inserter(actualBreadthFirst));
+    copy(
+        t.begin<breadth_first<binary_node<char>>>(),
+        t.end<breadth_first<binary_node<char>>>(),
+        back_inserter(actualBreadthFirst));
 
     QCOMPARE(actualSize, expectedSize);
     QCOMPARE(actualPreOrder, expectedPreOrder);
@@ -47,20 +49,23 @@ void TreeIterationTest::iteration() {
     QCOMPARE(actualBreadthFirst, expectedBreadthFirst);
 
     /*   ---   Reverse order test   ---   */
-    list<string> actualReversePreOrder;
-    list<string> actualReverseInOrder;
-    list<string> actualReversePostOrder;
-    list<string> actualReverseBreadthFirst;
+    list<char> actualReversePreOrder;
+    list<char> actualReverseInOrder;
+    list<char> actualReversePostOrder;
+    list<char> actualReverseBreadthFirst;
 
-    list<string> expectedReversePreOrder;
-    list<string> expectedReverseInOrder;
-    list<string> expectedReversePostOrder;
-    list<string> expectedReverseBreadthFirst;
+    list<char> expectedReversePreOrder;
+    list<char> expectedReverseInOrder;
+    list<char> expectedReversePostOrder;
+    list<char> expectedReverseBreadthFirst;
 
     copy(t.rbegin<pre_order>(), t.rend<pre_order>(), back_inserter(actualReversePreOrder));
     copy(t.rbegin<in_order>(), t.rend<in_order>(), back_inserter(actualReverseInOrder));
     copy(t.rbegin<post_order>(), t.rend<post_order>(), back_inserter(actualReversePostOrder));
-    copy(t.rbegin<breadth_first>(), t.rend<breadth_first>(), back_inserter(actualReverseBreadthFirst));
+    copy(
+        t.rbegin<breadth_first<binary_node<char>>>(),
+        t.rend<breadth_first<binary_node<char>>>(),
+        back_inserter(actualReverseBreadthFirst));
 
     copy(expectedPreOrder.rbegin(), expectedPreOrder.rend(), back_inserter(expectedReversePreOrder));
     copy(expectedInOrder.rbegin(), expectedInOrder.rend(), back_inserter(expectedReverseInOrder));
@@ -74,282 +79,212 @@ void TreeIterationTest::iteration() {
 }
 
 void TreeIterationTest::iteration_data() {
-    QTest::addColumn<binary_tree<string>>("t");
+    QTest::addColumn<binary_tree<char>>("t");
     QTest::addColumn<int>("expectedSize");
-    QTest::addColumn<list<string>>("expectedPreOrder");
-    QTest::addColumn<list<string>>("expectedInOrder");
-    QTest::addColumn<list<string>>("expectedPostOrder");
-    QTest::addColumn<list<string>>("expectedBreadthFirst");
+    QTest::addColumn<list<char>>("expectedPreOrder");
+    QTest::addColumn<list<char>>("expectedInOrder");
+    QTest::addColumn<list<char>>("expectedPostOrder");
+    QTest::addColumn<list<char>>("expectedBreadthFirst");
 
     /******************************************************************************************************************/
-    QTest::newRow("Empty String")
-        << binary_tree<string>(n(""))
+    QTest::newRow("Single character")
+        << binary_tree<char>(n('#'))
         << 1
-        << list<string>{""}
-        << list<string>{""}
-        << list<string>{""}
-        << list<string>{""};
+        << list<char>{'#'}
+        << list<char>{'#'}
+        << list<char>{'#'}
+        << list<char>{'#'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a left child")
-        // clang-format off
-        << binary_tree<string>(
-            n("1")(
-                n("2")
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('1')(
+                   n('2')))
+
         << 2
-        << list<string>{"1", "2"}
-        << list<string>{"2", "1"}
-        << list<string>{"2", "1"}
-        << list<string>{"1", "2"};
+        << list<char>{'1', '2'}
+        << list<char>{'2', '1'}
+        << list<char>{'2', '1'}
+        << list<char>{'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a right child")
-        // clang-format off
-        << binary_tree<string>(
-            n("1")(
-                n(),
-                n("2")
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('1')(
+                   n(),
+                   n('2')))
+
         << 2
-        << list<string>{"1", "2"}
-        << list<string>{"1", "2"}
-        << list<string>{"2", "1"}
-        << list<string>{"1", "2"};
+        << list<char>{'1', '2'}
+        << list<char>{'1', '2'}
+        << list<char>{'2', '1'}
+        << list<char>{'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Small tree")
-        // clang-format off
-        << binary_tree<string>(
-            n("a")(
-                n("b")(
-                    n("d")(
-                        n("h"),
-                        n() // This can be omitted but I want to test it
-                    ),
-                    n("e")
-                ),
-                n("c")(
-                    n("f")(
-                        n("j"),
-                        n("k")
-                    ),
-                    n("g")
-                )
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('a')(
+                   n('b')(
+                       n('d')(
+                           n('h'),
+                           n() // This can be omitted but I want to test it
+                           ),
+                       n('e')),
+                   n('c')(
+                       n('f')(
+                           n('j'),
+                           n('k')),
+                       n('g'))))
+
         << 10
-        << list<string>{"a", "b", "d", "h", "e", "c", "f", "j", "k", "g"}
-        << list<string>{"h", "d", "b", "e", "a", "j", "f", "k", "c", "g"}
-        << list<string>{"h", "d", "e", "b", "j", "k", "f", "g", "c", "a"}
-        << list<string>{"a", "b", "c", "d", "e", "f", "g", "h", "j", "k"};
+        << list<char>{'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
+        << list<char>{'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
+        << list<char>{'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
+        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k'};
 
     /******************************************************************************************************************/
     QTest::newRow("Big tree")
-        // clang-format off
-        << binary_tree<string>(
-            n("a")(
-                n("b")(
-                    n("c")(
-                        n("d")(
-                            n("e")(
-                                n("f"),
-                                n("g")
-                            ),
-                            n("h")(
-                                n(),
-                                n("o")
-                            )
-                        ),
-                        n("i")(
-                            n(),
-                            n("n")(
-                                n(),
-                                n("p")
-                            )
-                        )
-                    ),
-                    n("j")(
-                        n(),
-                        n("m")(
-                            n(),
-                            n("q")(
-                                n(),
-                                n("t")
-                            )
-                        )
-                    )
-                ),
-                n("k")(
-                    n(),
-                    n("l")(
-                        n(),
-                        n("r")(
-                            n(),
-                            n("s")(
-                                n(),
-                                n("u")
-                            )
-                        )
-                    )
-                )
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('a')(
+                   n('b')(
+                       n('c')(
+                           n('d')(
+                               n('e')(
+                                   n('f'),
+                                   n('g')),
+                               n('h')(
+                                   n(),
+                                   n('o'))),
+                           n('i')(
+                               n(),
+                               n('n')(
+                                   n(),
+                                   n('p')))),
+                       n('j')(
+                           n(),
+                           n('m')(
+                               n(),
+                               n('q')(
+                                   n(),
+                                   n('t'))))),
+                   n('k')(
+                       n(),
+                       n('l')(
+                           n(),
+                           n('r')(
+                               n(),
+                               n('s')(
+                                   n(),
+                                   n('u')))))))
+
         << 21
-        << list<string>{"a", "b", "c", "d", "e", "f", "g", "h", "o", "i", "n", "p", "j", "m", "q", "t", "k", "l", "r", "s", "u"}
-        << list<string>{"f", "e", "g", "d", "h", "o", "c", "i", "n", "p", "b", "j", "m", "q", "t", "a", "k", "l", "r", "s", "u"}
-        << list<string>{"f", "g", "e", "o", "h", "d", "p", "n", "i", "c", "t", "q", "m", "j", "b", "u", "s", "r", "l", "k", "a"}
-        << list<string>{"a", "b", "k", "c", "j", "l", "d", "i", "m", "r", "e", "h", "n", "q", "s", "f", "g", "o", "p", "t", "u"};
+        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
+        << list<char>{'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
+        << list<char>{'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
+        << list<char>{'a', 'b', 'k', 'c', 'j', 'l', 'd', 'i', 'm', 'r', 'e', 'h', 'n', 'q', 's', 'f', 'g', 'o', 'p', 't', 'u'};
 
     /******************************************************************************************************************/
     QTest::newRow("All left child")
-        // clang-format off
-        << binary_tree<string>(
-            n("1")(
-                n("2")(
-                    n("3")(
-                        n("4")(
-                            n("5")(
-                                n("6")(
-                                    n("7")(
-                                        n("8")(
-                                            n("9")(
-                                                n("10")(
-                                                    n("11")(
-                                                        n("12")(
-                                                            n("13")(
-                                                                n("14")(
-                                                                    n("15")
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('1')(
+                   n('2')(
+                       n('3')(
+                           n('4')(
+                               n('5')(
+                                   n('6')(
+                                       n('7')(
+                                           n('8')(
+                                               n('9')(
+                                                   n('A')(
+                                                       n('B')(
+                                                           n('C')(
+                                                               n('D')(
+                                                                   n('E')(
+                                                                       n('F'))))))))))))))))
+
         << 15
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("All right child")
-        // clang-format off
-        << binary_tree<string>(
-            n("1")(
-                n(),
-                n("2")(
-                    n(),
-                    n("3")(
-                        n(),
-                        n("4")(
-                            n(),
-                            n("5")(
-                                n(),
-                                n("6")(
-                                    n(),
-                                    n("7")(
-                                        n(),
-                                        n("8")(
-                                            n(),
-                                            n("9")(
-                                                n(),
-                                                n("10")(
-                                                    n(),
-                                                    n("11")(
-                                                        n(),
-                                                        n("12")(
-                                                            n(),
-                                                            n("13")(
-                                                                n(),
-                                                                n("14")(
-                                                                    n(),
-                                                                    n("15")
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('1')(
+                   n(),
+                   n('2')(
+                       n(),
+                       n('3')(
+                           n(),
+                           n('4')(
+                               n(),
+                               n('5')(
+                                   n(),
+                                   n('6')(
+                                       n(),
+                                       n('7')(
+                                           n(),
+                                           n('8')(
+                                               n(),
+                                               n('9')(
+                                                   n(),
+                                                   n('A')(
+                                                       n(),
+                                                       n('B')(
+                                                           n(),
+                                                           n('C')(
+                                                               n(),
+                                                               n('D')(
+                                                                   n(),
+                                                                   n('E')(
+                                                                       n(),
+                                                                       n('F'))))))))))))))))
+
         << 15
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("ZigZag")
-        // clang-format off
-        << binary_tree<string>(
-            n("1")(
-                n("2")(
-                    n(),
-                    n("3")(
-                        n("4")(
-                            n(),
-                            n("5")(
-                                n("6")(
-                                    n(),
-                                    n("7")(
-                                        n("8")(
-                                            n(),
-                                            n("9")(
-                                                n("10")(
-                                                    n(),
-                                                    n("11")(
-                                                        n("12")(
-                                                            n(),
-                                                            n("13")(
-                                                                n("14")(
-                                                                    n(),
-                                                                    n("15")
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-        // clang-format on
+
+        << binary_tree<char>(
+               n('1')(
+                   n('2')(
+                       n(),
+                       n('3')(
+                           n('4')(
+                               n(),
+                               n('5')(
+                                   n('6')(
+                                       n(),
+                                       n('7')(
+                                           n('8')(
+                                               n(),
+                                               n('9')(
+                                                   n('A')(
+                                                       n(),
+                                                       n('B')(
+                                                           n('C')(
+                                                               n(),
+                                                               n('D')(
+                                                                   n('E')(
+                                                                       n(),
+                                                                       n('F'))))))))))))))))
+
         << 15
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}
-        << list<string>{"2", "4", "6", "8", "10", "12", "14", "15", "13", "11", "9", "7", "5", "3", "1"}
-        << list<string>{"15", "14", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"}
-        << list<string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char>{'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
+        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 }
 
 QTEST_MAIN(TreeIterationTest);

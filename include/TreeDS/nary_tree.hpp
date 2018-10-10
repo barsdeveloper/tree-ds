@@ -2,7 +2,7 @@
 
 #include <memory> // std::allocator
 
-#include <TreeDS/node/binary_node.hpp>
+#include <TreeDS/node/nary_node.hpp>
 #include <TreeDS/traversal_policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
 
@@ -18,11 +18,11 @@ namespace ds {
  */
 template <
     typename T,
-    template <typename> class Algorithm = pre_order,
-    typename Allocator                  = std::allocator<T>>
-class nary_tree : public tree<T, nary_node, Algorithm, Allocator> {
-    using super = tree<T, nary_node, Algorithm, Allocator>;
-    using tree<T, nary_node, Algorithm, Allocator>::tree;
+    typename Algorithm = pre_order,
+    typename Allocator = std::allocator<T>>
+class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
+    using super = tree<T, nary_node<T>, Algorithm, Allocator>;
+    using tree<T, nary_node<T>, Algorithm, Allocator>::tree;
 };
 
 } // namespace ds

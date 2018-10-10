@@ -17,10 +17,10 @@ namespace ds {
 template <typename T>
 class binary_node : public node<T, binary_node<T>> {
 
-    template <typename, template <typename> class, bool>
+    template <typename, typename, bool>
     friend class tree_iterator;
 
-    template <typename, template <typename> class, template <typename> class, typename>
+    template <typename, typename, typename, typename>
     friend class tree;
 
     template <typename A>
@@ -98,6 +98,7 @@ class binary_node : public node<T, binary_node<T>> {
     ~binary_node() = default;
 
     protected:
+    /// Move the resources hold by this node to another node
     void move_resources_to(binary_node& node) {
         if (this->left) {
             this->left->parent = &node;
@@ -110,7 +111,53 @@ class binary_node : public node<T, binary_node<T>> {
         this->right  = nullptr;
     }
 
+    /// Discard this whole subtree and replace it with node
+    void replace_with(binary_node& node) {
+        assert(node.is_root());
+        if (this->parent != nullptr) {
+            if (this->is_left_child()) {
+                this->parent->left = &node;
+            } else {
+                this->parent->right = &node;
+            }
+            this->parent->attach(&node);
+            this->parent = nullptr;
+        }
+    }
+
     public:
+    bool is_last_child() const {
+        return this->parent
+            ? this->parent->get_last_child() == this
+            : false;
+    }
+
+    bool is_first_child() const {
+        return this->parent
+            ? this->parent->get_first_child() == this
+            : false;
+    }
+
+    bool is_left_child() const {
+        return this->parent
+            ? this == this->parent->left
+            : false;
+    }
+
+    bool is_right_child() const {
+        return this->parent
+            ? this == this->parent->right
+            : false;
+    }
+
+    bool has_left_child() const {
+        return this->left != nullptr;
+    }
+
+    bool has_right_child() const {
+        return this->right != nullptr;
+    }
+
     const binary_node* get_left_child() const {
         return this->left;
     }
@@ -147,28 +194,8 @@ class binary_node : public node<T, binary_node<T>> {
         return nullptr;
     }
 
-    auto release() {
+    std::tuple<binary_node*, binary_node*> release() {
         return std::make_tuple(this->left, this->right);
-    }
-
-    bool is_left_child() const {
-        return this->parent
-            ? this == this->parent->left
-            : false;
-    }
-
-    bool is_right_child() const {
-        return this->parent
-            ? this == this->parent->right
-            : false;
-    }
-
-    bool has_left_child() const {
-        return this->left != nullptr;
-    }
-
-    bool has_right_child() const {
-        return this->right != nullptr;
     }
 
     long hash_code() const;

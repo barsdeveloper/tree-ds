@@ -15,8 +15,6 @@ class PreliminaryTest : public QObject {
     void objectCreation();
 };
 
-Q_DECLARE_METATYPE(binary_tree<Foo>);
-
 void PreliminaryTest::objectCreation() {
 
     binary_tree<Foo> t;

@@ -46,13 +46,13 @@ void NaryNodeTest::defaultConstructed() {
 }
 
 void NaryNodeTest::constructFromStructNode() {
-    // clang-format off
+    
     auto structNode =
         n(Target("a"))(
             n(Target("b")),
             n(Target("c"))
         );
-    // clang-format on
+    
     nary_node<Target> node(structNode);
     auto& first = *node.get_first_child();
     auto& last  = *node.get_last_child();

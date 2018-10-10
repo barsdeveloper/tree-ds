@@ -33,15 +33,15 @@ namespace ds {
  */
 template <
     typename T,
-    template <typename> class Node,
-    template <typename> class Algorithm,
+    typename Node,
+    typename Algorithm,
     typename Allocator>
 class tree {
 
-    template <typename, template <typename> class, template <typename> class, typename>
+    template <typename, typename, typename, typename>
     friend class tree;
 
-    template <typename, template <typename> class, bool>
+    template <typename, typename, bool>
     friend class tree_iterator;
 
     public:
@@ -51,22 +51,22 @@ class tree {
     using value_type      = T;
     using reference       = value_type&;
     using const_reference = const value_type&;
-    using node_type       = Node<T>;
+    using node_type       = Node;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
     using pointer         = typename std::allocator_traits<Allocator>::pointer;
     using const_pointer   = typename std::allocator_traits<Allocator>::const_pointer;
-    using algorithm_type  = Algorithm<node_type>;
+    using algorithm_type  = Algorithm;
     using allocator_type  = typename std::allocator_traits<Allocator>::template rebind_alloc<node_type>;
 
     // Iterators
-    template <template <typename> class A>
+    template <typename A>
     using iterator = tree_iterator<tree, A, false>;
-    template <template <typename> class A>
+    template <typename A>
     using const_iterator = tree_iterator<tree, A, true>;
-    template <template <typename> class A>
+    template <typename A>
     using reverse_iterator = std::reverse_iterator<iterator<A>>;
-    template <template <typename> class A>
+    template <typename A>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
     protected:
@@ -96,6 +96,15 @@ class tree {
             size_value(other.size_value) {
     }
 
+    template <typename OtherPolicy, typename OtherAllocator>
+    tree(const tree<T, Node, OtherPolicy, OtherAllocator>& other) :
+            root(
+                other.root
+                    ? std::move(allocate(allocator, *other.root, allocator))
+                    : decltype(root){}),
+            size_value(other.size_value) {
+    }
+
     /**
      * Move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument will be empty
      * after this operation.
@@ -106,11 +115,6 @@ class tree {
             size_value(other.size_value) {
         other.nullify();
     }
-
-    /*
-     * Destruct all the nodes and deallocate the memory owned by this tree.
-     */
-    ~tree() = default;
 
     /**
      * Create a tree by copying the nodes structure starting from the {@link temporary_node} passed as argument. A new
@@ -125,6 +129,11 @@ class tree {
             root(std::move(allocate(allocator, root, allocator))),
             size_value(root.get_subtree_size()) {
     }
+
+    /*
+     * Destruct all the nodes and deallocate the memory owned by this tree.
+     */
+    ~tree() = default;
 
     tree& operator=(const tree& other) {
         this->root = std::move(allocate(allocator, *other.root, allocator));
@@ -146,7 +155,7 @@ class tree {
      * algorithm used to traverse the tree.
      * @return iterator to the first element
      */
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     iterator<A> begin() {
         // Incremented to get it to the first element
         return ++iterator<A>(this);
@@ -158,7 +167,7 @@ class tree {
      * algorithm used to traverse the tree. Using this iterator you can't modify the container.
      * @return constant iterator to the first element
      */
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_iterator<A> begin() const {
         return cbegin();
     }
@@ -166,7 +175,7 @@ class tree {
     /**
      * @copydoc #begin() const
      */
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_iterator<A> cbegin() const {
         // Incremented to get it to the first element
         return ++const_iterator<A>(this);
@@ -180,27 +189,27 @@ class tree {
      * element.
      * @return iterator the element following the last element
      */
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     iterator<A> end() {
         return iterator<A>(this);
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_iterator<A> end() const {
         return cend();
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_iterator<A> cend() const {
         return const_iterator<A>(this);
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     reverse_iterator<A> rbegin() {
         return reverse_iterator<A>(iterator<A>(this));
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_reverse_iterator<A> rbegin() const {
         /*
          * Why we don'_tree increment the reverse_iterator as we do with iterator?
@@ -215,24 +224,24 @@ class tree {
         return crbegin();
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_reverse_iterator<A> crbegin() const {
         return const_reverse_iterator<A>(const_iterator<A>(this));
     }
 
     // reverse end
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     reverse_iterator<A> rend() {
         // reverse_iterator takes an iterator as argument, we construct it using {this}
         return --reverse_iterator<A>(iterator<A>(this));
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_reverse_iterator<A> rend() const {
         return crend();
     }
 
-    template <template <typename> class A = Algorithm>
+    template <typename A = Algorithm>
     const_reverse_iterator<A> crend() const {
         // reverse_iterator takes an iterator as argument, we construcit using {this}
         return --const_reverse_iterator<A>(const_iterator<A>(this));
@@ -281,19 +290,16 @@ class tree {
     }
 
     template <typename It>
-    iterator<Algorithm> insert(
-        It position,
-        std::unique_ptr<node_type, deleter<allocator_type>> node // owning pointer with deleter function object
-    ) {
+    It insert(It position, std::unique_ptr<node_type, deleter<allocator_type>> node) {
         node_type* target = position.get_node();
         if (target) { // if iterator points to valid node
-            target->move_resources_to(*node);
+            target->replace_with(*(node.release()));
         } else if (!this->root) {
             this->root = std::move(node);
         } else {
             throw std::logic_error("Tried to insert node in a not valid position.");
         }
-        return {this, node.get()};
+        return position;
     }
 
     public:
@@ -332,8 +338,8 @@ class tree {
         typename ConvertibleT,
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
-    iterator<Algorithm> insert(It position, const struct_node<ConvertibleT, Children...>& node) {
-        std::size_t lost_nodes = tree(position.get_node()).size();
+    It insert(It position, const struct_node<ConvertibleT, Children...>& node) {
+        std::size_t lost_nodes = count_nodes(*position.get_node());
         this->size_value += node.get_subtree_size() - lost_nodes;
         return insert(position, allocate(allocator, node));
     }
@@ -346,7 +352,7 @@ class tree {
      * @return an iterator that points to the inserted element
      */
     template <typename It>
-    iterator<Algorithm> insert(It position, const_reference value) {
+    It insert(It position, const_reference value) {
         ++this->size_value;
         return insert(position, allocate(allocator, value));
     }
@@ -358,19 +364,20 @@ class tree {
      * @return an iterator that points to the inserted element
      */
     template <typename It>
-    iterator<Algorithm> insert(It position, value_type&& value) {
+    It insert(It position, value_type&& value) {
         ++this->size_value;
         return insert(position, allocate(allocator, std::move(value)));
     }
 
     template <typename It, typename... Args>
-    iterator<Algorithm> emplace(It position, Args&&... args) {
+    It emplace(It position, Args&&... args) {
         ++this->size_value;
         return insert(position, allocate(allocator, std::forward<Args>(args)...));
     }
 
     /*   ---   Equality comparison   ---   */
-    bool operator==(const tree& other) const {
+    template <typename OtherPolicy, typename OtherAllocator>
+    bool operator==(const tree<T, Node, OtherPolicy, OtherAllocator>& other) const {
         // 1. Test if different size_value
         if (this->size_value != other.size_value) {
             return false;
@@ -396,5 +403,16 @@ class tree {
         return root && root->operator==(other);
     }
 };
+
+template <
+    typename T,
+    typename Node,
+    typename Policy1,
+    typename Policy2,
+    typename Allocator1,
+    typename Allocator2>
+bool operator!=(const tree<T, Node, Policy1, Allocator1> lhs, const tree<T, Node, Policy2, Allocator2>& rhs) {
+    return !lhs.operator==(rhs);
+}
 
 } // namespace ds

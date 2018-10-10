@@ -1,9 +1,17 @@
 #pragma once
 
 #include <functional>
-#include <utility> // std::forward()
+#include <type_traits> // std::enable_if, std::is_convertible, std::is_constructible, std::void_t
+#include <utility>     // std::forward(), std::declval
 
 namespace ds {
+
+// forward declarations
+template <typename>
+class binary_node;
+
+template <typename>
+class nary_node;
 
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(FROM, TO) typename = std::enable_if_t<std::is_constructible_v<FROM, TO>>
@@ -59,7 +67,7 @@ const Node* prev_branch_sibling(const Node& from) {
             },
             // then return
             [&](const Node& child, const Node&) {
-                // because it considers the child
+                // because it considers the previous value (first argument)
                 ++relative_level;
                 // always present because it's the first child
                 return child.get_prev_sibling();
@@ -169,6 +177,53 @@ const Node* deepest_rightmost_child(const Node& root) {
         current_node = prev_branch_sibling(*current_node);
     } while (current_node != nullptr);
     return deepest_node;
+}
+
+/**
+ * This is a type trait used to verify whheter a given traversal policy is updateable, i.e. if it has a method update
+ * callable with a two arguments of type Arg. For a concrete example take a look at {@link breadth_first#update}.
+ */
+template <
+    typename T,      // type to be cheacked
+    typename Arg,    // arguments to be provided to method: "update"
+    typename = void> // dummy argument to exclude this template overload from being taken into consideration
+struct is_updateable : std::false_type {};
+
+template <typename T, typename Arg>
+struct is_updateable<
+    T,   // type to be cheacked
+    Arg, // arguments to be provided to method: "update"
+    // the whole thing result in void (it is just to satisfy template parameter 3
+    std::void_t<
+        // unevaluated context
+        decltype(
+            // declare a value of type T (works also if T is not default constructible
+            std::declval<T>()
+                // call method update
+                .update(
+                    // provide it an argument Node
+                    std::declval<const Arg&>(), std::declval<const Arg&>()))>> : std::true_type {};
+
+template <typename T>
+std::size_t count_nodes(const binary_node<T>& node) {
+    return 1
+        + (node.get_left_child() != nullptr
+               ? count_nodes(*node.get_left_child())
+               : 0)
+        + (node.get_right_child() != nullptr
+               ? count_nodes(*node.get_right_child())
+               : 0);
+}
+
+template <typename T>
+std::size_t count_nodes(const nary_node<T>& node) {
+    std::size_t size          = 1;
+    const nary_node<T>* child = node.get_first_child();
+    while (child != nullptr) {
+        size += count_nodes(*child);
+        child = child->get_next_sibling();
+    }
+    return size;
 }
 
 } // namespace ds

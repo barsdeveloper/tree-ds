@@ -15,10 +15,10 @@ namespace ds {
 template <typename T>
 class nary_node : public node<T, nary_node<T>> {
 
-    template <typename, template <typename> class, bool>
+    template <typename, typename, bool>
     friend class tree_iterator;
 
-    template <typename, template <typename> class, template <typename> class, typename>
+    template <typename, typename, typename, typename>
     friend class tree;
 
     protected:
@@ -39,12 +39,21 @@ class nary_node : public node<T, nary_node<T>> {
         Allocator&& allocator = std::allocator<nary_node>()) :
             node<T, nary_node<T>>(static_cast<T>(other.value)),
             first_child(
-                other.first_child
-                    ? this->attach(allocate(allocator, *other.first_child, allocator).release())
+                other.first_child != nullptr
+                    ? this->attach(
+                          allocate(
+                              allocator,
+                              *other.first_child,
+                              allocator)
+                              .release())
                     : nullptr),
             next_sibling(
-                other.next_sibling
-                    ? this->attach(allocate(allocator, *other.next_sibling, allocator).release())
+                other.next_sibling != nullptr
+                    ? allocate(
+                          allocator,
+                          *other.next_sibling,
+                          allocator)
+                          .release()
                     : nullptr) {
     }
 
@@ -90,6 +99,7 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     protected:
+    /// Move the resources hold by this node to another node
     void move_resources_to(nary_node& node) {
         if (this->first_child) {
             this->first_child->parent = &node;
@@ -102,7 +112,36 @@ class nary_node : public node<T, nary_node<T>> {
         this->next_sibling = nullptr;
     }
 
+    /// Discard this whole subtree and replace it with node
+    void replace_with(nary_node& node) {
+        assert(node.is_root());
+        assert(node.next_sibling == nullptr);
+        if (this->parent != nullptr) {
+            node.parent = this->parent;
+            if (this->is_first_child()) {
+                this->parent->first_child = &node;
+            } else {
+                this->get_prev_sibling()->next_sibling = &node;
+            }
+            if (this->next_sibling != nullptr) {
+                node.next_sibling  = this->next_sibling;
+                this->next_sibling = nullptr;
+            }
+            this->parent = nullptr;
+        }
+    }
+
     public:
+    bool is_last_child() const {
+        return this->parent != nullptr && this->next_sibling == nullptr;
+    }
+
+    bool is_first_child() const {
+        return this->parent
+            ? this->parent->first_child == this
+            : false;
+    }
+
     const nary_node* get_first_child() const {
         return this->first_child;
     }
@@ -139,6 +178,12 @@ class nary_node : public node<T, nary_node<T>> {
         }
     }
 
+    nary_node* get_prev_sibling() {
+        return const_cast<nary_node*>(
+            static_cast<const nary_node*>(this)
+                ->get_prev_sibling());
+    }
+
     const nary_node* get_next_sibling() const {
         return this->next_sibling;
     }
@@ -151,7 +196,18 @@ class nary_node : public node<T, nary_node<T>> {
         return *current;
     }
 
-    auto release() {
+    nary_node* attach(nary_node* node) {
+        assert(node != nullptr);
+        node->parent    = this;
+        nary_node* next = node->next_sibling;
+        while (next) {
+            this->attach(next);
+            next = next->next_sibling;
+        }
+        return node;
+    }
+
+    std::tuple<nary_node*, nary_node*> release() {
         return std::make_tuple(this->first_child, this->next_sibling);
     }
 

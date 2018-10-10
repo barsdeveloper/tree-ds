@@ -2,53 +2,56 @@
 
 #include <functional>
 
-#include <TreeDS/traversal_policy/current_state_traversal.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace ds {
 
-template <typename Node>
-class post_order final : public current_state_traversal<Node, post_order> {
-
-    using current_state_traversal<Node, post_order>::current_state_traversal;
+class post_order final {
 
     public:
-    const Node* increment_impl() {
-        auto prev = this->get_current();
-        auto next = this->get_current()->get_parent();
-        if (!next || prev == next->get_last_child()) {
+    constexpr post_order() = default;
+
+    template <typename Node>
+    const Node* increment(const Node& from) {
+        const Node* prev = &from;
+        const Node* next = from.get_parent();
+        if (prev->is_root() || prev->is_last_child()) {
             return next;
         }
-        return next->get_right_child()
-            ? keep_calling(*next->get_right_child(), std::mem_fn(&Node::get_first_child))
+        next = prev->get_next_sibling();
+        return next
+            ? keep_calling(*next, std::mem_fn(&Node::get_first_child))
             : nullptr;
     }
 
-    const Node* decrement_impl() {
+    template <typename Node>
+    const Node* decrement(const Node& from) {
         using namespace std::placeholders;
-        auto result = this->get_current()->get_last_child();
+        const Node* result = from.get_last_child();
         if (result) {
             return result;
         }
         return keep_calling(
             // from
-            *this->get_current(),
+            from,
             // keep calling
             std::mem_fn(&Node::get_parent),
             // until
-            [](const Node& child, const Node& parent) {
+            [](const Node& child, const Node&) {
                 return !child.is_first_child();
             },
-            [](const Node& child, const Node& parent) {
+            [](const Node& child, const Node&) {
                 return child.get_prev_sibling();
             });
     }
 
-    const Node* go_first_impl(const Node& root) {
+    template <typename Node>
+    const Node* go_first(const Node& root) {
         return keep_calling(root, std::mem_fn(&Node::get_first_child));
     }
 
-    const Node* go_last_impl(const Node& root) {
+    template <typename Node>
+    const Node* go_last(const Node& root) {
         return &root;
     }
 };

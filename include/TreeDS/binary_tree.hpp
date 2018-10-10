@@ -18,11 +18,11 @@ namespace ds {
  */
 template <
     typename T,
-    template <typename> class Algorithm = pre_order,
-    typename Allocator                  = std::allocator<T>>
-class binary_tree : public tree<T, binary_node, Algorithm, Allocator> {
-    using super = tree<T, binary_node, Algorithm, Allocator>;
-    using tree<T, binary_node, Algorithm, Allocator>::tree;
+    typename Algorithm = pre_order,
+    typename Allocator = std::allocator<T>>
+class binary_tree : public tree<T, binary_node<T>, Algorithm, Allocator> {
+    using super = tree<T, binary_node<T>, Algorithm, Allocator>;
+    using tree<T, binary_node<T>, Algorithm, Allocator>::tree;
 };
 
 } // namespace ds
