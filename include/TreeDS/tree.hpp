@@ -70,11 +70,21 @@ class tree {
     using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
     protected:
-    allocator_type allocator{};
     /// @brief Owning pointer to the root node.
     std::unique_ptr<node_type, deleter<allocator_type>> root{};
     /// @brief The number of nodes in the tree.
     size_type size_value = 0u;
+    allocator_type allocator{};
+
+    protected:
+    template <typename ConvertibleNode>
+    tree(const ConvertibleNode* root_ptr, size_type size) :
+            root(
+                root_ptr != nullptr
+                    ? std::move(allocate(allocator, *root_ptr, allocator))
+                    : nullptr),
+            size_value(size) {
+    }
 
     public:
     /**
@@ -280,6 +290,10 @@ class tree {
      */
     size_type max_size() const {
         return std::numeric_limits<size_type>::max();
+    }
+
+    const Node* get_root() const {
+        return root.get();
     }
 
     /*   ---   Modifiers   ---   */

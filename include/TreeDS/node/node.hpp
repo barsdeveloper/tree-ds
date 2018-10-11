@@ -20,13 +20,6 @@ class node {
             value(args...) {
     }
 
-    protected:
-    Node* attach(Node* node) {
-        assert(node != nullptr);
-        node->parent = static_cast<Node*>(this);
-        return node;
-    }
-
     public:
     /*   ---   Getters   ---   */
     const T& get_value() const {

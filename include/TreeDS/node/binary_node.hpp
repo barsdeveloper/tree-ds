@@ -37,21 +37,18 @@ class binary_node : public node<T, binary_node<T>> {
     using node<T, binary_node<T>>::node;
 
     /*   ---   Wide acceptance copy constructor using allocator   ---   */
-    template <
-        typename ConvertibleT = T,
-        typename Allocator    = std::allocator<binary_node>,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+    template <typename Allocator = std::allocator<binary_node>>
     explicit binary_node(
-        const binary_node<ConvertibleT>& other,
+        const binary_node<T>& other,
         Allocator&& allocator = std::allocator<binary_node>()) :
-            node<T, binary_node<T>>(static_cast<T>(other.value)),
+            node<T, binary_node<T>>(other.value),
             left(
                 other.left
-                    ? this->attach(allocate(allocator, *other.left, allocator).release())
+                    ? attach(allocate(allocator, *other.left, allocator).release())
                     : nullptr),
             right(
                 other.right
-                    ? this->attach(allocate(allocator, *other.right, allocator).release())
+                    ? attach(allocate(allocator, *other.right, allocator).release())
                     : nullptr) {
     }
 
@@ -73,7 +70,7 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
                     "The struct_node passed has a LEFT child with a value that is not compatible with T.");
-                this->left = this->attach(allocate(allocator, left, allocator).release());
+                this->left = attach(allocate(allocator, left, allocator).release());
             }
         }
         if constexpr (sizeof...(Nodes) >= 2) {
@@ -82,7 +79,7 @@ class binary_node : public node<T, binary_node<T>> {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
                     "The struct_node passed has a RIGHT child with a value that is not compatible with T.");
-                this->right = this->attach(allocate(allocator, right, allocator).release());
+                this->right = attach(allocate(allocator, right, allocator).release());
             }
         }
     }
@@ -123,6 +120,12 @@ class binary_node : public node<T, binary_node<T>> {
             this->parent->attach(&node);
             this->parent = nullptr;
         }
+    }
+
+    binary_node* attach(binary_node* node) {
+        assert(node != nullptr);
+        node->parent = this;
+        return node;
     }
 
     public:
