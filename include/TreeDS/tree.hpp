@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>  // std::bind(), std::mem_fun()
+#include <iterator>    // std::make_reverse_iterator
 #include <limits>      // std::numeric_limits()
 #include <memory>      // std::unique_ptr, std::allocator_traits
 #include <stdexcept>   // std::logic_error
@@ -120,7 +121,8 @@ class tree {
      * after this operation.
      * @param other the tree to be moved
      */
-    tree(tree&& other) :
+    template <typename OtherPolicy, typename OtherAllocator>
+    tree(tree<T, Node, OtherPolicy, OtherAllocator>&& other) :
             root(std::move(other.root)),
             size_value(other.size_value) {
         other.nullify();
@@ -167,7 +169,7 @@ class tree {
      */
     template <typename A = Algorithm>
     iterator<A> begin() {
-        // Incremented to get it to the first element
+        // Incremented to shift it to the first element (initially it's end-equivalent)
         return ++iterator<A>(this);
     }
 
@@ -187,7 +189,7 @@ class tree {
      */
     template <typename A = Algorithm>
     const_iterator<A> cbegin() const {
-        // Incremented to get it to the first element
+        // Incremented to shift it to the first element (initially it's end-equivalent)
         return ++const_iterator<A>(this);
     }
 
@@ -216,34 +218,24 @@ class tree {
 
     template <typename A = Algorithm>
     reverse_iterator<A> rbegin() {
-        return reverse_iterator<A>(iterator<A>(this));
+        return std::make_reverse_iterator(end<A>());
     }
 
     template <typename A = Algorithm>
     const_reverse_iterator<A> rbegin() const {
-        /*
-         * Why we don'_tree increment the reverse_iterator as we do with iterator?
-         * It would make sense: when constructed the iterator is at the end() (which is same for both iterator and
-         * reverse_iterator) incrementing will result in an actual decrementing taking the iterator to the last element
-         * (that is reverse_iterator's fist element). We don't need to do this because a reverse_iterator will be
-         * decremented before dereferenced (every time).
-         * See "http://en.cppreference.com/w/cpp/policy/reverse_iterator/operator*".
-         * This seems like a waste of resources to me but it works that way.
-         * In general reverse_iterator == iterator - 1
-         */
         return crbegin();
     }
 
     template <typename A = Algorithm>
     const_reverse_iterator<A> crbegin() const {
-        return const_reverse_iterator<A>(const_iterator<A>(this));
+        return std::make_reverse_iterator(cend<A>());
     }
 
     // reverse end
     template <typename A = Algorithm>
     reverse_iterator<A> rend() {
-        // reverse_iterator takes an iterator as argument, we construct it using {this}
-        return --reverse_iterator<A>(iterator<A>(this));
+        // Incremented to shift it to the first element (initially it's end-equivalent)
+        return std::make_reverse_iterator(begin<A>());
     }
 
     template <typename A = Algorithm>
@@ -253,8 +245,8 @@ class tree {
 
     template <typename A = Algorithm>
     const_reverse_iterator<A> crend() const {
-        // reverse_iterator takes an iterator as argument, we construcit using {this}
-        return --const_reverse_iterator<A>(const_iterator<A>(this));
+        // Incremented to shift it to the first element (initially it's end-equivalent)
+        return std::make_reverse_iterator(cbegin<A>());
     }
 
     /*   ---   Capacity   ---   */
@@ -304,12 +296,14 @@ class tree {
     }
 
     template <typename It>
-    It insert(It position, std::unique_ptr<node_type, deleter<allocator_type>> node) {
-        node_type* target = position.get_node();
-        if (target) { // if iterator points to valid node
+    It insert(It position, decltype(root) node, std::size_t replacement_size) {
+        size_value += replacement_size;
+        node_type* target = const_cast<node_type*>(position.get_node());
+        if (target != nullptr) { // if iterator points to valid node
             target->replace_with(*(node.release()));
-        } else if (!this->root) {
-            this->root = std::move(node);
+            size_value -= count_nodes(*target);
+        } else if (root == nullptr) {
+            root = std::move(node);
         } else {
             throw std::logic_error("Tried to insert node in a not valid position.");
         }
@@ -353,9 +347,7 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     It insert(It position, const struct_node<ConvertibleT, Children...>& node) {
-        std::size_t lost_nodes = count_nodes(*position.get_node());
-        this->size_value += node.get_subtree_size() - lost_nodes;
-        return insert(position, allocate(allocator, node));
+        return insert(position, allocate(allocator, node), node.get_subtree_size());
     }
 
     /**
@@ -366,9 +358,8 @@ class tree {
      * @return an iterator that points to the inserted element
      */
     template <typename It>
-    It insert(It position, const_reference value) {
-        ++this->size_value;
-        return insert(position, allocate(allocator, value));
+    It insert(It position, const T& value) {
+        return insert(position, allocate(allocator, value, 1u));
     }
 
     /**
@@ -378,15 +369,13 @@ class tree {
      * @return an iterator that points to the inserted element
      */
     template <typename It>
-    It insert(It position, value_type&& value) {
-        ++this->size_value;
-        return insert(position, allocate(allocator, std::move(value)));
+    It insert(It position, T&& value) {
+        return insert(position, allocate(allocator, std::move(value)), 1u);
     }
 
     template <typename It, typename... Args>
     It emplace(It position, Args&&... args) {
-        ++this->size_value;
-        return insert(position, allocate(allocator, std::forward<Args>(args)...));
+        return insert(position, allocate(allocator, std::forward<Args>(args)...), 1u);
     }
 
     /*   ---   Equality comparison   ---   */

@@ -12,8 +12,8 @@ class tree;
 
 template <
     typename Tree,
-    typename Algorithm,
-    bool Constant = false>
+    typename Algorithm = typename Tree::algorithm_type,
+    bool Constant      = false>
 class tree_iterator {
 
     template <typename, typename, typename, typename>
@@ -41,12 +41,8 @@ class tree_iterator {
 
     protected:
     algorithm_type algorithm{};
-    tree_type* iterated_tree = nullptr; // nullptr => no container associated (default iterator)
-    node_type* current_node  = nullptr; // nullptr => end()
-
-    tree_iterator(tree_type* tree) :
-            iterated_tree(tree) {
-    }
+    tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
+    node_type* current_node = nullptr; // nullptr => end()
 
     public:
     ~tree_iterator() = default;
@@ -59,12 +55,8 @@ class tree_iterator {
     // Iterators must be CopyAssignable
     tree_iterator& operator=(const tree_iterator&) = default;
 
-    tree_iterator(tree_type& tree, bool go_first = true) :
-            iterated_tree(&tree) {
-        if (go_first) {
-            // incrementing from _current = nullptr (which is end()), will take the iterator to the begin()
-            this->operator++();
-        }
+    tree_iterator(tree_type* tree) :
+            pointed_tree(tree) {
     }
 
     /*   ---   Enlarged construction/assignment   ---   */
@@ -82,7 +74,7 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if<!Constant || OtherConstant>>
     explicit tree_iterator(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) :
-            iterated_tree(other.iterated_tree),
+            pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
     }
 
@@ -91,8 +83,8 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if<!Constant || OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) {
-        iterated_tree = other.iterated_tree;
-        current_node  = other.current_node;
+        this->pointed_tree = other.pointed_tree;
+        this->current_node = other.current_node;
         return *this;
     }
 
@@ -110,7 +102,7 @@ class tree_iterator {
 
     template <bool OtherConst>
     bool operator==(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
-        return iterated_tree == other.iterated_tree && current_node == other.current_node;
+        return this->current_node == other.current_node;
     }
 
     template <bool OtherConst>
@@ -122,7 +114,7 @@ class tree_iterator {
         if (current_node) {
             // const_cast needed in case node_type is non const
             current_node = const_cast<node_type*>(algorithm.increment(*current_node));
-        } else if (iterated_tree && iterated_tree->root) {
+        } else if (pointed_tree != nullptr && pointed_tree->get_root() != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => incremented from end() => go to its first element (rewind)
@@ -130,7 +122,7 @@ class tree_iterator {
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
             // const_cast needed in case node_type is non const
-            current_node = const_cast<node_type*>(algorithm.go_first(*iterated_tree->root));
+            current_node = const_cast<node_type*>(algorithm.go_first(*pointed_tree->get_root()));
         }
         return *this;
     }
@@ -145,7 +137,7 @@ class tree_iterator {
         if (current_node) {
             // const_cast needed in case node_type is non constant
             current_node = const_cast<node_type*>(algorithm.decrement(*current_node));
-        } else if (iterated_tree && iterated_tree->root) {
+        } else if (pointed_tree != nullptr && pointed_tree->get_root() != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => decremented from end() => go to its last element (before end())
@@ -153,7 +145,7 @@ class tree_iterator {
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
             // const_cast needed in case node_type is non const
-            current_node = const_cast<node_type*>(algorithm.go_last(*iterated_tree->root));
+            current_node = const_cast<node_type*>(algorithm.go_last(*pointed_tree->get_root()));
         }
         return *this;
     }
