@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <functional>
+#include <memory> // std::allocator
 
 #include <TreeDS/node/node.hpp>
 
@@ -12,14 +13,17 @@ namespace ds {
  * to right, and from top to bottom. Please note that this iterator is intended to be used forward only (incremented
  * only). Reverse order iteration is possible (and tested) though it will imply severve performance hits.
  */
-template <typename Node>
+template <typename Node, typename Allocator = std::allocator<Node>>
 class breadth_first final {
 
     private:
-    std::deque<const Node*> open_nodes{};
+    std::deque<const Node*, Allocator> open_nodes{};
+    Allocator allocator;
 
     public:
-    breadth_first() = default;
+    breadth_first(const Allocator& allocator = Allocator()) :
+            allocator(allocator) {
+    }
 
     // formward puhes into open back and pops front
     const Node* increment(const Node&) {
