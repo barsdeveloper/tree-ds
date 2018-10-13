@@ -19,66 +19,71 @@ void PreliminaryTest::objectCreation() {
 
     binary_tree<Foo> t;
 
-    // the tree is empty
+    // The tree is empty
     QCOMPARE(t.size(), 0);
     QVERIFY(t.empty());
 
-    // iterator point to the end
+    // Iterator point to the end
     QVERIFY(t.begin() == t.end());
     QVERIFY(t.cbegin() == t.cend());
     QVERIFY(t.rbegin() == t.rend());
     QVERIFY(t.crbegin() == t.crend());
 
-    // iterator to const_iterator equality compatibility
+    // Iterator to const_iterator equality compatibility
     QVERIFY(t.cbegin() == t.end());
     QVERIFY(t.crbegin() == t.rend());
 
     // construct an element
     t.emplace(t.begin(), 67, 93);
-    QCOMPARE(*t.begin(), Foo(67, 93));
     QCOMPARE(t, n(Foo(67, 93)));
 
-    // the tree has 1 element
+    // The tree has 1 element
     QCOMPARE(t.size(), 1);
     QVERIFY(!t.empty());
 
-    // iterator no more point to the end
+    // All iterators begin from the unique element
+    QCOMPARE(*t.begin(), Foo(67, 93));
+    QCOMPARE(*t.cbegin(), Foo(67, 93));
+    QCOMPARE(*t.rbegin(), Foo(67, 93));
+    QCOMPARE(*t.crbegin(), Foo(67, 93));
+
+    // Iterator no more point to the end
     QVERIFY(t.begin() != t.end());
     QVERIFY(t.cbegin() != t.cend());
     QVERIFY(t.rbegin() != t.rend());
     QVERIFY(t.crbegin() != t.crend());
 
-    // end is one after begin
+    // End is one after begin
     QVERIFY(++t.begin() == t.end());
     QVERIFY(++t.cbegin() == t.cend());
     QVERIFY(++t.rbegin() == t.rend());
     QVERIFY(++t.crbegin() == t.crend());
 
-    // begin is one before end
+    // Begin is one before end
     QVERIFY(t.begin() == --t.end());
     QVERIFY(t.cbegin() == --t.cend());
     QVERIFY(t.rbegin() == --t.rend());
     QVERIFY(t.crbegin() == --t.crend());
 
-    // delete all elements
+    // Delete all elements
     t.clear();
 
-    // the tree is again empty
+    // The tree is again empty
     QCOMPARE(t.size(), 0);
     QVERIFY(t.empty());
 
-    // the iterators point again at the end
+    // Iterators point again at the end
     QVERIFY(t.begin() == t.end());
     QVERIFY(t.cbegin() == t.cend());
     QVERIFY(t.rbegin() == t.rend());
     QVERIFY(t.crbegin() == t.crend());
 
-    // create by insert
+    // Create by insert
     t.insert(t.begin(), Foo(45, 900));
     QCOMPARE(*t.begin(), Foo(45, 900));
     QCOMPARE(t, n(Foo(45, 900)));
 
-    // the tree has 1 element again
+    // The tree has 1 element again
     QCOMPARE(t.size(), 1);
     QVERIFY(!t.empty());
 }

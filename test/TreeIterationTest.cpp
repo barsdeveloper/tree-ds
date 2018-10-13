@@ -142,11 +142,9 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a left child")
-
         << binary_tree<char>(
                n('1')(
                    n('2')))
-
         << 2
         << list<char>{'1', '2'}
         << list<char>{'2', '1'}
@@ -155,12 +153,10 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a right child")
-
         << binary_tree<char>(
                n('1')(
                    n(),
                    n('2')))
-
         << 2
         << list<char>{'1', '2'}
         << list<char>{'1', '2'}
@@ -169,7 +165,6 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("Small tree")
-
         << binary_tree<char>(
                n('a')(
                    n('b')(
@@ -183,7 +178,6 @@ void TreeIterationTest::iteration_data() {
                            n('j'),
                            n('k')),
                        n('g'))))
-
         << 10
         << list<char>{'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
         << list<char>{'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
@@ -192,7 +186,6 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("Big tree")
-
         << binary_tree<char>(
                n('a')(
                    n('b')(
@@ -225,7 +218,6 @@ void TreeIterationTest::iteration_data() {
                                n('s')(
                                    n(),
                                    n('u')))))))
-
         << 21
         << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
         << list<char>{'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
@@ -234,7 +226,6 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("All left child")
-
         << binary_tree<char>(
                n('1')(
                    n('2')(
@@ -251,7 +242,6 @@ void TreeIterationTest::iteration_data() {
                                                                n('D')(
                                                                    n('E')(
                                                                        n('F'))))))))))))))))
-
         << 15
         << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
@@ -260,7 +250,6 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("All right child")
-
         << binary_tree<char>(
                n('1')(
                    n(),
@@ -291,7 +280,6 @@ void TreeIterationTest::iteration_data() {
                                                                    n('E')(
                                                                        n(),
                                                                        n('F'))))))))))))))))
-
         << 15
         << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
@@ -300,7 +288,6 @@ void TreeIterationTest::iteration_data() {
 
     /******************************************************************************************************************/
     QTest::newRow("ZigZag")
-
         << binary_tree<char>(
                n('1')(
                    n('2')(
@@ -324,7 +311,6 @@ void TreeIterationTest::iteration_data() {
                                                                    n('E')(
                                                                        n(),
                                                                        n('F'))))))))))))))))
-
         << 15
         << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char>{'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
