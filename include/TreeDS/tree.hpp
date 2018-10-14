@@ -46,7 +46,7 @@ class tree {
     friend class tree_iterator;
 
     public:
-    /*   ---   Types declarations   ---   */
+    //   ---   TYPES   ---
 
     // General
     using value_type      = T;
@@ -71,6 +71,7 @@ class tree {
     using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
 
     protected:
+    //   ---   ATTRIBUTES   ---
     /// @brief Owning pointer to the root node.
     std::unique_ptr<node_type, deleter<allocator_type>> root{};
     /// @brief The number of nodes in the tree.
@@ -88,6 +89,7 @@ class tree {
     }
 
     public:
+    //   ---   METHODS   ---
     /**
      * Create an empty tree.
      */
@@ -160,7 +162,7 @@ class tree {
         return *this;
     }
 
-    /*   ---   Iterators   ---   */
+    //   ---   ITERATORS   ---
     /**
      * @brief Returns an iterator to the beginning.
      * @details The iterator will point to the first element of the container. Which one is the first depends on the
@@ -249,7 +251,7 @@ class tree {
         return std::make_reverse_iterator(cbegin<A>());
     }
 
-    /*   ---   Capacity   ---   */
+    //   ---   CAPACITY   ---
     public:
     /**
      * @brief Checks whether the container is empty.
@@ -288,15 +290,19 @@ class tree {
         return root.get();
     }
 
-    /*   ---   Modifiers   ---   */
+    //   ---   MODIFIERS   ---
     protected:
     void nullify() {
         root       = nullptr;
         size_value = 0u;
     }
 
-    template <typename It>
-    It insert(It position, decltype(root) node, std::size_t replacement_size) {
+    template <typename A, bool Constant>
+    tree_iterator<tree, A, Constant>
+    insert(tree_iterator<tree, A, Constant> position, decltype(root) node, std::size_t replacement_size) {
+        if (position.pointed_tree != this) {
+            throw std::logic_error("The iterator passed is not associated with tree");
+        }
         size_value += replacement_size;
         node_type* target = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
@@ -305,7 +311,7 @@ class tree {
         } else if (root == nullptr) {
             root = std::move(node);
         } else {
-            throw std::logic_error("Tried to insert node in a not valid position.");
+            throw std::logic_error("The iterator points to a non valid position (end()).");
         }
         return position;
     }
@@ -378,7 +384,7 @@ class tree {
         return insert(position, allocate(allocator, std::forward<Args>(args)...), 1u);
     }
 
-    /*   ---   Equality comparison   ---   */
+    //  ---   COMPARISON   ---
     template <typename OtherPolicy, typename OtherAllocator>
     bool operator==(const tree<T, Node, OtherPolicy, OtherAllocator>& other) const {
         // 1. Test if different size_value

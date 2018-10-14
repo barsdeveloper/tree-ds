@@ -52,6 +52,7 @@ class tree_iterator {
 
     // Iterators must be CopyConstructible
     tree_iterator(const tree_iterator&) = default;
+
     // Iterators must be CopyAssignable
     tree_iterator& operator=(const tree_iterator&) = default;
 
@@ -70,33 +71,43 @@ class tree_iterator {
      * between iterators with different algorithm types. That's the reason of explicit, to limit compiler magics.
      */
     template <
-        typename OtherAlgorithm,
         bool OtherConstant,
-        typename = std::enable_if<!Constant || OtherConstant>>
-    explicit tree_iterator(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) :
+        typename = std::enable_if<!Constant && OtherConstant>>
+    explicit tree_iterator(const tree_iterator<Tree, Algorithm, OtherConstant>& other) :
             pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
     }
 
     template <
-        typename OtherAlgorithm,
         bool OtherConstant,
-        typename = std::enable_if<!Constant || OtherConstant>>
-    tree_iterator& operator=(const tree_iterator<Tree, OtherAlgorithm, OtherConstant>& other) {
+        typename = std::enable_if<!Constant && OtherConstant>>
+    tree_iterator& operator=(const tree_iterator<Tree, Algorithm, OtherConstant>& other) {
         this->pointed_tree = other.pointed_tree;
         this->current_node = other.current_node;
         return *this;
     }
 
-    node_type* get_node() const {
+    node_type* get_node() {
         return current_node;
     }
 
-    value_type& operator*() const {
+    const node_type* get_node() const {
+        return current_node;
+    }
+
+    value_type& operator*() {
         return current_node->value;
     }
 
-    value_type* operator->() const {
+    const value_type& operator*() const {
+        return current_node->value;
+    }
+
+    value_type* operator->() {
+        return &(current_node->value);
+    }
+
+    const value_type* operator->() const {
         return &(current_node->value);
     }
 

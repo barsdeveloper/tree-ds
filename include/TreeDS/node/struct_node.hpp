@@ -91,7 +91,7 @@ class struct_node {
         };
         std::apply(
             [&](auto&... nodes) {
-                (check_not_empty(nodes), ...);
+                (..., check_not_empty(nodes));
             },
             this->children);
         return count;

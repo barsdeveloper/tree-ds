@@ -65,10 +65,9 @@ void TreeTest::naryTree() {
     QCOMPARE(copy2.size(), 12);
     QCOMPARE(copy, copy2);
 
-    std::vector<char> actual2(copy2.begin(), copy2.end());
-    QCOMPARE(
-        actual2,
-        (std::vector<char>{'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'}));
+    actual   = std::vector<char>(copy2.begin(), copy2.end());
+    expected = std::vector<char>{'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'};
+    QCOMPARE(actual, expected);
 
     nary_tree<char, pre_order> moved(std::move(copy2));
     QCOMPARE(moved.size(), 12);
@@ -81,11 +80,29 @@ void TreeTest::naryTree() {
     QVERIFY(!(tree != moved));
 
     moved.insert(
-        --std::find(tree.rbegin(), tree.rend(), 'g')
+        --std::find(moved.rbegin(), moved.rend(), 'g')
               .base(),
         '!');
+    actual = std::vector<char>(
+        moved.cbegin<breadth_first<nary_node<char>>>(),
+        moved.cend<breadth_first<nary_node<char>>>());
+    expected = std::vector<char>{'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(moved.size(), 8);
+    QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
+
+    auto it = std::find(
+        moved.begin<breadth_first<nary_node<char>>>(),
+        moved.end<breadth_first<nary_node<char>>>(),
+        'b');
+    *it    = '?';
+    actual = std::vector<char>(
+        moved.cbegin<breadth_first<nary_node<char>>>(),
+        moved.cend<breadth_first<nary_node<char>>>());
+    expected = std::vector<char>{'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
+
+    QCOMPARE(moved.size(), 8);
+    QCOMPARE(actual, expected);
 }
 
 void TreeTest::binaryTree() {
