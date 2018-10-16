@@ -166,6 +166,13 @@ class tree_iterator {
         this->operator--();
         return it;
     }
+
+    void update(const node_type& current, const node_type& replacement) {
+        current_node = const_cast<node_type*>(&replacement);
+        if constexpr (is_updateable<algorithm_type, node_type>::value) {
+            algorithm.update(current, replacement);
+        }
+    }
 };
 
 } // namespace ds

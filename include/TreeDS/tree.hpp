@@ -306,8 +306,10 @@ class tree {
         size_value += replacement_size;
         node_type* target = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
-            target->replace_with(*(node.release()));
+            node_type* replacement = node.release();
+            target->replace_with(*replacement);
             size_value -= count_nodes(*target);
+            position.update(*target, *replacement);
         } else if (root == nullptr) {
             root = std::move(node);
         } else {

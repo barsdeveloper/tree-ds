@@ -146,7 +146,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
     QCOMPARE(*it25, 25);
     QCOMPARE(*it26, 26);
 
-    t.insert(
+    auto former24 = t.insert(
         it24,
         n(100)(
             n(101)(
@@ -179,6 +179,41 @@ void BreadthFirstTest::checkUpdateConsistency() {
                     n(129)),
                 n(118),
                 n(119))));
+    std::vector<int> newNodes{
+        *former24,   // 100
+        *++former24, // 25
+        *++former24, // 26
+        *++former24, // 27
+        *++former24, // 28
+        *++former24, // 29
+        *++former24, // 101
+        *++former24, // 102
+        *++former24, // 103
+        *++former24, // 104
+        *++former24, // 105
+        *++former24, // 106
+        *++former24, // 107
+        *++former24, // 34
+        *++former24, // 35
+        *++former24, // 36
+        *++former24, // 108
+        *++former24, // 109
+        *++former24, // 110
+        *++former24, // 111
+        *++former24, // 112
+        *++former24, // 113
+        *++former24, // 114
+        *++former24, // 115
+        *++former24, // 116
+        *++former24, // 117
+        *++former24, // 118
+        *++former24, // 119
+        *++former24, // 40
+        *++former24, // 45
+    };
+    std::vector<int> expected{100, 25, 26, 27, 28, 29, 101, 102, 103, 104, 105, 106, 107, 34, 35, 36,
+                              108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 40, 41};
+    QCOMPARE(newNodes, expected);
 }
 
 QTEST_MAIN(BreadthFirstTest);
