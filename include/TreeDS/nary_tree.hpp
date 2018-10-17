@@ -29,11 +29,39 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
     template <typename OtherAlgorithm, typename OtherAllocator>
     nary_tree(const binary_tree<T, OtherAlgorithm, OtherAllocator>& other) :
             tree<T, nary_node<T>, Algorithm, Allocator>(
-                other.get_root(),
+                other.get_root()
+                    ? allocate(this->allocator, *other.get_root(), this->allocator).release()
+                    : nullptr,
                 static_cast<std::size_t>(other.size())) {
+        static_assert(
+            std::is_copy_constructible_v<T>,
+            "Tried to construct an nary_tree from a binary_tree containing a non copyable type.");
     }
 
-    // Import the overloads of the operator== into the current class
+    // Import the overloads of the operator= into the current class (that would be shadowed otherwise)
+    using tree<T, nary_node<T>, Algorithm, Allocator>::operator=;
+
+    template <typename OtherAlgorithm, typename OtherAllocator>
+    nary_tree& operator=(const binary_tree<T, OtherAlgorithm, OtherAllocator>& other) {
+        static_assert(
+            std::is_copy_assignable_v<T>,
+            "Tried to assign to an nary_tree a binary_tree containing a non copyable type.");
+        if (other.get_root() != nullptr) {
+            this->root = allocate(this->allocator, *other.get_root(), this->allocator);
+        }
+        this->size_value = other.size();
+        return *this;
+    }
+
+    template <typename OtherAlgorithm, typename OtherAllocator>
+    nary_tree& operator=(binary_tree<T, OtherAlgorithm, OtherAllocator>&& other) {
+        this->root       = other.root.release();
+        this->size_value = other.size();
+        other.clear();
+        return *this;
+    }
+
+    // Import the overloads of the operator== into the current class (that would be shadowed otherwise)
     using tree<T, nary_node<T>, Algorithm, Allocator>::operator==;
 
     template <typename OtherAlgorithm, typename OtherAllocator>

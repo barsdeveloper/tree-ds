@@ -88,19 +88,39 @@ class nary_node : public node<T, nary_node<T>> {
 
     /*   ---   Construct from struct_node using allocator   ---   */
     template <
-        typename ConvertibleT = T,
+        typename ConvertibleT,
         typename... Nodes,
         typename Allocator = std::allocator<nary_node>,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit nary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()) {
+            node<T, nary_node>(other.get_value()),
+            first_child(extract_children(other.get_children(), allocator)) {
+    }
+
+    /*   ---   Emplace from struct_node using allocator   ---   */
+    template <
+        typename... EmplaceArgs,
+        typename... Nodes,
+        typename Allocator = std::allocator<nary_node>,
+        CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
+    explicit nary_node(
+        const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
+        Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node>(other.get_value()),
+            first_child(extract_children(other.get_children(), allocator)) {
+    }
+
+    private:
+    template <typename... Nodes, typename Allocator>
+    nary_node* extract_children(const std::tuple<Nodes...>& nodes, Allocator&& allocator) {
         // pointer to the considered child (which is itself a pointer to nary_node)
-        nary_node** current_child = &this->first_child;
+        nary_node* result         = nullptr;
+        nary_node** current_child = &result;
         // lambda that assigns one child at time
-        auto assign_child = [&](auto&& node) {
-            *current_child           = node.release();                  // assign child
+        auto assign_child = [&](auto node) {
+            *current_child           = node;                            // assign child
             (*current_child)->parent = this;                            // set the parent of that child
             current_child            = &(*current_child)->next_sibling; // go to next child
         };
@@ -109,14 +129,13 @@ class nary_node : public node<T, nary_node<T>> {
             static_assert(
                 !std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>,
                 "ds::nary_node does not accept empty nodes");
-            assign_child(allocate(allocator, structure_node, allocator));
+            assign_child(allocate(allocator, structure_node, allocator).release());
         };
         std::apply(
-            [&](auto&... nodes) {
-                // call allocate_child for each element in the tuple other.get_children()
-                (allocate_child(nodes), ...);
-            },
-            other.get_children());
+            // call allocate_child for each element in the tuple other.get_children()
+            [&](auto&... nodes) { (..., allocate_child(nodes)); },
+            nodes);
+        return result;
     }
 
     protected:

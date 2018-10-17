@@ -76,20 +76,17 @@ class tree {
     std::unique_ptr<node_type, deleter<allocator_type>> root{};
     /// @brief The number of nodes in the tree.
     size_type size_value = 0u;
+    /// @brief Allocator object used to allocate the nodes.
     allocator_type allocator{};
 
     protected:
-    template <typename ConvertibleNode>
-    tree(const ConvertibleNode* root_ptr, size_type size) :
-            root(
-                root_ptr != nullptr
-                    ? std::move(allocate(allocator, *root_ptr, allocator))
-                    : nullptr),
+    tree(node_type* root, size_type size) :
+            root(root),
             size_value(size) {
     }
 
     public:
-    //   ---   METHODS   ---
+    //   ---   CONSTRUCTORS   ---
     /**
      * Create an empty tree.
      */
@@ -104,18 +101,24 @@ class tree {
     tree(const tree& other) :
             root(
                 other.root
-                    ? std::move(allocate(allocator, *other.root, allocator))
-                    : decltype(root){}),
+                    ? allocate(allocator, *other.root, allocator)
+                    : nullptr),
             size_value(other.size_value) {
+        static_assert(
+            std::is_copy_constructible_v<T>,
+            "Tried to COPY a tree containing a non copyable type.");
     }
 
-    template <typename OtherPolicy, typename OtherAllocator>
+    template <typename OtherPolicy, typename OtherAllocator, CHECK_COPIABLE(T)>
     tree(const tree<T, Node, OtherPolicy, OtherAllocator>& other) :
             root(
                 other.root
-                    ? std::move(allocate(allocator, *other.root, allocator))
-                    : decltype(root){}),
+                    ? allocate(allocator, *other.root, allocator)
+                    : nullptr),
             size_value(other.size_value) {
+        static_assert(
+            std::is_copy_constructible_v<T>,
+            "Tried to COPY a tree containing a non copyable type.");
     }
 
     /**
@@ -125,9 +128,9 @@ class tree {
      */
     template <typename OtherPolicy, typename OtherAllocator>
     tree(tree<T, Node, OtherPolicy, OtherAllocator>&& other) :
-            root(std::move(other.root)),
+            root(other.root.release()),
             size_value(other.size_value) {
-        other.nullify();
+        other.clear();
     }
 
     /**
@@ -138,9 +141,18 @@ class tree {
     template <
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(const struct_node<ConvertibleT, Children...>& root) :
-            root(std::move(allocate(allocator, root, allocator))),
+            root(allocate(allocator, root, allocator)),
+            size_value(root.get_subtree_size()) {
+    }
+
+    template <
+        typename... EmplacingArgs,
+        typename... Children,
+        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+    tree(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) :
+            root(allocate(allocator, root, allocator)),
             size_value(root.get_subtree_size()) {
     }
 
@@ -149,16 +161,22 @@ class tree {
      */
     ~tree() = default;
 
-    tree& operator=(const tree& other) {
+    //   ---   METHODS   ---
+    template <typename OtherPolicy, typename OtherAllocator>
+    tree& operator=(const tree<T, Node, OtherPolicy, OtherAllocator>& other) {
+        static_assert(
+            std::is_nothrow_copy_assignable_v<T>,
+            "Tried to COPY ASSIGN a tree containing a non copyable type.");
         this->root = std::move(allocate(allocator, *other.root, allocator));
         this->size = other.size;
         return *this;
     }
 
-    tree& operator=(tree&& other) {
+    template <typename OtherPolicy, typename OtherAllocator>
+    tree& operator=(tree<T, Node, OtherPolicy, OtherAllocator>&& other) {
         this->root       = std::move(other.root);
         this->size_value = other.size_value;
-        other.nullify();
+        other.clear();
         return *this;
     }
 
@@ -292,16 +310,11 @@ class tree {
 
     //   ---   MODIFIERS   ---
     protected:
-    void nullify() {
-        root       = nullptr;
-        size_value = 0u;
-    }
-
     template <typename A, bool Constant>
     tree_iterator<tree, A, Constant>
     insert(tree_iterator<tree, A, Constant> position, decltype(root) node, std::size_t replacement_size) {
         if (position.pointed_tree != this) {
-            throw std::logic_error("The iterator passed is not associated with tree");
+            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to.");
         }
         size_value += replacement_size;
         node_type* target = const_cast<node_type*>(position.get_node());
@@ -313,7 +326,7 @@ class tree {
         } else if (root == nullptr) {
             root = std::move(node);
         } else {
-            throw std::logic_error("The iterator points to a non valid position (end()).");
+            throw std::logic_error("The iterator points to a non valid position (end).");
         }
         return position;
     }
@@ -325,7 +338,8 @@ class tree {
      * element iterator ({@link tree#end() end()}) remains valid.
      */
     void clear() {
-        this->nullify();
+        root       = nullptr;
+        size_value = 0u;
     }
 
     /**
@@ -422,7 +436,7 @@ template <
     typename Policy2,
     typename Allocator1,
     typename Allocator2>
-bool operator!=(const tree<T, Node, Policy1, Allocator1> lhs, const tree<T, Node, Policy2, Allocator2>& rhs) {
+bool operator!=(const tree<T, Node, Policy1, Allocator1>& lhs, const tree<T, Node, Policy2, Allocator2>& rhs) {
     return !lhs.operator==(rhs);
 }
 

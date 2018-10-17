@@ -10,8 +10,8 @@ namespace ds {
 
 /**
  * Traversal policy that returns nodes in a line by line fashion. In forward order the nodes will be retrieved from left
- * to right, and from top to bottom. Please note that this iterator is intended to be used forward only (incremented
- * only). Reverse order iteration is possible (and tested) though it will imply severve performance hits.
+ * to right, and from top to bottom.  Please note that this iterator is intended to be usedforward only (incremented
+ * only). Reverse order iteration is possible (and tested) though it will imply severe performance drop.
  */
 template <typename Node, typename Allocator = std::allocator<Node>>
 class breadth_first final {
@@ -75,11 +75,11 @@ class breadth_first final {
         return deepest_rightmost_child(root);
     }
 
-    void update(const Node& previous, const Node& replacement) {
+    void update(const Node& current, const Node& replacement) {
         // delete children of the previous nodes from open_nodes (invariants garantee that they are the last elements)
         while (!open_nodes.empty()) {
             const Node* last = open_nodes.back();
-            if (last->parent() == &previous) {
+            if (last->get_parent() == &current) {
                 open_nodes.pop_back();
                 last = open_nodes.back();
             } else {

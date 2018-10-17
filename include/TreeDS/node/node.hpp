@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <utility> // std::forward()
 
 #include <TreeDS/utility.hpp>
@@ -14,10 +15,16 @@ class node {
     Node* parent = nullptr;
 
     public:
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T hold into this node.
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
     template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
     explicit node(Args&&... args) :
             value(args...) {
+    }
+
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
+    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
+    explicit node(const std::tuple<Args...>& args_tuple) :
+            value(std::make_from_tuple<T>(std::move(args_tuple))) {
     }
 
     public:

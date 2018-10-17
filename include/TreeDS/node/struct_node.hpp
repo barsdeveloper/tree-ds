@@ -23,6 +23,9 @@ class struct_node {
     template <typename, typename...>
     friend class struct_node; // other instantiations of this template
 
+    template <typename... TupleArgs>
+    friend constexpr struct_node<std::tuple<TupleArgs...>> n(TupleArgs...); // emplacing struct_node
+
     friend constexpr struct_node<std::nullptr_t> n(); // empty node function creator
 
     friend constexpr struct_node<T> n<T>(T); // node function creator
@@ -34,10 +37,10 @@ class struct_node {
 
     //   ---   ATTRIBUTES   ---
     protected:
-    value_t value;
+    value_t value;                 // Value hold by this node
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
-    children_t children{};
+    children_t children{};         // Tuple containing actual children
 
     //   ---   METHODS   ---
     private:

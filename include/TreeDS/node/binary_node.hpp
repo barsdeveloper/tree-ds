@@ -44,44 +44,44 @@ class binary_node : public node<T, binary_node<T>> {
             node<T, binary_node<T>>(other.value),
             left(
                 other.left
-                    ? attach(allocate(allocator, *other.left, allocator).release())
+                    ? attach_children(allocate(allocator, *other.left, allocator).release())
                     : nullptr),
             right(
                 other.right
-                    ? attach(allocate(allocator, *other.right, allocator).release())
+                    ? attach_children(allocate(allocator, *other.right, allocator).release())
                     : nullptr) {
     }
 
     /*   ---   Construct from struct_node using allocator   ---   */
     template <
-        typename ConvertibleT = T,
+        typename ConvertibleT,
         typename... Nodes,
         typename Allocator = std::allocator<binary_node>,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<binary_node>()) :
-            node<T, binary_node>(other.get_value()) {
+            node<T, binary_node>(other.get_value()),
+            left(extract_left(other.get_children(), allocator)),
+            right(extract_right(other.get_children(), allocator)) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
+        attach_children();
+    }
 
-        if constexpr (sizeof...(Nodes) >= 1) {
-            const auto& left = get_child<0>(other);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
-                static_assert(
-                    std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
-                    "The struct_node passed has a LEFT child with a value that is not compatible with T.");
-                this->left = attach(allocate(allocator, left, allocator).release());
-            }
-        }
-        if constexpr (sizeof...(Nodes) >= 2) {
-            const auto& right = get_child<1>(other);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
-                static_assert(
-                    std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
-                    "The struct_node passed has a RIGHT child with a value that is not compatible with T.");
-                this->right = attach(allocate(allocator, right, allocator).release());
-            }
-        }
+    /*   ---   Emplacing from struct_node using allocator   ---   */
+    template <
+        typename... EmplaceArgs,
+        typename... Nodes,
+        typename Allocator = std::allocator<binary_node>,
+        CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
+    explicit binary_node(
+        const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
+        Allocator&& allocator = std::allocator<binary_node>()) :
+            node<T, binary_node>(other.get_value()),
+            left(extract_left(other.get_children(), allocator)),
+            right(extract_right(other.get_children(), allocator)) {
+        static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
+        attach_children();
     }
 
     /*   ---   Move constructor   ---   */
@@ -93,6 +93,29 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     ~binary_node() = default;
+
+    private:
+    template <typename... Nodes, typename Allocator>
+    binary_node* extract_left(const std::tuple<Nodes...>& children, Allocator&& allocator) {
+        if constexpr (sizeof...(Nodes) >= 1) {
+            const auto& left = std::get<0>(children);
+            if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
+                return allocate(allocator, left, allocator).release();
+            }
+        }
+        return nullptr;
+    }
+
+    template <typename... Nodes, typename Allocator>
+    binary_node* extract_right(const std::tuple<Nodes...>& children, Allocator&& allocator) {
+        if constexpr (sizeof...(Nodes) >= 2) {
+            const auto& right = std::get<1>(children);
+            if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
+                return allocate(allocator, right, allocator).release();
+            }
+        }
+        return nullptr;
+    }
 
     protected:
     /// Move the resources hold by this node to another node
@@ -117,15 +140,24 @@ class binary_node : public node<T, binary_node<T>> {
             } else {
                 this->parent->right = &node;
             }
-            this->parent->attach(&node);
+            this->parent->attach_children(&node);
             this->parent = nullptr;
         }
     }
 
-    binary_node* attach(binary_node* node) {
+    binary_node* attach_children(binary_node* node) {
         assert(node != nullptr);
         node->parent = this;
         return node;
+    }
+
+    void attach_children() {
+        if (left != nullptr) {
+            left->parent = this;
+        }
+        if (right != nullptr) {
+            right->parent = this;
+        }
     }
 
     public:

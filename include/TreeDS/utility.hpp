@@ -14,7 +14,8 @@ template <typename>
 class nary_node;
 
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
-#define CHECK_CONSTRUCTIBLE(FROM, TO) typename = std::enable_if_t<std::is_constructible_v<FROM, TO>>
+#define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
+#define CHECK_COPIABLE(TYPE) typename = std::enable_if<std::is_copy_constructible_v<TYPE>>
 
 template <typename Node, typename Call, typename Test, typename Result>
 const Node* keep_calling(const Node& from, Call call, Test test, Result result) {
@@ -201,8 +202,28 @@ struct is_updateable<
             std::declval<T>()
                 // call method update
                 .update(
-                    // provide it an argument Node
-                    std::declval<const Arg&>(), std::declval<const Arg&>()))>> : std::true_type {};
+                    // provide it arguments Node
+                    std::declval<const Arg&>(),
+                    std::declval<const Arg&>()))>>
+        : std::true_type {};
+
+template <
+    typename T,
+    typename Tuple,
+    typename = void>
+struct is_constructible_from_tuple : std::false_type {};
+
+template <
+    typename T,
+    typename Tuple>
+struct is_constructible_from_tuple<
+    T,
+    Tuple,
+    std::enable_if_t<
+        std::is_invocable_v<
+            std::make_from_tuple<T>,
+            const Tuple&>>>
+        : std::true_type {};
 
 template <typename T>
 std::size_t count_nodes(const binary_node<T>& node) {

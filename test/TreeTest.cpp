@@ -1,6 +1,7 @@
 #include <QtTest/QtTest>
 
 #include <TreeDS/nary_tree>
+#include <TreeDS/traversal_policy/in_order.hpp>
 
 #include "Types.hpp"
 
@@ -16,6 +17,7 @@ class TreeTest : public QObject {
     private slots:
     void naryTree();
     void binaryTree();
+    void nonCopyable();
 };
 
 void TreeTest::naryTree() {
@@ -126,6 +128,46 @@ void TreeTest::binaryTree() {
     std::vector<int> actual(tree.begin(), tree.end());
 
     QCOMPARE(actual, expected);
+
+    nary_tree<int, breadth_first<nary_node<int>>> nary;
+    nary = tree;
+
+    QCOMPARE(tree.size(), nary.size());
+    QVERIFY(nary == tree);
+    QVERIFY(!(nary != tree));
+    QVERIFY(tree == nary);
+    QVERIFY(!(tree != nary));
+}
+
+void TreeTest::nonCopyable() {
+    binary_tree<NonCopyable> tree(
+        n('a', 1)(
+            n('b', 2),
+            n('c', 3)(
+                n('d', 4),
+                n('e', 5))));
+    // nary_tree<NonCopyable> anotherTree(tree); // this shouldn't compile
+    binary_tree<NonCopyable> movedTree(std::move(tree));
+
+    QVERIFY(tree.empty());
+    QVERIFY(tree.size() == 0);
+    QVERIFY(tree.begin() == tree.end());
+    QVERIFY(!movedTree.empty());
+    QVERIFY(movedTree.size() == 5);
+    QVERIFY(movedTree != tree);
+    QVERIFY(tree != movedTree);
+
+    movedTree.emplace(
+        std::find(movedTree.begin(), movedTree.end(), NonCopyable('c', 3)),
+        'z', 100);
+    auto it    = movedTree.begin<in_order>();
+    auto itEnd = movedTree.end<in_order>();
+
+    QCOMPARE(movedTree.size(), 3);
+    QCOMPARE(*it++, NonCopyable('b', 2));
+    QCOMPARE(*it++, NonCopyable('a', 1));
+    QCOMPARE(*it++, NonCopyable('z', 100));
+    QCOMPARE(it, itEnd);
 }
 
 QTEST_MAIN(TreeTest);

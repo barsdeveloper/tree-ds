@@ -3,6 +3,24 @@
 #include <QtTest/QtTest>
 #include <string>
 
+struct NonCopyable {
+    char a;
+    int b;
+    NonCopyable()                   = delete;
+    NonCopyable(const NonCopyable&) = delete;
+    NonCopyable(NonCopyable&&)      = delete;
+    NonCopyable(char a, int b) :
+            a(a),
+            b(b) {
+    }
+    bool operator==(const NonCopyable& other) const {
+        return this->a == other.a && this->b == other.b;
+    }
+    bool operator!=(const NonCopyable& other) const {
+        return !this->operator==(other);
+    }
+};
+
 struct Foo {
     int a;
     int b;
