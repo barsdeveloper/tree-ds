@@ -10,6 +10,7 @@
 #include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/node/struct_node.hpp>
+#include <TreeDS/traversal_policy/post_order.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace ds {
@@ -72,12 +73,12 @@ class tree {
 
     protected:
     //   ---   ATTRIBUTES   ---
-    /// @brief Owning pointer to the root node.
-    std::unique_ptr<node_type, deleter<allocator_type>> root{};
-    /// @brief The number of nodes in the tree.
-    size_type size_value = 0u;
     /// @brief Allocator object used to allocate the nodes.
     allocator_type allocator{};
+    /// @brief Owning pointer to the root node.
+    node_type* root = nullptr;
+    /// @brief The number of nodes in the tree.
+    size_type size_value = 0u;
 
     protected:
     tree(node_type* root, size_type size) :
@@ -92,16 +93,21 @@ class tree {
      */
     constexpr tree() = default;
 
+    explicit tree(const Allocator& allocator) :
+            allocator(allocator) {
+    }
+
     /**
      * Copy constructor. Create a tree by copying the tree passed as argument. Remember that this involves deep copy
      * (use std::move() whenever you can). A new {@link node_type} will be allocated for each node of the other tree.
      * The allocator will be used.
      * @param other the tree to be copied from
      */
-    tree(const tree& other) :
+    explicit tree(const tree& other) :
+            allocator(other.allocator),
             root(
                 other.root
-                    ? allocate(allocator, *other.root, allocator)
+                    ? allocate(allocator, *other.root, allocator).release()
                     : nullptr),
             size_value(other.size_value) {
         static_assert(
@@ -110,10 +116,10 @@ class tree {
     }
 
     template <typename OtherPolicy, typename OtherAllocator, CHECK_COPIABLE(T)>
-    tree(const tree<T, Node, OtherPolicy, OtherAllocator>& other) :
+    explicit tree(const tree<T, Node, OtherPolicy, OtherAllocator>& other) :
             root(
                 other.root
-                    ? allocate(allocator, *other.root, allocator)
+                    ? allocate(allocator, *other.root, allocator).release()
                     : nullptr),
             size_value(other.size_value) {
         static_assert(
@@ -126,11 +132,12 @@ class tree {
      * after this operation.
      * @param other the tree to be moved
      */
-    template <typename OtherPolicy, typename OtherAllocator>
-    tree(tree<T, Node, OtherPolicy, OtherAllocator>&& other) :
-            root(other.root.release()),
+    template <typename OtherPolicy>
+    tree(tree<T, Node, OtherPolicy, Allocator>&& other) :
+            allocator(other.allocator),
+            root(other.root),
             size_value(other.size_value) {
-        other.clear();
+        other.emptify();
     }
 
     /**
@@ -143,7 +150,7 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(const struct_node<ConvertibleT, Children...>& root) :
-            root(allocate(allocator, root, allocator)),
+            root(allocate(allocator, root, allocator).release()),
             size_value(root.get_subtree_size()) {
     }
 
@@ -152,31 +159,57 @@ class tree {
         typename... Children,
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
     tree(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) :
-            root(allocate(allocator, root, allocator)),
+            root(allocate(allocator, root, allocator).release()),
             size_value(root.get_subtree_size()) {
     }
 
     /*
      * Destruct all the nodes and deallocate the memory owned by this tree.
      */
-    ~tree() = default;
+    ~tree() {
+        clear();
+    }
 
-    //   ---   METHODS   ---
+    public:
+    //   ---   ASSIGNMENT   ---
     template <typename OtherPolicy, typename OtherAllocator>
     tree& operator=(const tree<T, Node, OtherPolicy, OtherAllocator>& other) {
         static_assert(
             std::is_nothrow_copy_assignable_v<T>,
             "Tried to COPY ASSIGN a tree containing a non copyable type.");
-        this->root = std::move(allocate(allocator, *other.root, allocator));
-        this->size = other.size;
+        this->assign(
+            allocate(allocator, *other.root, allocator).release(),
+            other.size);
         return *this;
     }
 
-    template <typename OtherPolicy, typename OtherAllocator>
-    tree& operator=(tree<T, Node, OtherPolicy, OtherAllocator>&& other) {
-        this->root       = std::move(other.root);
-        this->size_value = other.size_value;
-        other.clear();
+    template <typename OtherPolicy>
+    tree& operator=(tree<T, Node, OtherPolicy, Allocator>&& other) {
+        allocator = other.allocator;
+        this->assign(other.root, other.size_value);
+        other.emptify();
+        return *this;
+    }
+
+    template <
+        typename ConvertibleT,
+        typename... Nodes,
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
+    tree& operator=(const struct_node<ConvertibleT, Nodes...>& root) {
+        this->assign(
+            allocate(allocator, root, allocator).release(),
+            root.get_subtree_size());
+        return *this;
+    }
+
+    template <
+        typename... EmplacingArgs,
+        typename... Children,
+        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+    tree& operator=(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) {
+        this->assign(
+            allocate(allocator, root, allocator).release(),
+            root.get_subtree_size());
         return *this;
     }
 
@@ -269,6 +302,11 @@ class tree {
         return std::make_reverse_iterator(cbegin<A>());
     }
 
+    public:
+    allocator_type get_allocator() const {
+        return allocator;
+    }
+
     //   ---   CAPACITY   ---
     public:
     /**
@@ -282,7 +320,7 @@ class tree {
      * @return true if the tree is empty
      */
     bool empty() const {
-        return root == nullptr;
+        return size_value == 0;
     }
 
     /**
@@ -305,30 +343,52 @@ class tree {
     }
 
     const Node* get_root() const {
-        return root.get();
+        return root;
     }
 
     //   ---   MODIFIERS   ---
     protected:
     template <typename A, bool Constant>
     tree_iterator<tree, A, Constant>
-    insert(tree_iterator<tree, A, Constant> position, decltype(root) node, std::size_t replacement_size) {
+    modify_subtree(
+        tree_iterator<tree, A, Constant> position,
+        std::unique_ptr<node_type, deleter<allocator_type>> node,
+        std::size_t replacement_size) {
         if (position.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to.");
         }
-        size_value += replacement_size;
-        node_type* target = const_cast<node_type*>(position.get_node());
+        node_type* replacement = node.release();
+        node_type* target      = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
-            node_type* replacement = node.release();
-            target->replace_with(*replacement);
-            size_value -= count_nodes(*target);
+            assert(root != nullptr);
             position.update(*target, *replacement);
+            if (target == root) {
+                assign(replacement, replacement_size);
+            } else {
+                target->replace_with(*replacement);
+                size_value -= count_nodes(*target);
+                deallocate(allocator, target);
+            }
         } else if (root == nullptr) {
-            root = std::move(node);
+            root = replacement;
         } else {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
+        size_value += replacement_size;
         return position;
+    }
+
+    void emptify() {
+        root       = nullptr;
+        size_value = 0u;
+    }
+
+    void assign(node_type* root, std::size_t size) {
+        if (this->root != nullptr) {
+            deallocate(this->allocator, this->root);
+        }
+        this->root       = root;
+        this->size_value = size;
     }
 
     public:
@@ -338,8 +398,7 @@ class tree {
      * element iterator ({@link tree#end() end()}) remains valid.
      */
     void clear() {
-        root       = nullptr;
-        size_value = 0u;
+        assign(nullptr, 0u);
     }
 
     /**
@@ -369,7 +428,7 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     It insert(It position, const struct_node<ConvertibleT, Children...>& node) {
-        return insert(position, allocate(allocator, node), node.get_subtree_size());
+        return modify_subtree(position, allocate(allocator, node, allocator), node.get_subtree_size());
     }
 
     /**
@@ -381,7 +440,7 @@ class tree {
      */
     template <typename It>
     It insert(It position, const T& value) {
-        return insert(position, allocate(allocator, value, 1u));
+        return modify_subtree(position, allocate(allocator, value), 1u);
     }
 
     /**
@@ -392,12 +451,37 @@ class tree {
      */
     template <typename It>
     It insert(It position, T&& value) {
-        return insert(position, allocate(allocator, std::move(value)), 1u);
+        return modify_subtree(position, allocate(allocator, std::move(value)), 1u);
     }
 
     template <typename It, typename... Args>
     It emplace(It position, Args&&... args) {
-        return insert(position, allocate(allocator, std::forward<Args>(args)...), 1u);
+        return modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u);
+    }
+
+    template <
+        typename It,
+        typename... EmplacingArgs,
+        typename... Children,
+        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+    It emplace(It position, const struct_node<std::tuple<EmplacingArgs...>, Children...>& nodes) {
+        return modify_subtree(position, allocate(allocator, nodes, allocator), 1u);
+    }
+
+    iterator<post_order> erase(iterator<post_order> position) {
+        node_type* node = position++.get_node();
+        assert(node != nullptr);
+        deallocate(allocator, node);
+        return position;
+    }
+
+    iterator<post_order> erase(iterator<post_order> first, iterator<post_order> last) {
+        while (first != last) {
+            node_type* node = first++.get_node();
+            assert(node != nullptr);
+            deallocate(allocator, node);
+        }
+        return first;
     }
 
     //  ---   COMPARISON   ---

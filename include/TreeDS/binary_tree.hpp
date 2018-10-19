@@ -22,7 +22,10 @@ template <
     typename Allocator = std::allocator<T>>
 class binary_tree : public tree<T, binary_node<T>, Algorithm, Allocator> {
     using super = tree<T, binary_node<T>, Algorithm, Allocator>;
+
+    public:
     using tree<T, binary_node<T>, Algorithm, Allocator>::tree;
+    using tree<T, binary_node<T>, Algorithm, Allocator>::operator=;
 };
 
 } // namespace ds

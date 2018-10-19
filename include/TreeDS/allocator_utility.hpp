@@ -27,13 +27,13 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
     auto resources_to_deallocate = ptr->release();
     std::apply(
         [&](auto&... pointers) {
-            (deallocate(allocator, pointers), ...);
+            (..., deallocate(allocator, pointers));
         },
         resources_to_deallocate);
-    // then deallocate the node itself
-    // destroy
+    // then the node itself
+    // call destructor
     std::allocator_traits<Allocator>::destroy(allocator, ptr);
-    // deallocate
+    // free memory
     std::allocator_traits<Allocator>::deallocate(allocator, ptr, 1);
 }
 

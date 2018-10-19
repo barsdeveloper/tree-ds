@@ -1,6 +1,9 @@
 #pragma once
 
 #include <QtTest/QtTest>
+#include <algorithm>
+#include <deque>
+#include <memory>
 #include <string>
 
 struct NonCopyable {
@@ -95,3 +98,43 @@ struct ConvertibleTo {
         return {value};
     }
 };
+
+template <typename T>
+struct CustomAllocator {
+    static std::deque<T*> allocated;
+    static int total_allocated;
+    static int total_deallocated;
+    using value_type                        = T;
+    CustomAllocator()                       = default;
+    CustomAllocator(const CustomAllocator&) = default;
+    T* allocate(std::size_t count) {
+        T* ptr = static_cast<T*>(::operator new(count * sizeof(T)));
+        allocated.push_back(ptr);
+        ++total_allocated;
+        return ptr;
+    }
+    void deallocate(T* ptr, std::size_t size) {
+        assert(ptr != nullptr);
+        assert(
+            std::find(allocated.begin(), allocated.end(), ptr)
+            != allocated.end());
+        allocated.erase(std::remove(allocated.begin(), allocated.end(), ptr), allocated.end());
+        ++total_deallocated;
+        ::operator delete(ptr, size);
+    }
+    bool operator==(const CustomAllocator&) const {
+        return true;
+    }
+    bool operator!=(const CustomAllocator&) const {
+        return false;
+    }
+};
+
+template <typename T>
+std::deque<T*> CustomAllocator<T>::allocated;
+
+template <typename T>
+int CustomAllocator<T>::total_allocated = 0;
+
+template <typename T>
+int CustomAllocator<T>::total_deallocated = 0;

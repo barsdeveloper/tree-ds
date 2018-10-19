@@ -46,6 +46,7 @@ void TreeTest::naryTree() {
     actual.clear();
     for (const auto& value : diff) actual.push_back(value);
     expected[7] = '#';
+
     QCOMPARE(diff.size(), 12);
     QCOMPARE(actual, expected);
     QVERIFY(tree != diff);

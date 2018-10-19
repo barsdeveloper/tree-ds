@@ -23,6 +23,8 @@ template <
     typename Allocator = std::allocator<T>>
 class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
     using super = tree<T, nary_node<T>, Algorithm, Allocator>;
+
+    // Inherit constructors from parent class
     using tree<T, nary_node<T>, Algorithm, Allocator>::tree;
 
     public:
@@ -46,18 +48,20 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
         static_assert(
             std::is_copy_assignable_v<T>,
             "Tried to assign to an nary_tree a binary_tree containing a non copyable type.");
-        if (other.get_root() != nullptr) {
-            this->root = allocate(this->allocator, *other.get_root(), this->allocator);
-        }
-        this->size_value = other.size();
+        this->assign(
+            other.get_root() != nullptr
+                ? allocate(this->allocator, *other.get_root(), this->allocator).release()
+                : nullptr,
+            other.size());
         return *this;
     }
 
     template <typename OtherAlgorithm, typename OtherAllocator>
     nary_tree& operator=(binary_tree<T, OtherAlgorithm, OtherAllocator>&& other) {
-        this->root       = other.root.release();
-        this->size_value = other.size();
-        other.clear();
+        this->assign(
+            other.get_root(),
+            other.size());
+        other.emptify();
         return *this;
     }
 
