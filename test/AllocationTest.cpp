@@ -1,6 +1,6 @@
 #include <QtTest/QtTest>
 
-#include <TreeDS/nary_tree>
+#include <TreeDS/tree>
 
 #include "Types.hpp"
 

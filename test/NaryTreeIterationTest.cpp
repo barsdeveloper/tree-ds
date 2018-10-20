@@ -3,7 +3,7 @@
 #include <iterator>
 #include <list>
 
-#include <TreeDS/nary_tree>
+#include <TreeDS/tree>
 
 using namespace std;
 using namespace ds;

@@ -52,6 +52,12 @@ struct Bar {
     bool operator!=(const Bar& other) const {
         return !this->operator==(other);
     }
+    std::string method() const {
+        return "constant";
+    }
+    std::string method() {
+        return "mutable";
+    }
 };
 
 struct ConvertibleFrom {
@@ -113,14 +119,14 @@ struct CustomAllocator {
         ++total_allocated;
         return ptr;
     }
-    void deallocate(T* ptr, std::size_t size) {
+    void deallocate(T* ptr, std::size_t) {
         assert(ptr != nullptr);
         assert(
             std::find(allocated.begin(), allocated.end(), ptr)
             != allocated.end());
         allocated.erase(std::remove(allocated.begin(), allocated.end(), ptr), allocated.end());
         ++total_deallocated;
-        ::operator delete(ptr, size);
+        ::operator delete(ptr);
     }
     bool operator==(const CustomAllocator&) const {
         return true;

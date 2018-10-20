@@ -56,23 +56,14 @@ class tree_iterator {
     // Iterators must be CopyAssignable
     tree_iterator& operator=(const tree_iterator&) = default;
 
-    tree_iterator(tree_type* tree) :
-            pointed_tree(tree) {
+    tree_iterator(tree_type& tree) :
+            pointed_tree(&tree) {
     }
 
-    /*   ---   Enlarged construction/assignment   ---   */
-    /*
-     * This will enable conversion between templates with different a Algorithm but the same T. Also this allows a
-     * general conversion between any (but having the same parameter T) const_iterator to any iterator.
-     * Why explicit?
-     * Iterator must satisfy the multipass guarantee:
-     * http://en.cppreference.com/w/cpp/concept/ForwardIterator
-     * That means that it1 == it2 implies ++it1 == ++it2. Obviously this would be false if we allow implicit conversion
-     * between iterators with different algorithm types. That's the reason of explicit, to limit compiler magics.
-     */
+    // Conversion from iterator to const_iterator
     template <
         bool OtherConstant,
-        typename = std::enable_if<!Constant && OtherConstant>>
+        typename = std::enable_if_t<Constant && !OtherConstant>>
     explicit tree_iterator(const tree_iterator<Tree, Algorithm, OtherConstant>& other) :
             pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
@@ -80,7 +71,7 @@ class tree_iterator {
 
     template <
         bool OtherConstant,
-        typename = std::enable_if<!Constant && OtherConstant>>
+        typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, Algorithm, OtherConstant>& other) {
         this->pointed_tree = other.pointed_tree;
         this->current_node = other.current_node;
@@ -113,7 +104,8 @@ class tree_iterator {
 
     template <bool OtherConst>
     bool operator==(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
-        return this->current_node == other.current_node;
+        return this->pointed_tree == other.pointed_tree
+            && this->current_node == other.current_node;
     }
 
     template <bool OtherConst>

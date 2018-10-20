@@ -1,12 +1,6 @@
 #include <QtTest/QtTest>
 
-#include <TreeDS/binary_tree>
-#include <TreeDS/nary_tree>
-#include <TreeDS/traversal_policy/breadth_first.hpp>
-#include <TreeDS/traversal_policy/in_order.hpp>
-#include <TreeDS/traversal_policy/post_order.hpp>
-#include <TreeDS/traversal_policy/pre_order.hpp>
-#include <TreeDS/utility.hpp>
+#include <TreeDS/tree>
 
 #include "Types.hpp"
 

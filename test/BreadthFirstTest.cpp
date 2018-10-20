@@ -2,8 +2,7 @@
 #include <functional>
 #include <list>
 
-#include <TreeDS/nary_tree>
-#include <TreeDS/traversal_policy/breadth_first.hpp>
+#include <TreeDS/tree>
 
 using namespace std;
 using namespace ds;
@@ -72,13 +71,13 @@ const nary_tree<int> BreadthFirstTest::tree(
                     n(23))))));
 
 void BreadthFirstTest::backAndForth() {
-    std::list<int> result;
-    std::list<int> expected(50);
-    std::copy(
+    list<int> result;
+    list<int> expected(50);
+    copy(
         tree.cbegin<breadth_first<nary_node<int>>>(),
         tree.cend<breadth_first<nary_node<int>>>(),
-        std::back_inserter(result));
-    std::iota(expected.begin(), expected.end(), 1);
+        back_inserter(result));
+    iota(expected.begin(), expected.end(), 1);
 
     QCOMPARE(result, expected);
 
@@ -131,7 +130,7 @@ void BreadthFirstTest::backAndForth() {
 
 void BreadthFirstTest::checkUpdateConsistency() {
     nary_tree<int> t(BreadthFirstTest::tree);
-    auto it24 = std::find(
+    auto it24 = find(
         t.begin<breadth_first<nary_node<int>>>(),
         t.end<breadth_first<nary_node<int>>>(),
         24);
@@ -179,7 +178,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
                     n(129)),
                 n(118),
                 n(119))));
-    std::vector<int> newNodes{
+    vector<int> newNodes{
         *former24,   // 100
         *++former24, // 25
         *++former24, // 26
@@ -211,8 +210,8 @@ void BreadthFirstTest::checkUpdateConsistency() {
         *++former24, // 40
         *++former24, // 45
     };
-    std::vector<int> expected{100, 25, 26, 27, 28, 29, 101, 102, 103, 104, 105, 106, 107, 34, 35, 36,
-                              108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 40, 41};
+    vector<int> expected{100, 25, 26, 27, 28, 29, 101, 102, 103, 104, 105, 106, 107, 34, 35, 36,
+                         108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 40, 41};
     QCOMPARE(newNodes, expected);
 }
 

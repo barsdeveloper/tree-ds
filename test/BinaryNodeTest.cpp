@@ -1,6 +1,6 @@
 #include <QtTest/QtTest>
 
-#include <TreeDS/tree.hpp>
+#include <TreeDS/tree>
 
 #include "Types.hpp"
 
@@ -90,7 +90,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(right.get_next_sibling(), nullptr);
 
     // move test
-    binary_node<Target> newNode(std::move(node));
+    binary_node<Target> newNode(move(node));
 
     QVERIFY(newNode != node);
     QCOMPARE(*newNode.get_left_child(), left);

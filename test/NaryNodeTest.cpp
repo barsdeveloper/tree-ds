@@ -1,6 +1,6 @@
 #include <QtTest/QtTest>
 
-#include <TreeDS/node/nary_node.hpp>
+#include <TreeDS/tree>
 
 #include "Types.hpp"
 
@@ -46,13 +46,11 @@ void NaryNodeTest::defaultConstructed() {
 }
 
 void NaryNodeTest::constructFromStructNode() {
-    
-    auto structNode =
-        n(Target("a"))(
-            n(Target("b")),
-            n(Target("c"))
-        );
-    
+
+    auto structNode = n(Target("a"))(
+        n(Target("b")),
+        n(Target("c")));
+
     nary_node<Target> node(structNode);
     auto& first = *node.get_first_child();
     auto& last  = *node.get_last_child();
@@ -88,7 +86,7 @@ void NaryNodeTest::constructFromStructNode() {
     QCOMPARE(last.get_next_sibling(), nullptr);
 
     // move test
-    nary_node<Target> newNode(std::move(node));
+    nary_node<Target> newNode(move(node));
 
     QVERIFY(newNode != node);
     QCOMPARE(*newNode.get_first_child(), first);

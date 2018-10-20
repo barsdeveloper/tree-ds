@@ -223,7 +223,7 @@ class tree {
     template <typename A = Algorithm>
     iterator<A> begin() {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++iterator<A>(this);
+        return ++iterator<A>(*this);
     }
 
     /**
@@ -243,7 +243,7 @@ class tree {
     template <typename A = Algorithm>
     const_iterator<A> cbegin() const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++const_iterator<A>(this);
+        return ++const_iterator<A>(*this);
     }
 
     /**
@@ -256,7 +256,7 @@ class tree {
      */
     template <typename A = Algorithm>
     iterator<A> end() {
-        return iterator<A>(this);
+        return iterator<A>(*this);
     }
 
     template <typename A = Algorithm>
@@ -266,7 +266,7 @@ class tree {
 
     template <typename A = Algorithm>
     const_iterator<A> cend() const {
-        return const_iterator<A>(this);
+        return const_iterator<A>(*this);
     }
 
     template <typename A = Algorithm>
