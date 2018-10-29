@@ -3,7 +3,7 @@
 #include <memory> // std::allocator
 
 #include <TreeDS/node/binary_node.hpp>
-#include <TreeDS/traversal_policy/pre_order.hpp>
+#include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
 
 namespace ds {

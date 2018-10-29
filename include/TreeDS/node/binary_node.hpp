@@ -62,8 +62,8 @@ class binary_node : public node<T, binary_node<T>> {
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<binary_node>()) :
             node<T, binary_node>(other.get_value()),
-            left(extract_left(other.get_children(), allocator)),
-            right(extract_right(other.get_children(), allocator)) {
+            left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
+            right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
         attach_children();
     }
@@ -78,8 +78,8 @@ class binary_node : public node<T, binary_node<T>> {
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = std::allocator<binary_node>()) :
             node<T, binary_node>(other.get_value()),
-            left(extract_left(other.get_children(), allocator)),
-            right(extract_right(other.get_children(), allocator)) {
+            left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
+            right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
         attach_children();
     }
@@ -100,7 +100,7 @@ class binary_node : public node<T, binary_node<T>> {
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = std::get<0>(children);
             if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
-                return allocate(allocator, left, allocator).release();
+                return allocate(allocator, left, std::forward<Allocator>(allocator)).release();
             }
         }
         return nullptr;
@@ -111,7 +111,7 @@ class binary_node : public node<T, binary_node<T>> {
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = std::get<1>(children);
             if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
-                return allocate(allocator, right, allocator).release();
+                return allocate(allocator, right, std::forward<Allocator>(allocator)).release();
             }
         }
         return nullptr;

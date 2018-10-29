@@ -40,9 +40,15 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    algorithm_type algorithm{};
+    algorithm_type algorithm {};
     tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
     node_type* current_node = nullptr; // nullptr => end()
+
+    protected:
+    // Constructor used by tree to create an iterator
+    tree_iterator(tree_type& tree) :
+            pointed_tree(&tree) {
+    }
 
     public:
     ~tree_iterator() = default;
@@ -55,10 +61,6 @@ class tree_iterator {
 
     // Iterators must be CopyAssignable
     tree_iterator& operator=(const tree_iterator&) = default;
-
-    tree_iterator(tree_type& tree) :
-            pointed_tree(&tree) {
-    }
 
     // Conversion from iterator to const_iterator
     template <

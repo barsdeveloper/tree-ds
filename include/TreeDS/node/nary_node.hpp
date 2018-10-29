@@ -113,8 +113,8 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     private:
-    template <typename... Nodes, typename Allocator>
-    nary_node* extract_children(const std::tuple<Nodes...>& nodes, Allocator&& allocator) {
+    template <typename Allocator, typename... Nodes>
+    nary_node* extract_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
         // pointer to the considered child (which is itself a pointer to nary_node)
         nary_node* result         = nullptr;
         nary_node** current_child = &result;

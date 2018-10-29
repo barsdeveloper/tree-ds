@@ -10,7 +10,7 @@
 #include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/traversal_policy/post_order.hpp>
+#include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace ds {

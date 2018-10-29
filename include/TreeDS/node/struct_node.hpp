@@ -45,9 +45,9 @@ class struct_node {
     //   ---   METHODS   ---
     private:
     // Constructors are private because the instances must be constructed using function n().
-    constexpr struct_node(const T& value, Children... children) :
+    constexpr struct_node(const T& value, Children&&... children) :
             value(value),
-            children(children...) {
+            children(std::forward<Children>(children)...) {
         std::size_t size           = std::is_same_v<T, std::nullptr_t> ? 0 : 1;
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;

@@ -10,6 +10,9 @@ namespace ds {
 template <typename T, typename Node>
 class node {
 
+    public:
+    using value_type = T;
+
     protected:
     T value;
     Node* parent = nullptr;
