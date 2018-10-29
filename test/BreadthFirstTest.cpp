@@ -7,14 +7,18 @@
 using namespace std;
 using namespace ds;
 
+// Test statefull iterators in order to check the robustness to keep a coherent internal state
 class BreadthFirstTest : public QObject {
 
     Q_OBJECT
     private:
+    // Initial tree to be modified
     static const nary_tree<int> tree;
 
     private slots:
+    // Traverse in an unusual way: jump forward and backward
     void backAndForth();
+    // Check wether the iterator is updated consistently (update is required in case of insertion operation)
     void checkUpdateConsistency();
 };
 
@@ -73,26 +77,31 @@ const nary_tree<int> BreadthFirstTest::tree(
 void BreadthFirstTest::backAndForth() {
     list<int> result;
     list<int> expected(50);
+    // populate result with the actual result of tree traverse
     copy(
         tree.cbegin<breadth_first<nary_node<int>>>(),
         tree.cend<breadth_first<nary_node<int>>>(),
         back_inserter(result));
+    // the expected traversal is 1...50
     iota(expected.begin(), expected.end(), 1);
 
     QCOMPARE(result, expected);
 
+    // Iterators of expected
     auto expectedStart = expected.begin();
     auto expectedEnd   = expected.end();
     auto expectedIt    = expectedStart;
 
+    // Iterators of the actual tree
     auto actualStart = tree.cbegin<breadth_first<nary_node<int>>>();
     auto actualEnd   = tree.cend<breadth_first<nary_node<int>>>();
     auto actualIt    = actualStart;
+
     // start jumping forward and backward
     int index = 0;
-    while (expectedIt != expectedEnd) {
+    while (expectedIt != expectedEnd) { // until the end
         int offset = 0;
-        // take care it eventually reaches the end
+        // take care it will reaches the end (totally must add more than subtract)
         switch (index++ % 4) {
         case 0:
             offset = 3;
@@ -107,18 +116,19 @@ void BreadthFirstTest::backAndForth() {
             offset = -4;
             break;
         }
+        // 3 - 5 + 7 - 4 = 1 ok, it will reach the end
         while (offset != 0 && expectedIt != expectedEnd && actualIt != actualEnd) {
             QVERIFY(*expectedIt == *actualIt);
-            if (offset > 0) {
+            if (offset > 0) { // positive offset increments
                 if (expectedIt == expectedEnd || actualIt == actualEnd) {
-                    break;
+                    break; // if it reached the end, simply end the loop
                 }
                 --offset;
                 ++expectedIt;
                 ++actualIt;
-            } else {
+            } else { // negative offset decrements
                 if (expectedIt == expectedStart || expectedIt == expectedEnd) {
-                    break;
+                    break; // if it reached the start, simply end the loop
                 }
                 ++offset;
                 --expectedIt;
@@ -145,6 +155,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
     QCOMPARE(*it25, 25);
     QCOMPARE(*it26, 26);
 
+    // replace node 24 with another subtree
     auto former24 = t.insert(
         it24,
         n(100)(
@@ -178,7 +189,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
                     n(129)),
                 n(118),
                 n(119))));
-    vector<int> newNodes{
+    vector<int> newNodes {
         *former24,   // 100
         *++former24, // 25
         *++former24, // 26
@@ -210,8 +221,8 @@ void BreadthFirstTest::checkUpdateConsistency() {
         *++former24, // 40
         *++former24, // 45
     };
-    vector<int> expected{100, 25, 26, 27, 28, 29, 101, 102, 103, 104, 105, 106, 107, 34, 35, 36,
-                         108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 40, 41};
+    vector<int> expected {100, 25, 26, 27, 28, 29, 101, 102, 103, 104, 105, 106, 107, 34, 35, 36,
+                          108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 40, 41};
     QCOMPARE(newNodes, expected);
 }
 

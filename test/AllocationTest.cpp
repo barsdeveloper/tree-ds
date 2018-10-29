@@ -12,10 +12,11 @@ class AllocationTest : public QObject {
     Q_OBJECT
 
     private slots:
-    void first();
+    void test1();
+    void test2();
 };
 
-void AllocationTest::first() {
+void AllocationTest::test1() {
     binary_tree<
         Foo,
         post_order,
@@ -107,6 +108,29 @@ void AllocationTest::first() {
     QCOMPARE(tree.get_allocator().allocated.size(), 0);
     QCOMPARE(tree.get_allocator().total_allocated, 11);
     QCOMPARE(tree.get_allocator().total_deallocated, 11);
+}
+
+void AllocationTest::test2() {
+    using allocator_t = CustomAllocator<binary_node<float>>;
+
+    {
+        allocator_t allocator;
+
+        QCOMPARE(allocator_t::allocated.size(), 0);
+        QCOMPARE(allocator_t::total_allocated, 0);
+        QCOMPARE(allocator_t::total_deallocated, 0);
+
+        auto ptr  = allocate(allocator, 5.7);
+        auto ptr2 = allocate(allocator, 7.8);
+
+        QCOMPARE(allocator_t::allocated.size(), 2);
+        QCOMPARE(allocator_t::total_allocated, 2);
+        QCOMPARE(allocator_t::total_deallocated, 0);
+    } // here allocated stuff will be deleted
+
+    QCOMPARE(allocator_t::allocated.size(), 0);
+    QCOMPARE(allocator_t::total_allocated, 2);
+    QCOMPARE(allocator_t::total_deallocated, 2);
 }
 
 QTEST_MAIN(AllocationTest);

@@ -13,30 +13,37 @@ class IsUpdateableTest : public QObject {
 
     private slots:
     void test() {
+
         QVERIFY((
             is_updateable<
                 breadth_first<binary_node<int>>,
                 binary_node<int>>::value));
+
         QVERIFY((
             !is_updateable<
                 breadth_first<binary_node<int>>,
                 binary_node<float>>::value));
+
         QVERIFY((
             is_updateable<
                 breadth_first<binary_node<Foo>>,
                 binary_node<Foo>>::value));
+
         QVERIFY((
             !is_updateable<
                 breadth_first<binary_node<Foo>>,
                 binary_node<Bar>>::value));
+
         QVERIFY((
             is_updateable<
                 breadth_first<nary_node<string>>,
                 nary_node<string>>::value));
+
         QVERIFY((
             !is_updateable<
                 breadth_first<nary_node<string>>,
                 nary_node<char>>::value));
+
         QVERIFY((
             is_updateable<
                 breadth_first<nary_node<Bar>>,

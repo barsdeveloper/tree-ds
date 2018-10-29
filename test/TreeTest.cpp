@@ -7,6 +7,9 @@
 using namespace std;
 using namespace ds;
 
+template class ds::nary_tree<Foo>;
+template class ds::binary_tree<Bar>;
+
 class TreeTest : public QObject {
 
     Q_OBJECT
