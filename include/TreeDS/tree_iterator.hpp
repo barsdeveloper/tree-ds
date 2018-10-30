@@ -12,8 +12,8 @@ class tree;
 
 template <
     typename Tree,
-    typename Algorithm = typename Tree::algorithm_type,
-    bool Constant      = false>
+    typename Policy = typename Tree::algorithm_type,
+    bool Constant   = false>
 class tree_iterator {
 
     template <typename, typename, typename, typename>
@@ -28,7 +28,7 @@ class tree_iterator {
         Constant,
         const typename tree_type::node_type,
         typename tree_type::node_type>;
-    using algorithm_type = Algorithm;
+    using policy_type = Policy;
     // Iterators mandatory type declarations
     using value_type = std::conditional_t<
         Constant,
@@ -40,7 +40,7 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    algorithm_type algorithm {};
+    policy_type policy {};
     tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
     node_type* current_node = nullptr; // nullptr => end()
 
@@ -66,7 +66,7 @@ class tree_iterator {
     template <
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
-    explicit tree_iterator(const tree_iterator<Tree, Algorithm, OtherConstant>& other) :
+    explicit tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
             pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
     }
@@ -74,7 +74,7 @@ class tree_iterator {
     template <
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
-    tree_iterator& operator=(const tree_iterator<Tree, Algorithm, OtherConstant>& other) {
+    tree_iterator& operator=(const tree_iterator<Tree, Policy, OtherConstant>& other) {
         this->pointed_tree = other.pointed_tree;
         this->current_node = other.current_node;
         return *this;
@@ -105,20 +105,20 @@ class tree_iterator {
     }
 
     template <bool OtherConst>
-    bool operator==(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
+    bool operator==(const tree_iterator<Tree, Policy, OtherConst>& other) const {
         return this->pointed_tree == other.pointed_tree
             && this->current_node == other.current_node;
     }
 
     template <bool OtherConst>
-    bool operator!=(const tree_iterator<Tree, Algorithm, OtherConst>& other) const {
+    bool operator!=(const tree_iterator<Tree, Policy, OtherConst>& other) const {
         return !this->operator==(other);
     }
 
     tree_iterator& operator++() {
         if (current_node) {
             // const_cast needed in case node_type is non const
-            current_node = const_cast<node_type*>(algorithm.increment(*current_node));
+            current_node = const_cast<node_type*>(policy.increment(*current_node));
         } else if (pointed_tree != nullptr && pointed_tree->get_root() != nullptr) {
             /*
              * If iterator is at the end():
@@ -127,7 +127,7 @@ class tree_iterator {
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
             // const_cast needed in case node_type is non const
-            current_node = const_cast<node_type*>(algorithm.go_first(*pointed_tree->get_root()));
+            current_node = const_cast<node_type*>(policy.go_first(*pointed_tree->get_root()));
         }
         return *this;
     }
@@ -141,7 +141,7 @@ class tree_iterator {
     tree_iterator& operator--() {
         if (current_node) {
             // const_cast needed in case node_type is non constant
-            current_node = const_cast<node_type*>(algorithm.decrement(*current_node));
+            current_node = const_cast<node_type*>(policy.decrement(*current_node));
         } else if (pointed_tree != nullptr && pointed_tree->get_root() != nullptr) {
             /*
              * If iterator is at the end():
@@ -150,7 +150,7 @@ class tree_iterator {
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
             // const_cast needed in case node_type is non const
-            current_node = const_cast<node_type*>(algorithm.go_last(*pointed_tree->get_root()));
+            current_node = const_cast<node_type*>(policy.go_last(*pointed_tree->get_root()));
         }
         return *this;
     }
@@ -163,8 +163,8 @@ class tree_iterator {
 
     void update(const node_type& current, const node_type& replacement) {
         current_node = const_cast<node_type*>(&replacement);
-        if constexpr (is_updateable<algorithm_type, node_type>::value) {
-            algorithm.update(current, replacement);
+        if constexpr (is_updateable<policy_type, node_type>::value) {
+            policy.update(current, replacement);
         }
     }
 };

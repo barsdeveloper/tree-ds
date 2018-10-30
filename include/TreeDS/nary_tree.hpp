@@ -13,24 +13,24 @@ namespace ds {
  * @brief A type of tree having nodes {@link nary_node}
  *
  * @tparam T the type of value hold by this tree
- * @tparam Algorithm default traverasl algorithm
+ * @tparam Policy default traversal algorithm
  * @tparam Allocator the allocater used to allocate nodes
  * @relates tree
  */
 template <
     typename T,
-    typename Algorithm = pre_order,
+    typename Policy    = pre_order,
     typename Allocator = std::allocator<T>>
-class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
-    using super = tree<T, nary_node<T>, Algorithm, Allocator>;
+class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
+    using super = tree<T, nary_node<T>, Policy, Allocator>;
 
     // Inherit constructors from parent class
-    using tree<T, nary_node<T>, Algorithm, Allocator>::tree;
+    using tree<T, nary_node<T>, Policy, Allocator>::tree;
 
     public:
-    template <typename OtherAlgorithm, typename OtherAllocator>
-    nary_tree(const binary_tree<T, OtherAlgorithm, OtherAllocator>& other) :
-            tree<T, nary_node<T>, Algorithm, Allocator>(
+    template <typename OtherPolicy, typename OtherAllocator>
+    nary_tree(const binary_tree<T, OtherPolicy, OtherAllocator>& other) :
+            tree<T, nary_node<T>, Policy, Allocator>(
                 other.get_root()
                     ? allocate(this->allocator, *other.get_root(), this->allocator).release()
                     : nullptr,
@@ -41,10 +41,10 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
     }
 
     // Import the overloads of the operator= into the current class (that would be shadowed otherwise)
-    using tree<T, nary_node<T>, Algorithm, Allocator>::operator=;
+    using tree<T, nary_node<T>, Policy, Allocator>::operator=;
 
-    template <typename OtherAlgorithm, typename OtherAllocator>
-    nary_tree& operator=(const binary_tree<T, OtherAlgorithm, OtherAllocator>& other) {
+    template <typename OtherPolicy, typename OtherAllocator>
+    nary_tree& operator=(const binary_tree<T, OtherPolicy, OtherAllocator>& other) {
         static_assert(
             std::is_copy_assignable_v<T>,
             "Tried to assign to an nary_tree a binary_tree containing a non copyable type.");
@@ -56,8 +56,8 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
         return *this;
     }
 
-    template <typename OtherAlgorithm, typename OtherAllocator>
-    nary_tree& operator=(binary_tree<T, OtherAlgorithm, OtherAllocator>&& other) {
+    template <typename OtherPolicy, typename OtherAllocator>
+    nary_tree& operator=(binary_tree<T, OtherPolicy, OtherAllocator>&& other) {
         this->assign(
             other.get_root(),
             other.size());
@@ -66,10 +66,10 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
     }
 
     // Import the overloads of the operator== into the current class (that would be shadowed otherwise)
-    using tree<T, nary_node<T>, Algorithm, Allocator>::operator==;
+    using tree<T, nary_node<T>, Policy, Allocator>::operator==;
 
-    template <typename OtherAlgorithm, typename OtherAllocator>
-    bool operator==(const binary_tree<T, OtherAlgorithm, OtherAllocator>& other) const {
+    template <typename OtherPolicy, typename OtherAllocator>
+    bool operator==(const binary_tree<T, OtherPolicy, OtherAllocator>& other) const {
         // 1. Test if different size_value
         if (this->size() != other.size()) {
             return false;
@@ -85,37 +85,37 @@ class nary_tree : public tree<T, nary_node<T>, Algorithm, Allocator> {
 
 template <
     typename T,
-    typename Algorithm1,
-    typename Algorithm2,
+    typename Policy1,
+    typename Policy2,
     typename Allocator1,
     typename Allocator2>
 bool operator==(
-    const binary_tree<T, Algorithm1, Allocator1>& lhs,
-    const nary_tree<T, Algorithm2, Allocator2>& rhs) {
+    const binary_tree<T, Policy1, Allocator1>& lhs,
+    const nary_tree<T, Policy2, Allocator2>& rhs) {
     return rhs.operator==(lhs);
 }
 
 template <
     typename T,
-    typename Algorithm1,
-    typename Algorithm2,
+    typename Policy1,
+    typename Policy2,
     typename Allocator1,
     typename Allocator2>
 bool operator!=(
-    const nary_tree<T, Algorithm2, Allocator2>& lhs,
-    const binary_tree<T, Algorithm1, Allocator1>& rhs) {
+    const nary_tree<T, Policy2, Allocator2>& lhs,
+    const binary_tree<T, Policy1, Allocator1>& rhs) {
     return !lhs.operator==(rhs);
 }
 
 template <
     typename T,
-    typename Algorithm1,
-    typename Algorithm2,
+    typename Policy1,
+    typename Policy2,
     typename Allocator1,
     typename Allocator2>
 bool operator!=(
-    const binary_tree<T, Algorithm1, Allocator1>& lhs,
-    const nary_tree<T, Algorithm2, Allocator2>& rhs) {
+    const binary_tree<T, Policy1, Allocator1>& lhs,
+    const nary_tree<T, Policy2, Allocator2>& rhs) {
     return !rhs.operator==(lhs);
 }
 

@@ -28,7 +28,7 @@ namespace ds {
  * method and using an {@link #iterator} as place indicator.
  *
  * @tparam T type of element hold by the tree
- * @tparam Algorithm default iterator algorithm used to traverse the tree in a range-based for loop
+ * @tparam Policy default iterator algorithm used to traverse the tree in a range-based for loop
  * @tparam Allocator allocator type used to allocate new nodes
  *
  * @sa binary_tree
@@ -36,7 +36,7 @@ namespace ds {
 template <
     typename T,
     typename Node,
-    typename Algorithm,
+    typename Policy,
     typename Allocator>
 class tree {
 
@@ -58,23 +58,23 @@ class tree {
     using difference_type = std::ptrdiff_t;
     using pointer         = typename std::allocator_traits<Allocator>::pointer;
     using const_pointer   = typename std::allocator_traits<Allocator>::const_pointer;
-    using algorithm_type  = Algorithm;
+    using policy_type     = Policy;
     using allocator_type  = typename std::allocator_traits<Allocator>::template rebind_alloc<node_type>;
 
     // Iterators
-    template <typename A>
-    using iterator = tree_iterator<tree, A, false>;
-    template <typename A>
-    using const_iterator = tree_iterator<tree, A, true>;
-    template <typename A>
-    using reverse_iterator = std::reverse_iterator<iterator<A>>;
-    template <typename A>
-    using const_reverse_iterator = std::reverse_iterator<const_iterator<A>>;
+    template <typename P>
+    using iterator = tree_iterator<tree, P, false>;
+    template <typename P>
+    using const_iterator = tree_iterator<tree, P, true>;
+    template <typename P>
+    using reverse_iterator = std::reverse_iterator<iterator<P>>;
+    template <typename P>
+    using const_reverse_iterator = std::reverse_iterator<const_iterator<P>>;
 
     protected:
     //   ---   ATTRIBUTES   ---
     /// @brief Allocator object used to allocate the nodes.
-    allocator_type allocator{};
+    allocator_type allocator {};
     /// @brief Owning pointer to the root node.
     node_type* root = nullptr;
     /// @brief The number of nodes in the tree.
@@ -220,10 +220,10 @@ class tree {
      * algorithm used to traverse the tree.
      * @return iterator to the first element
      */
-    template <typename A = Algorithm>
-    iterator<A> begin() {
+    template <typename P = Policy>
+    iterator<P> begin() {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++iterator<A>(*this);
+        return ++iterator<P>(*this);
     }
 
     /**
@@ -232,18 +232,18 @@ class tree {
      * algorithm used to traverse the tree. Using this iterator you can't modify the container.
      * @return constant iterator to the first element
      */
-    template <typename A = Algorithm>
-    const_iterator<A> begin() const {
+    template <typename P = Policy>
+    const_iterator<P> begin() const {
         return cbegin();
     }
 
     /**
      * @copydoc #begin() const
      */
-    template <typename A = Algorithm>
-    const_iterator<A> cbegin() const {
+    template <typename P = Policy>
+    const_iterator<P> cbegin() const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++const_iterator<A>(*this);
+        return ++const_iterator<P>(*this);
     }
 
     /**
@@ -254,52 +254,52 @@ class tree {
      * element.
      * @return iterator the element following the last element
      */
-    template <typename A = Algorithm>
-    iterator<A> end() {
-        return iterator<A>(*this);
+    template <typename P = Policy>
+    iterator<P> end() {
+        return iterator<P>(*this);
     }
 
-    template <typename A = Algorithm>
-    const_iterator<A> end() const {
-        return cend();
+    template <typename P = Policy>
+    const_iterator<P> end() const {
+        return cend<P>();
     }
 
-    template <typename A = Algorithm>
-    const_iterator<A> cend() const {
-        return const_iterator<A>(*this);
+    template <typename P = Policy>
+    const_iterator<P> cend() const {
+        return const_iterator<P>(*this);
     }
 
-    template <typename A = Algorithm>
-    reverse_iterator<A> rbegin() {
-        return std::make_reverse_iterator(end<A>());
+    template <typename P = Policy>
+    reverse_iterator<P> rbegin() {
+        return std::make_reverse_iterator(end<P>());
     }
 
-    template <typename A = Algorithm>
-    const_reverse_iterator<A> rbegin() const {
-        return crbegin();
+    template <typename P = Policy>
+    const_reverse_iterator<P> rbegin() const {
+        return crbegin<P>();
     }
 
-    template <typename A = Algorithm>
-    const_reverse_iterator<A> crbegin() const {
-        return std::make_reverse_iterator(cend<A>());
+    template <typename P = Policy>
+    const_reverse_iterator<P> crbegin() const {
+        return std::make_reverse_iterator(cend<P>());
     }
 
     // reverse end
-    template <typename A = Algorithm>
-    reverse_iterator<A> rend() {
+    template <typename P = Policy>
+    reverse_iterator<P> rend() {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(begin<A>());
+        return std::make_reverse_iterator(begin<P>());
     }
 
-    template <typename A = Algorithm>
-    const_reverse_iterator<A> rend() const {
-        return crend();
+    template <typename P = Policy>
+    const_reverse_iterator<P> rend() const {
+        return crend<P>();
     }
 
-    template <typename A = Algorithm>
-    const_reverse_iterator<A> crend() const {
+    template <typename P = Policy>
+    const_reverse_iterator<P> crend() const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(cbegin<A>());
+        return std::make_reverse_iterator(cbegin<P>());
     }
 
     public:
@@ -348,10 +348,10 @@ class tree {
 
     //   ---   MODIFIERS   ---
     protected:
-    template <typename A, bool Constant>
-    tree_iterator<tree, A, Constant>
+    template <typename P, bool Constant>
+    tree_iterator<tree, P, Constant>
     modify_subtree(
-        tree_iterator<tree, A, Constant> position,
+        tree_iterator<tree, P, Constant> position,
         std::unique_ptr<node_type, deleter<allocator_type>> node,
         std::size_t replacement_size) {
         if (position.pointed_tree != this) {
