@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory> // std::allocator
 
-#include <TreeDS/node/node.hpp>
+#include <TreeDS/node/node_base.hpp>
 
 namespace md {
 
@@ -16,8 +16,10 @@ namespace md {
 template <typename Node, typename Allocator = std::allocator<Node>>
 class breadth_first final {
 
+    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<Node>;
+
     private:
-    std::deque<const Node*, Allocator> open_nodes{};
+    std::deque<const Node*, Allocator> open_nodes {};
     Allocator allocator;
 
     public:
@@ -95,4 +97,4 @@ class breadth_first final {
     }
 };
 
-} // namespace ds
+} // namespace md

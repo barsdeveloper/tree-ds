@@ -17,7 +17,7 @@ class PreliminaryTest : public QObject {
 
 void PreliminaryTest::objectCreation() {
 
-    binary_tree<Foo> t;
+    binary::tree<Foo> t;
 
     // The tree is empty
     QCOMPARE(t.size(), 0);

@@ -6,8 +6,10 @@
 
 namespace md {
 
-template <typename T>
-class binary_node;
+namespace binary {
+    template <typename T>
+    class node;
+}
 
 class in_order final {
 
@@ -15,12 +17,12 @@ class in_order final {
     constexpr in_order() = default;
 
     template <typename T>
-    const binary_node<T>* increment(const binary_node<T>& from) {
+    const binary::node<T>* increment(const binary::node<T>& from) {
         if (from.get_right_child()) {
-            return keep_calling(*from.get_right_child(), std::mem_fn(&binary_node<T>::get_left_child));
+            return keep_calling(*from.get_right_child(), std::mem_fn(&binary::node<T>::get_left_child));
         } else {
-            const binary_node<T>* prev = &from;
-            const binary_node<T>* next = from.get_parent();
+            const binary::node<T>* prev = &from;
+            const binary::node<T>* next = from.get_parent();
             while (next) {
                 if (prev == next->get_left_child()) {
                     return next; // found
@@ -33,12 +35,12 @@ class in_order final {
     }
 
     template <typename T>
-    const binary_node<T>* decrement(const binary_node<T>& from) {
+    const binary::node<T>* decrement(const binary::node<T>& from) {
         if (from.get_left_child()) {
-            return keep_calling(*from.get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
+            return keep_calling(*from.get_left_child(), std::mem_fn(&binary::node<T>::get_right_child));
         }
-        const binary_node<T>* prev = &from;
-        const binary_node<T>* next = from.get_parent();
+        const binary::node<T>* prev = &from;
+        const binary::node<T>* next = from.get_parent();
         while (next) {
             if (prev == next->get_right_child()) {
                 return next; // found
@@ -50,14 +52,14 @@ class in_order final {
     }
 
     template <typename T>
-    const binary_node<T>* go_first(const binary_node<T>& root) {
-        return keep_calling(root, std::mem_fn(&binary_node<T>::get_left_child));
+    const binary::node<T>* go_first(const binary::node<T>& root) {
+        return keep_calling(root, std::mem_fn(&binary::node<T>::get_left_child));
     }
 
     template <typename T>
-    const binary_node<T>* go_last(const binary_node<T>& root) {
-        return keep_calling(root, std::mem_fn(&binary_node<T>::get_right_child));
+    const binary::node<T>* go_last(const binary::node<T>& root) {
+        return keep_calling(root, std::mem_fn(&binary::node<T>::get_right_child));
     }
 };
 
-} // namespace ds
+} // namespace md

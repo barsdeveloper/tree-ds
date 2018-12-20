@@ -8,7 +8,7 @@
 namespace md {
 
 template <typename, typename, typename, typename>
-class tree;
+class tree_base;
 
 template <
     typename Tree,
@@ -17,7 +17,7 @@ template <
 class tree_iterator {
 
     template <typename, typename, typename, typename>
-    friend class tree;
+    friend class tree_base;
 
     template <typename, typename, bool>
     friend class tree_iterator;
@@ -169,4 +169,4 @@ class tree_iterator {
     }
 };
 
-} // namespace ds
+} // namespace md

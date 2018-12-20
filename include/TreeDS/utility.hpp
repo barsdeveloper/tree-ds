@@ -7,11 +7,14 @@
 namespace md {
 
 // forward declarations
-template <typename>
-class binary_node;
-
-template <typename>
-class nary_node;
+namespace binary {
+    template <typename>
+    class node;
+}
+namespace nary {
+    template <typename>
+    class node;
+}
 
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
@@ -226,7 +229,7 @@ struct is_constructible_from_tuple<
         : std::true_type {};
 
 template <typename T>
-std::size_t count_nodes(const binary_node<T>& node) {
+std::size_t count_nodes(const binary::node<T>& node) {
     return 1
         + (node.get_left_child() != nullptr
                ? count_nodes(*node.get_left_child())
@@ -237,9 +240,9 @@ std::size_t count_nodes(const binary_node<T>& node) {
 }
 
 template <typename T>
-std::size_t count_nodes(const nary_node<T>& node) {
-    std::size_t size          = 1;
-    const nary_node<T>* child = node.get_first_child();
+std::size_t count_nodes(const nary::node<T>& node) {
+    std::size_t size           = 1;
+    const nary::node<T>* child = node.get_first_child();
     while (child != nullptr) {
         size += count_nodes(*child);
         child = child->get_next_sibling();
@@ -247,4 +250,4 @@ std::size_t count_nodes(const nary_node<T>& node) {
     return size;
 }
 
-} // namespace ds
+} // namespace md

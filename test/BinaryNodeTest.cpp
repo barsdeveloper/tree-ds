@@ -12,7 +12,7 @@ using namespace md;
  * the code for all the methods. Those methods will NOT appear as NOT covered by tests (because they will be not
  * recognized as lines of code) giving the false information fo greater coverage percentage.
  */
-template class md::binary_node<Target>;
+template class md::binary::node<Target>;
 
 class BinaryNodeTest : public QObject {
 
@@ -26,8 +26,8 @@ class BinaryNodeTest : public QObject {
 };
 
 void BinaryNodeTest::defaultConstructed() {
-    binary_node<int> node;
-    binary_node<int> node2;
+    binary::node<int> node;
+    binary::node<int> node2;
 
     QVERIFY(node == node2);
     QVERIFY(!(node != node2));
@@ -52,7 +52,7 @@ void BinaryNodeTest::constructFromStructNode() {
     auto structNode = n(Target("a"))(
         n(Target("b")),
         n(Target("c")));
-    binary_node<Target> node(structNode);
+    binary::node<Target> node(structNode);
     auto& left  = *node.get_left_child();
     auto& right = *node.get_right_child();
 
@@ -90,7 +90,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(right.get_next_sibling(), nullptr);
 
     // move test
-    binary_node<Target> newNode(move(node));
+    binary::node<Target> newNode(move(node));
 
     QVERIFY(newNode != node);
     QCOMPARE(*newNode.get_left_child(), left);
@@ -100,22 +100,22 @@ void BinaryNodeTest::constructFromStructNode() {
 }
 
 void BinaryNodeTest::equalityWithStructNode() {
-    binary_node<string> bothChild(
+    binary::node<string> bothChild(
         n("a")(
             n("b"),
             n("c")));
-    binary_node<string> leftChild(
+    binary::node<string> leftChild(
         n("a")(
             n("b")));
-    binary_node<string> rightChild(
+    binary::node<string> rightChild(
         n("a")(
             n(),
             n("b")));
-    binary_node<string> leftWrong(
+    binary::node<string> leftWrong(
         n("a")(
             n("#"),
             n("c")));
-    binary_node<string> rightWrong(
+    binary::node<string> rightWrong(
         n("a")(
             n("b"),
             n("#")));
@@ -150,10 +150,10 @@ void BinaryNodeTest::equalityWithStructNode() {
 void BinaryNodeTest::argumentImplicitConvertion() {
     auto from = ConvertibleFrom("someString");
     auto to   = ConvertibleTo("someString");
-    binary_node<Target> regular(Target(string("someString")));
-    binary_node<Target> constructedFrom(from);
-    binary_node<Target> constructedTo(to);
-    binary_node<Target> different("diffentString");
+    binary::node<Target> regular(Target(string("someString")));
+    binary::node<Target> constructedFrom(from);
+    binary::node<Target> constructedTo(to);
+    binary::node<Target> different("diffentString");
 
     QCOMPARE("someString", constructedFrom.get_value().value);
     QCOMPARE("someString", constructedTo.get_value().value);

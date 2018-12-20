@@ -15,7 +15,7 @@ class ReadmeTest : public QObject {
 
     private slots:
     void test() {
-        md::nary_tree<string> t; // empty tree created
+        md::nary::tree<string> t; // empty tree created
         QCOMPARE(t.size(), 0);
 
         {
@@ -25,7 +25,7 @@ class ReadmeTest : public QObject {
             QCOMPARE(result.str(), "size: 1 (hello)");
         }
 
-        md::binary_tree<int> myTree(
+        md::binary::tree<int> myTree(
             n(100)(              // root node
                 n(),             // left child of root (it is empty: no child)
                 n(200)(          // right child of root
@@ -41,7 +41,7 @@ class ReadmeTest : public QObject {
                 n(-30)(
                     n(-40))));
 
-        md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
+        md::binary::tree<int, md::in_order> inOrderTree(move(myTree));
         //            ^^^^^^^^^^^^ default algorithm used to iterate the tree
 
         {
