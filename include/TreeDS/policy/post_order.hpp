@@ -4,7 +4,7 @@
 
 #include <TreeDS/utility.hpp>
 
-namespace ds {
+namespace md {
 
 class post_order final {
 

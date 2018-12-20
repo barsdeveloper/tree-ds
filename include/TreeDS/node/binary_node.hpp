@@ -12,7 +12,7 @@
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/utility.hpp>
 
-namespace ds {
+namespace md {
 
 template <typename T>
 class binary_node : public node<T, binary_node<T>> {

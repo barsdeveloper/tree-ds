@@ -4,7 +4,7 @@
 #include <type_traits> // std::enable_if, std::is_convertible, std::is_constructible, std::void_t
 #include <utility>     // std::forward(), std::declval
 
-namespace ds {
+namespace md {
 
 // forward declarations
 template <typename>

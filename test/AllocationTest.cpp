@@ -5,7 +5,7 @@
 #include "Types.hpp"
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 class AllocationTest : public QObject {
 
@@ -21,7 +21,7 @@ void AllocationTest::test1() {
         Foo,
         post_order,
         CustomAllocator<Foo>>
-        tree{};
+        tree {};
 
     QCOMPARE(tree.get_allocator().allocated.size(), 0);
     QCOMPARE(tree.get_allocator().total_allocated, 0);

@@ -5,7 +5,7 @@
 #include <TreeDS/tree>
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 // Test statefull iterators in order to check the robustness to keep a coherent internal state
 class BreadthFirstTest : public QObject {

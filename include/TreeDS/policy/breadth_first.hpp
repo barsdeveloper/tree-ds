@@ -6,7 +6,7 @@
 
 #include <TreeDS/node/node.hpp>
 
-namespace ds {
+namespace md {
 
 /**
  * Traversal policy that returns nodes in a line by line fashion. In forward order the nodes will be retrieved from left

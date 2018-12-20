@@ -5,7 +5,7 @@
 
 #include <TreeDS/utility.hpp>
 
-namespace ds {
+namespace md {
 
 template <typename T, typename Node>
 class node {

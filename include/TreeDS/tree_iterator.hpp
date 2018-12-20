@@ -5,7 +5,7 @@
 
 #include <TreeDS/node/binary_node.hpp>
 
-namespace ds {
+namespace md {
 
 template <typename, typename, typename, typename>
 class tree;

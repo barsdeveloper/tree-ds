@@ -39,10 +39,10 @@ Here's a small example of utilization (you can merge and compile the code snippe
 #include <algorithm>
 #include <TreeDS/tree.hpp>
 using namespace std;
-using ds::n;
+using md::n;
 
 int main() {
-    ds::nary_tree<string> t;
+    md::nary_tree<string> t;
     cout << t.size_value() << endl; // 0
 ```
 
@@ -59,7 +59,7 @@ cout << "size: " << t.size_value() << " (" << *t.begin() << ")" << endl;
 The simplest way to use this library is to create anonymous nodes. Use the function ```n(something)``` to obtain a `struct_node<something_t>`, then use the function call operator to add (and replace) children to a node. The value obtained has a complex type, don't to refer to it directly, just feed it to the constructor itself. Look at the following example.
 
 ```c++
-ds::binary_tree<int> myTree(
+md::binary_tree<int> myTree(
     n(100)(              // root node
         n(),             // left child of root (it is empty: no child)
         n(200)(          // right child of root
@@ -113,7 +113,7 @@ myTree.insert(
 Let's now iterate the tree. You can create a tree with a specified traversal policy by setting the second template parameter. This algorithm will be the default choice (used in the range based loops, for example).
 
 ```c++
-ds::binary_tree<int, ds::in_order> inOrderTree(move(myTree));
+md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
 //            ^^^^^^^^^^^^ default policy used to iterate the tree
 ```
 
@@ -134,8 +134,8 @@ You can always traverse a tree in a personalized manner, independently on the Po
 // Post-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Post-order: ";
 result << "Post-order: ";
-auto it = inOrderTree.begin<ds::post_order>();
-while (it != inOrderTree.end<ds::post_order>()) {
+auto it = inOrderTree.begin<md::post_order>();
+while (it != inOrderTree.end<md::post_order>()) {
     result << *it++ << ", ";
 }
 }// end of main

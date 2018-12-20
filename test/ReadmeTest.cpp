@@ -7,7 +7,7 @@
 #include <TreeDS/tree>
 
 using namespace std;
-using ds::n;
+using md::n;
 
 class ReadmeTest : public QObject {
 
@@ -15,7 +15,7 @@ class ReadmeTest : public QObject {
 
     private slots:
     void test() {
-        ds::nary_tree<string> t; // empty tree created
+        md::nary_tree<string> t; // empty tree created
         QCOMPARE(t.size(), 0);
 
         {
@@ -25,7 +25,7 @@ class ReadmeTest : public QObject {
             QCOMPARE(result.str(), "size: 1 (hello)");
         }
 
-        ds::binary_tree<int> myTree(
+        md::binary_tree<int> myTree(
             n(100)(              // root node
                 n(),             // left child of root (it is empty: no child)
                 n(200)(          // right child of root
@@ -41,7 +41,7 @@ class ReadmeTest : public QObject {
                 n(-30)(
                     n(-40))));
 
-        ds::binary_tree<int, ds::in_order> inOrderTree(move(myTree));
+        md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
         //            ^^^^^^^^^^^^ default algorithm used to iterate the tree
 
         {
@@ -57,8 +57,8 @@ class ReadmeTest : public QObject {
         {
             std::stringstream cout;
             cout << "Post-order: ";
-            auto it = inOrderTree.begin<ds::post_order>();
-            while (it != inOrderTree.end<ds::post_order>()) {
+            auto it = inOrderTree.begin<md::post_order>();
+            while (it != inOrderTree.end<md::post_order>()) {
                 cout << *it++ << ", ";
             }
             QCOMPARE(cout.str(), "Post-order: -20, -40, -30, -10, 400, 200, 100, ");

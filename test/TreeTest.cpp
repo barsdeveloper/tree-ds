@@ -5,10 +5,10 @@
 #include "Types.hpp"
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
-template class ds::nary_tree<Foo>;
-template class ds::binary_tree<Bar>;
+template class md::nary_tree<Foo>;
+template class md::binary_tree<Bar>;
 
 class TreeTest : public QObject {
 
@@ -36,7 +36,7 @@ void TreeTest::naryTree() {
                         n('l')),
                     n('j'),
                     n('k')))));
-    vector<char> expected{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
+    vector<char> expected {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
     vector<char> actual(tree.begin(), tree.end());
     QCOMPARE(actual, expected);
     QCOMPARE(tree.size(), 12);
@@ -71,7 +71,7 @@ void TreeTest::naryTree() {
     QCOMPARE(copy, copy2);
 
     actual   = vector<char>(copy2.begin(), copy2.end());
-    expected = vector<char>{'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'};
+    expected = vector<char> {'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'};
     QCOMPARE(actual, expected);
 
     nary_tree<char, pre_order> moved(move(copy2));
@@ -91,7 +91,7 @@ void TreeTest::naryTree() {
     actual = vector<char>(
         moved.cbegin<breadth_first<nary_node<char>>>(),
         moved.cend<breadth_first<nary_node<char>>>());
-    expected = vector<char>{'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
+    expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(moved.size(), 8);
     QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
@@ -104,7 +104,7 @@ void TreeTest::naryTree() {
     actual = vector<char>(
         moved.cbegin<breadth_first<nary_node<char>>>(),
         moved.cend<breadth_first<nary_node<char>>>());
-    expected = vector<char>{'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
+    expected = vector<char> {'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
 
     QCOMPARE(moved.size(), 8);
     QCOMPARE(actual, expected);
@@ -127,7 +127,7 @@ void TreeTest::binaryTree() {
                             n(-11)),
                         n(-9)(
                             n(-12)))))));
-    vector<int> expected{-10, -6, -7, -4, -11, -8, -12, -9, -5, -3, -2, -1};
+    vector<int> expected {-10, -6, -7, -4, -11, -8, -12, -9, -5, -3, -2, -1};
     vector<int> actual(tree.begin(), tree.end());
 
     QCOMPARE(actual, expected);

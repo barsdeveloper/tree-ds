@@ -11,7 +11,7 @@
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/utility.hpp>
 
-namespace ds {
+namespace md {
 
 template <typename T>
 class nary_node : public node<T, nary_node<T>> {

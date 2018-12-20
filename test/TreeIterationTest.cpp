@@ -6,7 +6,7 @@
 #include <TreeDS/tree>
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 Q_DECLARE_METATYPE(list<char>);
 Q_DECLARE_METATYPE(binary_tree<char>);

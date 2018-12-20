@@ -5,10 +5,10 @@
 #include "Types.hpp"
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
-template class ds::tree_iterator<nary_tree<int>, pre_order, false>;
-template class ds::tree_iterator<binary_tree<Bar>, in_order, true>;
+template class md::tree_iterator<nary_tree<int>, pre_order, false>;
+template class md::tree_iterator<binary_tree<Bar>, in_order, true>;
 
 class IteratorTest : public QObject {
 

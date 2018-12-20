@@ -5,14 +5,14 @@
 #include "Types.hpp"
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 /*
  * Explicit template instantiation of the class being tested. Without this instantiation, the compiler will not generate
  * the code for all the methods. Those methods will NOT appear as NOT covered by tests (because they will be not
  * recognized as lines of code) giving the false information fo greater coverage percentage.
  */
-template class ds::binary_node<Target>;
+template class md::binary_node<Target>;
 
 class BinaryNodeTest : public QObject {
 

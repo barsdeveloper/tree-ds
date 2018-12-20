@@ -13,7 +13,7 @@
 #include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
-namespace ds {
+namespace md {
 
 /**
  * @brief A generic tree class that uses a custom node type.
@@ -524,4 +524,4 @@ bool operator!=(const tree<T, Node, Policy1, Allocator1>& lhs, const tree<T, Nod
     return !lhs.operator==(rhs);
 }
 
-} // namespace ds
+} // namespace md

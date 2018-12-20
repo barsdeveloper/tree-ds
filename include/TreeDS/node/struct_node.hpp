@@ -2,8 +2,9 @@
 
 #include <cstddef> // std::size_t
 #include <tuple>   // std::tuple
+#include <type_traits>
 
-namespace ds {
+namespace md {
 
 template <typename, typename...>
 class struct_node;
@@ -40,9 +41,9 @@ class struct_node {
     value_t value;                 // Value hold by this node
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
-    children_t children{};         // Tuple containing actual children
+    children_t children {};        // Tuple containing actual children
 
-    //   ---   METHODS   ---
+    //   ---   CONSTRUCTORS   ---
     private:
     // Constructors are private because the instances must be constructed using function n().
     constexpr struct_node(const T& value, Children&&... children) :
@@ -70,13 +71,9 @@ class struct_node {
     public:
     ~struct_node() = default;
 
-    constexpr struct_node(const struct_node& other) :
-            value(other.value),
-            subtree_size(other.subtree_size),
-            subtree_arity(other.subtree_arity),
-            children(other.children) {
-    }
+    constexpr struct_node(const struct_node& other) = default;
 
+    //   ---   METHODS   ---
     constexpr bool has_children() const {
         return this->children_count() > 0;
     }

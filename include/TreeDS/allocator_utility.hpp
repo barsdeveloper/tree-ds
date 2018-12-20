@@ -4,10 +4,9 @@
 #include <memory>  // std::unique_ptr, std::allocator_traits
 #include <tuple>
 
-namespace ds {
+namespace md {
 
 /**
- * @private
  * @brief Deallocates a previously allocated value using the given allocator.
  *
  * This function contains the logic needed to deallocate a value (represented by a pointer) previously allocated. This

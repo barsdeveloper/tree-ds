@@ -7,7 +7,7 @@
 #include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
 
-namespace ds {
+namespace md {
 
 /**
  * @brief A type of tree having nodes {@link nary_node}
@@ -28,6 +28,7 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     using tree<T, nary_node<T>, Policy, Allocator>::tree;
 
     public:
+    /// @brief Construct from {@link #binary_tree}
     template <typename OtherPolicy, typename OtherAllocator>
     nary_tree(const binary_tree<T, OtherPolicy, OtherAllocator>& other) :
             tree<T, nary_node<T>, Policy, Allocator>(
@@ -65,7 +66,7 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
         return *this;
     }
 
-    // Import the overloads of the operator== into the current class (that would be shadowed otherwise)
+    // Import the overloads of the operator== into the current class (would be shadowed otherwise)
     using tree<T, nary_node<T>, Policy, Allocator>::operator==;
 
     template <typename OtherPolicy, typename OtherAllocator>
@@ -119,4 +120,4 @@ bool operator!=(
     return !rhs.operator==(lhs);
 }
 
-} // namespace ds
+} // namespace md

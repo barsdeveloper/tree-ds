@@ -6,7 +6,7 @@
 #include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
 
-namespace ds {
+namespace md {
 
 /**
  * @brief A type of tree having nodes {@link binary_node}.

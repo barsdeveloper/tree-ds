@@ -5,7 +5,7 @@
 #include <TreeDS/utility.hpp>
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 class UtilityTest : public QObject {
 

@@ -5,7 +5,7 @@
 #include "Types.hpp"
 
 using namespace std;
-using namespace ds;
+using namespace md;
 
 class StructNodeTest : public QObject {
 
