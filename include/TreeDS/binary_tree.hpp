@@ -4,12 +4,12 @@
 
 #include <TreeDS/node/binary_node.hpp>
 #include <TreeDS/policy/pre_order.hpp>
-#include <TreeDS/tree_base.hpp>
+#include <TreeDS/tree.hpp>
 
-namespace md::binary {
+namespace md {
 
 /**
- * @brief A type of tree having nodes {@link binary::node}.
+ * @brief A type of tree having nodes {@link binary_node}.
  *
  * @tparam T the type of value hold by this tree
  * @tparam Policy default traversal algorithm
@@ -20,12 +20,12 @@ template <
     typename T,
     typename Policy    = pre_order,
     typename Allocator = std::allocator<T>>
-class tree : public md::tree_base<T, binary::node<T>, Policy, Allocator> {
-    using super = md::tree_base<T, binary::node<T>, Policy, Allocator>;
+class binary_tree : public tree<T, binary_node<T>, Policy, Allocator> {
+    using super = tree<T, binary_node<T>, Policy, Allocator>;
 
     public:
-    using md::tree_base<T, binary::node<T>, Policy, Allocator>::tree_base;
-    using md::tree_base<T, binary::node<T>, Policy, Allocator>::operator=;
+    using tree<T, binary_node<T>, Policy, Allocator>::tree;
+    using tree<T, binary_node<T>, Policy, Allocator>::operator=;
 };
 
-} // namespace md::binary
+} // namespace ds

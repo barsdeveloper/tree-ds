@@ -17,7 +17,7 @@ class AllocationTest : public QObject {
 };
 
 void AllocationTest::test1() {
-    binary::tree<
+    binary_tree<
         Foo,
         post_order,
         CustomAllocator<Foo>>
@@ -63,44 +63,44 @@ void AllocationTest::test1() {
     QCOMPARE(tree.get_allocator().total_deallocated, 4);
 
     { // Playing in a sub-scope
-        nary::tree<
+        nary_tree<
             Foo,
             breadth_first<
-                nary::node<Foo>,
-                CustomAllocator<nary::node<Foo>>>,
+                nary_node<Foo>,
+                CustomAllocator<nary_node<Foo>>>,
             CustomAllocator<Foo>>
             copyed(tree);
 
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::allocated.size(), 7);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_allocated, 7);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_deallocated, 0);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 0);
 
         // Replacing all 7 nodes with 2
         copyed = n(Foo(0, 1))(n(Foo(1, 2)));
 
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
 
         // Move constructing a tree does not ask the allocator
-        nary::tree<Foo, pre_order, CustomAllocator<Foo>> moved(std::move(copyed));
+        nary_tree<Foo, pre_order, CustomAllocator<Foo>> moved(std::move(copyed));
 
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
 
         // Move assigning a tree does not ask the allocator
-        nary::tree<Foo, pre_order, CustomAllocator<Foo>> moveds = std::move(copyed);
+        nary_tree<Foo, pre_order, CustomAllocator<Foo>> moveds = std::move(copyed);
 
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary::node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
 
     } // Implicit clear here
 
-    QCOMPARE(CustomAllocator<nary::node<Foo>>::allocated.size(), 0);
-    QCOMPARE(CustomAllocator<nary::node<Foo>>::total_allocated, 9);
-    QCOMPARE(CustomAllocator<nary::node<Foo>>::total_deallocated, 9);
+    QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 0);
+    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
+    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 9);
 
     // Now the allocator has no object allocated and counters are equal
     tree.clear();
@@ -111,7 +111,7 @@ void AllocationTest::test1() {
 }
 
 void AllocationTest::test2() {
-    using allocator_t = CustomAllocator<binary::node<float>>;
+    using allocator_t = CustomAllocator<binary_node<float>>;
 
     {
         allocator_t allocator;

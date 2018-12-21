@@ -13,7 +13,7 @@ class BreadthFirstTest : public QObject {
     Q_OBJECT
     private:
     // Initial tree to be modified
-    static const nary::tree<int> tree;
+    static const nary_tree<int> tree;
 
     private slots:
     // Traverse in an unusual way: jump forward and backward
@@ -22,7 +22,7 @@ class BreadthFirstTest : public QObject {
     void checkUpdateConsistency();
 };
 
-const nary::tree<int> BreadthFirstTest::tree(
+const nary_tree<int> BreadthFirstTest::tree(
     n(1)(
         n(2)(
             n(6)(
@@ -79,8 +79,8 @@ void BreadthFirstTest::backAndForth() {
     list<int> expected(50);
     // populate result with the actual result of tree traverse
     copy(
-        tree.cbegin<breadth_first<nary::node<int>>>(),
-        tree.cend<breadth_first<nary::node<int>>>(),
+        tree.cbegin<breadth_first<nary_node<int>>>(),
+        tree.cend<breadth_first<nary_node<int>>>(),
         back_inserter(result));
     // the expected traversal is 1...50
     iota(expected.begin(), expected.end(), 1);
@@ -93,8 +93,8 @@ void BreadthFirstTest::backAndForth() {
     auto expectedIt    = expectedStart;
 
     // Iterators of the actual tree
-    auto actualStart = tree.cbegin<breadth_first<nary::node<int>>>();
-    auto actualEnd   = tree.cend<breadth_first<nary::node<int>>>();
+    auto actualStart = tree.cbegin<breadth_first<nary_node<int>>>();
+    auto actualEnd   = tree.cend<breadth_first<nary_node<int>>>();
     auto actualIt    = actualStart;
 
     // start jumping forward and backward
@@ -139,10 +139,10 @@ void BreadthFirstTest::backAndForth() {
 }
 
 void BreadthFirstTest::checkUpdateConsistency() {
-    nary::tree<int> t(BreadthFirstTest::tree);
+    nary_tree<int> t(BreadthFirstTest::tree);
     auto it24 = find(
-        t.begin<breadth_first<nary::node<int>>>(),
-        t.end<breadth_first<nary::node<int>>>(),
+        t.begin<breadth_first<nary_node<int>>>(),
+        t.end<breadth_first<nary_node<int>>>(),
         24);
     auto it23 = (--it24)++;
     auto it22 = (--it23)++;

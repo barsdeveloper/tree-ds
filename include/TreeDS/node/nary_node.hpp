@@ -7,36 +7,35 @@
 
 #include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/node/binary_node.hpp>
-#include <TreeDS/node/node_base.hpp>
+#include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/tree_base.hpp>
 #include <TreeDS/utility.hpp>
 
-namespace md::nary {
+namespace md {
 
 template <typename T>
-class node : public md::node_base<T, node<T>> {
+class nary_node : public node<T, nary_node<T>> {
 
     template <typename, typename, bool>
-    friend class md::tree_iterator;
+    friend class tree_iterator;
 
     template <typename, typename, typename, typename>
-    friend class md::tree_base;
+    friend class tree;
 
     protected:
-    node* first_child  = nullptr;
-    node* next_sibling = nullptr;
+    nary_node* first_child  = nullptr;
+    nary_node* next_sibling = nullptr;
 
     public:
-    using md::node_base<T, node<T>>::node_base;
+    using node<T, nary_node<T>>::node;
 
     public:
     /*   ---   Wide acceptance copy constructor using allocator   ---   */
-    template <typename Allocator = std::allocator<node>>
-    explicit node(
-        const node<T>& other,
-        Allocator&& allocator = std::allocator<node>()) :
-            md::node_base<T, node<T>>(other.value),
+    template <typename Allocator = std::allocator<nary_node>>
+    explicit nary_node(
+        const nary_node<T>& other,
+        Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node<T>>(other.value),
             first_child(
                 other.first_child != nullptr
                     ? attach(
@@ -57,17 +56,17 @@ class node : public md::node_base<T, node<T>> {
     }
 
     /*   ---   Move Constructor   ---   */
-    explicit node(node&& other) :
-            md::node_base<T, node>(std::move(other.get_value())),
+    explicit nary_node(nary_node&& other) :
+            node<T, nary_node>(std::move(other.get_value())),
             first_child(other.first_child),
             next_sibling(other.next_sibling) {
         other.move_resources_to(*this);
     }
 
-    /*   ---   Conversion constructor from binary::node using allocator   ---   */
-    template <typename Allocator = std::allocator<node>>
-    explicit node(const md::binary::node<T>& other, Allocator&& allocator = std::allocator<node>()) :
-            md::node_base<T, node>(other.get_value()),
+    /*   ---   Conversion constructor from binary_node using allocator   ---   */
+    template <typename Allocator = std::allocator<nary_node>>
+    explicit nary_node(const binary_node<T>& other, Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node>(other.get_value()),
             first_child(
                 other.get_first_child() != nullptr
                     ? attach(
@@ -91,12 +90,12 @@ class node : public md::node_base<T, node<T>> {
     template <
         typename ConvertibleT,
         typename... Nodes,
-        typename Allocator = std::allocator<node>,
+        typename Allocator = std::allocator<nary_node>,
         CHECK_CONVERTIBLE(ConvertibleT, T)>
-    explicit node(
+    explicit nary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
-        Allocator&& allocator = std::allocator<node>()) :
-            md::node_base<T, node>(other.get_value()),
+        Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node>(other.get_value()),
             first_child(extract_children(other.get_children(), allocator)) {
     }
 
@@ -104,32 +103,32 @@ class node : public md::node_base<T, node<T>> {
     template <
         typename... EmplaceArgs,
         typename... Nodes,
-        typename Allocator = std::allocator<node>,
+        typename Allocator = std::allocator<nary_node>,
         CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
-    explicit node(
+    explicit nary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
-        Allocator&& allocator = std::allocator<node>()) :
-            md::node_base<T, node>(other.get_value()),
+        Allocator&& allocator = std::allocator<nary_node>()) :
+            node<T, nary_node>(other.get_value()),
             first_child(extract_children(other.get_children(), allocator)) {
     }
 
     private:
     template <typename Allocator, typename... Nodes>
-    node* extract_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
-        // pointer to the considered child (which is itself a pointer to nary::node)
-        node* result         = nullptr;
-        node** current_child = &result;
+    nary_node* extract_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
+        // pointer to the considered child (which is itself a pointer to nary_node)
+        nary_node* result         = nullptr;
+        nary_node** current_child = &result;
         // lambda that assigns one child at time
         auto assign_child = [&](auto node) {
             *current_child           = node;                            // assign child
             (*current_child)->parent = this;                            // set the parent of that child
             current_child            = &(*current_child)->next_sibling; // go to next child
         };
-        // lambda that constructs (by calling allocate) a nary::node from a struct_node
+        // lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto allocate_child = [&](auto& structure_node) {
             static_assert(
                 !std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>,
-                "ds::node does not accept empty nodes");
+                "ds::nary_node does not accept empty nodes");
             assign_child(allocate(allocator, structure_node, allocator).release());
         };
         std::apply(
@@ -141,7 +140,7 @@ class node : public md::node_base<T, node<T>> {
 
     protected:
     /// Move the resources hold by this node to another node
-    void move_resources_to(node& node) {
+    void move_resources_to(nary_node& node) {
         if (this->first_child) {
             this->first_child->parent = &node;
         }
@@ -154,7 +153,7 @@ class node : public md::node_base<T, node<T>> {
     }
 
     /// Discard this whole subtree and replace it with node
-    void replace_with(node& node) {
+    void replace_with(nary_node& node) {
         assert(node.is_root());
         assert(node.next_sibling == nullptr);
         if (this->parent != nullptr) {
@@ -172,15 +171,15 @@ class node : public md::node_base<T, node<T>> {
         }
     }
 
-    node* attach(node* n) {
-        assert(n != nullptr);
-        n->parent  = this;
-        node* next = n->next_sibling;
+    nary_node* attach(nary_node* node) {
+        assert(node != nullptr);
+        node->parent    = this;
+        nary_node* next = node->next_sibling;
         while (next) {
             this->attach(next);
             next = next->next_sibling;
         }
-        return n;
+        return node;
     }
 
     public:
@@ -194,19 +193,19 @@ class node : public md::node_base<T, node<T>> {
             : false;
     }
 
-    const node* get_first_child() const {
+    const nary_node* get_first_child() const {
         return this->first_child;
     }
 
-    const node* get_last_child() const {
+    const nary_node* get_last_child() const {
         return this->first_child
-            ? keep_calling(*this->first_child, std::mem_fn(&node::get_next_sibling))
+            ? keep_calling(*this->first_child, std::mem_fn(&nary_node::get_next_sibling))
             : nullptr;
     }
 
-    const node* get_prev_sibling() const {
+    const nary_node* get_prev_sibling() const {
         if (this->parent && this->parent->first_child) {
-            const node* first = this->parent->first_child;
+            const nary_node* first = this->parent->first_child;
             if (first == this) {
                 return nullptr;
             }
@@ -214,15 +213,15 @@ class node : public md::node_base<T, node<T>> {
                 // starting from
                 *first,
                 // keep calling
-                [](const node& node) {
+                [](const nary_node& node) {
                     return node.get_next_sibling();
                 },
                 // until
-                [=](const node&, const node& next) {
+                [=](const nary_node&, const nary_node& next) {
                     return &next == this;
                 },
                 // then return
-                [](const node& prev, const node&) {
+                [](const nary_node& prev, const nary_node&) {
                     return &prev;
                 });
         } else {
@@ -230,29 +229,29 @@ class node : public md::node_base<T, node<T>> {
         }
     }
 
-    node* get_prev_sibling() {
-        return const_cast<node*>(
-            static_cast<const node*>(this)
+    nary_node* get_prev_sibling() {
+        return const_cast<nary_node*>(
+            static_cast<const nary_node*>(this)
                 ->get_prev_sibling());
     }
 
-    const node* get_next_sibling() const {
+    const nary_node* get_next_sibling() const {
         return this->next_sibling;
     }
 
-    const node* get_child(int index) const {
-        const node* const* current = &this->first_child;
+    const nary_node* get_child(int index) const {
+        const nary_node* const* current = &this->first_child;
         for (int i = 0; i < index && *current != nullptr; ++i) {
             current = &(*current)->next_sibling;
         }
         return *current;
     }
 
-    std::tuple<node*, node*> release() {
+    std::tuple<nary_node*, nary_node*> release() {
         return std::make_tuple(this->first_child, this->next_sibling);
     }
 
-    bool operator==(const node& other) const {
+    bool operator==(const nary_node& other) const {
         // Trivial case exclusion.
         if ((this->first_child == nullptr) != (other.first_child == nullptr)
             || (this->next_sibling == nullptr) != (other.next_sibling == nullptr)) {
@@ -274,7 +273,7 @@ class node : public md::node_base<T, node<T>> {
         return true;
     }
 
-    bool operator==(const md::binary::node<T>& other) const {
+    bool operator==(const binary_node<T>& other) const {
         // Trivial case exclusion.
         if ((this->get_first_child() == nullptr) != (other.get_first_child() == nullptr)) {
             return false;
@@ -308,9 +307,9 @@ class node : public md::node_base<T, node<T>> {
         if (this->value != other.get_value()) {
             return false;
         }
-        // pointer to the considered child (which is itself a pointer to const nary::node)
-        const node* const* current_child = &this->first_child;
-        // lambda that constructs (by calling allocate) a nary::node from a struct_node
+        // pointer to the considered child (which is itself a pointer to const nary_node)
+        const nary_node* const* current_child = &this->first_child;
+        // lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto compare_child = [&](auto& structure_node) -> bool {
             bool result;
             if constexpr (std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>) {
@@ -338,7 +337,7 @@ class node : public md::node_base<T, node<T>> {
 
 /*   ---   Expected equality properties  ---   */
 template <typename T>
-bool operator!=(const node<T>& lhs, const node<T>& rhs) {
+bool operator!=(const nary_node<T>& lhs, const nary_node<T>& rhs) {
     return !lhs.operator==(rhs);
 }
 
@@ -349,7 +348,7 @@ template <
     CHECK_CONVERTIBLE(ConvertibleT, T)>
 bool operator==(
     const struct_node<ConvertibleT, Children...>& lhs,
-    const node<T>& rhs) {
+    const nary_node<T>& rhs) {
     return rhs.operator==(lhs);
 }
 
@@ -359,7 +358,7 @@ template <
     typename... Children,
     CHECK_CONVERTIBLE(ConvertibleT, T)>
 bool operator!=(
-    const node<T>& lhs,
+    const nary_node<T>& lhs,
     const struct_node<ConvertibleT, Children...>& rhs) {
     return !lhs.operator==(rhs);
 }
@@ -371,8 +370,8 @@ template <
     CHECK_CONVERTIBLE(ConvertibleT, T)>
 bool operator!=(
     const struct_node<ConvertibleT, Children...>& lhs,
-    const node<T>& rhs) {
+    const nary_node<T>& rhs) {
     return !rhs.operator==(lhs);
 }
 
-} // namespace md::nary
+} // namespace ds

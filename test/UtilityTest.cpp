@@ -21,8 +21,8 @@ class UtilityTest : public QObject {
 
 void UtilityTest::singleNode() {
     auto single = n(123);
-    nary::node<int> nary(single);
-    binary::node<int> binary(single);
+    nary_node<int> nary(single);
+    binary_node<int> binary(single);
 
     QCOMPARE(prev_branch_sibling(nary), nullptr);
     QCOMPARE(prev_branch_sibling(binary), nullptr);
@@ -37,9 +37,9 @@ void UtilityTest::singleNode() {
 void UtilityTest::oneChild() {
     auto leftChild  = n(234)(n(345));
     auto rightChild = n(456)(n(), n(567));
-    nary::node<int> nary(leftChild);
-    binary::node<int> binaryL(leftChild);
-    binary::node<int> binaryR(rightChild);
+    nary_node<int> nary(leftChild);
+    binary_node<int> binaryL(leftChild);
+    binary_node<int> binaryR(rightChild);
 
     QCOMPARE(prev_branch_sibling(nary), nullptr);
     QCOMPARE(prev_branch_sibling(binaryL), nullptr);
@@ -63,9 +63,9 @@ void UtilityTest::oneChild() {
 void UtilityTest::multipleChildren() {
     auto twoChildren   = n('a')(n('b'), n('c'));
     auto multiChildren = n('d')(n('e'), n('f'), n('g'), n('h'), n('i'), n('j'));
-    binary::node<char> binary(twoChildren);
-    nary::node<char> nary(multiChildren);
-    const nary::node<char>* children[] = {
+    binary_node<char> binary(twoChildren);
+    nary_node<char> nary(multiChildren);
+    const nary_node<char>* children[] = {
         nary.get_child(0),
         nary.get_child(1),
         nary.get_child(2),
@@ -97,7 +97,7 @@ void UtilityTest::multipleChildren() {
 }
 
 void UtilityTest::advancedBinary() {
-    binary::node<int> node(
+    binary_node<int> node(
         n(1)(
             n(),
             n(2)(
@@ -114,27 +114,27 @@ void UtilityTest::advancedBinary() {
                             n(),
                             n(13)(
                                 n(14))))))));
-    const binary::node<int>* n3
+    const binary_node<int>* n3
         = (&node)
               ->get_right_child() // 2
               ->get_left_child(); // 3
-    const binary::node<int>* n6 = n3->get_right_child();
-    const binary::node<int>* n4
+    const binary_node<int>* n6 = n3->get_right_child();
+    const binary_node<int>* n4
         = (&node)
               ->get_right_child()  // 2
               ->get_right_child(); // 4
-    const binary::node<int>* n5  = n3->get_left_child();
-    const binary::node<int>* n7  = n4->get_left_child();
-    const binary::node<int>* n8  = n4->get_right_child();
-    const binary::node<int>* n9  = n5->get_left_child();
-    const binary::node<int>* n10 = n5->get_right_child();
-    const binary::node<int>* n11 = n8->get_left_child();
-    const binary::node<int>* n12
+    const binary_node<int>* n5  = n3->get_left_child();
+    const binary_node<int>* n7  = n4->get_left_child();
+    const binary_node<int>* n8  = n4->get_right_child();
+    const binary_node<int>* n9  = n5->get_left_child();
+    const binary_node<int>* n10 = n5->get_right_child();
+    const binary_node<int>* n11 = n8->get_left_child();
+    const binary_node<int>* n12
         = n4
               ->get_right_child()  // 8
               ->get_right_child(); // 11
-    const binary::node<int>* n13 = n12->get_right_child();
-    const binary::node<int>* n14 = n13->get_left_child();
+    const binary_node<int>* n13 = n12->get_right_child();
+    const binary_node<int>* n14 = n13->get_left_child();
 
     QCOMPARE(prev_branch_sibling(*n8), n7);
     QCOMPARE(prev_branch_sibling(*n7), n6);
@@ -158,7 +158,7 @@ void UtilityTest::advancedBinary() {
 }
 
 void UtilityTest::advancedNary() {
-    const nary::node<int> node(
+    const nary_node<int> node(
         n(1)(
             n(2)(
                 n(5),
@@ -186,46 +186,46 @@ void UtilityTest::advancedNary() {
                             n(25)),
                         n(22)),
                     n(16)))));
-    const nary::node<int>* n2 = (&node)->get_child(0);
-    const nary::node<int>* n4 = (&node)->get_child(2);
-    const nary::node<int>* n9
+    const nary_node<int>* n2 = (&node)->get_child(0);
+    const nary_node<int>* n4 = (&node)->get_child(2);
+    const nary_node<int>* n9
         = (&node)
               ->get_child(1)  // 3
               ->get_child(1); // 9
-    const nary::node<int>* n10 = n4->get_child(0);
-    const nary::node<int>* n11 = n4->get_child(1);
-    const nary::node<int>* n12
+    const nary_node<int>* n10 = n4->get_child(0);
+    const nary_node<int>* n11 = n4->get_child(1);
+    const nary_node<int>* n12
         = n2
               ->get_child(1)  // 6
               ->get_child(0); //12
-    const nary::node<int>* n14
+    const nary_node<int>* n14
         = (&node)
               ->get_child(1)  // 3
               ->get_child(0)  // 8
               ->get_child(0); // 14
-    const nary::node<int>* n15
+    const nary_node<int>* n15
         = n4
               ->get_child(1)  // 11
               ->get_child(0); // 15
-    const nary::node<int>* n19
+    const nary_node<int>* n19
         = n2
               ->get_child(1)  // 6
               ->get_child(1)  // 13
               ->get_child(0); // 19
-    const nary::node<int>* n20 = n15->get_child(0);
-    const nary::node<int>* n22 = n15->get_child(2);
-    const nary::node<int>* n23
+    const nary_node<int>* n20 = n15->get_child(0);
+    const nary_node<int>* n22 = n15->get_child(2);
+    const nary_node<int>* n23
         = n2
               ->get_child(1)  // 6
               ->get_child(0)  // 12
               ->get_child(1)  // 18
               ->get_child(0); // 23
-    const nary::node<int>* n24
+    const nary_node<int>* n24
         = n15
               ->get_child(1)  // 22
               ->get_child(0); // 24
-    const nary::node<int>* n26 = n24->get_child(0);
-    const nary::node<int>* n27 = n26->get_child(0);
+    const nary_node<int>* n26 = n24->get_child(0);
+    const nary_node<int>* n27 = n26->get_child(0);
 
     QCOMPARE(prev_branch_sibling(*n10), n9);
     QCOMPARE(prev_branch_sibling(*n12), nullptr);

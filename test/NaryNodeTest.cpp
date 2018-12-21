@@ -12,7 +12,7 @@ using namespace md;
  * the code for all the methods. Those methods will NOT appear as NOT covered by tests (because they will be not
  * recognized as lines of code) giving the false information fo greater coverage percentage.
  */
-template class md::nary::node<Target>;
+template class md::nary_node<Target>;
 
 class NaryNodeTest : public QObject {
 
@@ -27,8 +27,8 @@ class NaryNodeTest : public QObject {
 };
 
 void NaryNodeTest::defaultConstructed() {
-    nary::node<int> node;
-    nary::node<int> node2;
+    nary_node<int> node;
+    nary_node<int> node2;
 
     QVERIFY(node == node2);
     QVERIFY(!(node != node2));
@@ -51,7 +51,7 @@ void NaryNodeTest::constructFromStructNode() {
         n(Target("b")),
         n(Target("c")));
 
-    nary::node<Target> node(structNode);
+    nary_node<Target> node(structNode);
     auto& first = *node.get_first_child();
     auto& last  = *node.get_last_child();
 
@@ -86,7 +86,7 @@ void NaryNodeTest::constructFromStructNode() {
     QCOMPARE(last.get_next_sibling(), nullptr);
 
     // move test
-    nary::node<Target> newNode(move(node));
+    nary_node<Target> newNode(move(node));
 
     QVERIFY(newNode != node);
     QCOMPARE(*newNode.get_first_child(), first);
@@ -98,22 +98,22 @@ void NaryNodeTest::constructFromStructNode() {
 }
 
 void NaryNodeTest::equalityWithStructNode() {
-    nary::node<string> someChildren(
+    nary_node<string> someChildren(
         n("a")(
             n("b"),
             n("c"),
             n("d"),
             n("e")));
-    nary::node<string> firstChild(
+    nary_node<string> firstChild(
         n("a")(
             n("b")));
-    nary::node<string> firstWrong(
+    nary_node<string> firstWrong(
         n("a")(
             n("#"),
             n("c"),
             n("d"),
             n("e")));
-    nary::node<string> secondWrong(
+    nary_node<string> secondWrong(
         n("a")(
             n("b"),
             n("#"),
@@ -153,10 +153,10 @@ void NaryNodeTest::equalityWithStructNode() {
 void NaryNodeTest::argumentImplicitConvertion() {
     auto from = ConvertibleFrom("someString");
     auto to   = ConvertibleTo("someString");
-    nary::node<Target> regular(Target(string("someString")));
-    nary::node<Target> constructedFrom(from);
-    nary::node<Target> constructedTo(to);
-    nary::node<Target> different("diffentString");
+    nary_node<Target> regular(Target(string("someString")));
+    nary_node<Target> constructedFrom(from);
+    nary_node<Target> constructedTo(to);
+    nary_node<Target> different("diffentString");
 
     QCOMPARE("someString", constructedFrom.get_value().value);
     QCOMPARE("someString", constructedTo.get_value().value);
@@ -174,7 +174,7 @@ void NaryNodeTest::argumentImplicitConvertion() {
 }
 
 void NaryNodeTest::positionalChildGetter() {
-    nary::node<string> node(
+    nary_node<string> node(
         n("a")(
             n("b")(
                 n("d"),
