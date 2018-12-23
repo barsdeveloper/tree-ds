@@ -37,7 +37,6 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
 }
 
 /**
- * @private
  * @brief Wraps an allocator to easily deallocate a value (calling {@link #operator()(Allocator::value_type*)}).
  *
  * This function is needed to be given to a std::unique_ptr as Deallocator.
@@ -83,4 +82,4 @@ allocate(Allocator& allocator, Args&&... args) {
         deleter<Allocator>>(ptr, {allocator});
 }
 
-} // namespace ds
+} // namespace md

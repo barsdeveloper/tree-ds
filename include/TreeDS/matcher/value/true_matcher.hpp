@@ -1,13 +1,15 @@
 #pragma once
 
-namespace ds {
+namespace md {
 
 class true_matcher {
     public:
-    template <typename ActualMatchable>
-    bool match(const ActualMatchable&) {
+    constexpr true_matcher() = default;
+
+    template <typename Value>
+    bool match_value(const Value&) {
         return true;
     }
 };
 
-} // namespace ds
+} // namespace md

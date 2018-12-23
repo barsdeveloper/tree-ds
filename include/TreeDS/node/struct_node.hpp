@@ -44,7 +44,7 @@ class struct_node {
     children_t children {};        // Tuple containing actual children
 
     //   ---   CONSTRUCTORS   ---
-    private:
+    protected:
     // Constructors are private because the instances must be constructed using function n().
     constexpr struct_node(const T& value, Children&&... children) :
             value(value),
@@ -139,4 +139,4 @@ constexpr const auto& get_child(const struct_node<T, Children...>& node) {
     return std::get<index>(node.get_children());
 }
 
-} // namespace ds
+} // namespace md
