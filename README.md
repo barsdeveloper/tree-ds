@@ -5,7 +5,7 @@
 ![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)
 ![Duplication](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=duplicated_lines_density)
 
-# TreeDS - work in progress
+# TreeDS
 TreeDS (tree data structure) is an STL-like tree container library for C++17 that provides two types of trees: nary and binary.
 
 Please feel free to open issues for any question and contribute to the code if you want.
@@ -17,7 +17,7 @@ Please feel free to open issues for any question and contribute to the code if y
 * Permissive license.
 * Iterators provided: pre-order, in-order, post-order, breadth-first
 * Expandable with custom iterator types.
-* Tree pattern matching (conceptually similar to regex).
+* Tree pattern matching (conceptually similar to regex). Still a work in progress.
 
 ## Design goals
 This library is designed with **performance** in mind. It will avoid expensive features like virtual member functions, memory allocations and type erarsure whenever possible, in general it follows the style of the standard library that prefers template parameters over runtime entities. Consider that I have a decently good understanding of C++ mechanics yet I'm far from being an expert.
