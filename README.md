@@ -1,12 +1,14 @@
-![Security](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=security_rating)
-![Readability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=reliability_rating)
-![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=sqale_rating)
-![Coverage](https://sonarcloud.io/api/project_badges/measure?project=tree-ds&metric=coverage)
+![Security](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=security_rating)
+![Readability](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=reliability_rating)
+![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=sqale_rating)
+![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)
+![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)
+![Duplication](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=duplicated_lines_density)
 
 # TreeDS - work in progress
 TreeDS (tree data structure) is an STL-like tree container library for C++17 that provides two types of trees: nary and binary.
 
-Please feel free to modify it and contribute to the code if you want.
+Please feel free to open issues for any question and contribute to the code if you want.
 
 ## Features
 * Standard C++17 (except ```#pragma once```, hopefully will be replaced with modules).
