@@ -116,7 +116,7 @@ Let's now iterate the tree. You can create a tree with a specified traversal pol
 
 ```c++
 md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
-//            ^^^^^^^^^^^^ default policy used to iterate the tree
+//                   ^^^^^^^^^^^^ default policy used to iterate the tree
 ```
 
 At this point moved the content from `myTree` (which now is empty) to `inOrder`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
