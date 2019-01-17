@@ -21,6 +21,9 @@ class NaryNodeTest : public QObject {
     private slots:
     void defaultConstructed();
     void constructFromStructNode();
+    void emplacedFromStructNode();
+    void moveConstructed();
+    void constructFromBinaryNode();
     void equalityWithStructNode();
     void argumentImplicitConvertion();
     void positionalChildGetter();
@@ -38,6 +41,7 @@ void NaryNodeTest::defaultConstructed() {
     QCOMPARE(node.get_parent(), nullptr);
     QCOMPARE(node.get_first_child(), nullptr);
     QCOMPARE(node.get_last_child(), nullptr);
+    QCOMPARE(node.get_following_siblings(), 0);
 
     QVERIFY(node.is_root());
     QVERIFY(!node.is_unique_child());
@@ -46,10 +50,10 @@ void NaryNodeTest::defaultConstructed() {
 }
 
 void NaryNodeTest::constructFromStructNode() {
-
-    auto structNode = n(Target("a"))(
-        n(Target("b")),
-        n(Target("c")));
+    auto structNode
+        = n(Target("a"))(
+            n(Target("b")),
+            n(Target("c")));
 
     nary_node<Target> node(structNode);
     auto& first = *node.get_first_child();
@@ -72,18 +76,21 @@ void NaryNodeTest::constructFromStructNode() {
     QVERIFY(!node.is_unique_child());
     QCOMPARE(node.get_prev_sibling(), nullptr);
     QCOMPARE(node.get_next_sibling(), nullptr);
+    QCOMPARE(node.get_following_siblings(), 0);
 
     QVERIFY(first.is_first_child());
     QVERIFY(!first.is_last_child());
     QVERIFY(!first.is_unique_child());
     QCOMPARE(first.get_prev_sibling(), nullptr);
     QCOMPARE(first.get_next_sibling(), &last);
+    QCOMPARE(first.get_following_siblings(), 1);
 
     QVERIFY(!last.is_first_child());
     QVERIFY(last.is_last_child());
     QVERIFY(!last.is_unique_child());
     QCOMPARE(last.get_prev_sibling(), &first);
     QCOMPARE(last.get_next_sibling(), nullptr);
+    QCOMPARE(last.get_following_siblings(), 0);
 
     // move test
     nary_node<Target> newNode(move(node));
@@ -95,6 +102,119 @@ void NaryNodeTest::constructFromStructNode() {
     QCOMPARE(node.get_last_child(), nullptr);
     QCOMPARE(node.get_prev_sibling(), nullptr);
     QCOMPARE(node.get_next_sibling(), nullptr);
+}
+
+void NaryNodeTest::emplacedFromStructNode() {
+    auto emplacingStructNode
+        = n(1, 1)(
+            n(2, 1)(
+                n(3, 1),
+                n(3, 2),
+                n(3, 3),
+                n(3, 4)),
+            n(2, 2)(
+                n(4, 1)(
+                    n(5, 1),
+                    n(5, 2))));
+    auto structNode
+        = n(Foo(1, 1))(
+            n(Foo(2, 1))(
+                n(Foo(3, 1)),
+                n(Foo(3, 2)),
+                n(Foo(3, 3)),
+                n(Foo(3, 4))),
+            n(Foo(2, 2))(
+                n(Foo(4, 1))(
+                    n(Foo(5, 1)),
+                    n(Foo(5, 2)))));
+    nary_node<Foo> node(emplacingStructNode);
+
+    auto& n21 = *node.get_first_child();
+    auto& n32 = *n21.get_child(1);
+    auto& n52
+        = *node.get_child(1)   // 2, 2
+               ->get_child(0)  // 4, 1
+               ->get_child(1); // 5, 2
+
+    QCOMPARE(n21.get_parent(), &node);
+    QCOMPARE(n32.get_parent(), &n21);
+
+    QVERIFY(
+        node != n21
+        && node != n32
+        && node != n52
+        && n21 != n32
+        && n32 != n52
+        && n21 != n52);
+
+    QCOMPARE(node, structNode);
+}
+
+void NaryNodeTest::moveConstructed() {
+    nary_node<int> moved(
+        n(1)(
+            n(2),
+            n(3)(
+                n(6)),
+            n(4),
+            n(5)));
+
+    auto n2 = moved.get_child(0);
+    auto n3 = moved.get_child(1);
+    auto n4 = moved.get_child(2);
+    auto n5 = moved.get_child(3);
+
+    nary_node<int> target(std::move(moved));
+
+    QVERIFY(moved.get_first_child() == nullptr);
+
+    QCOMPARE(target.get_first_child(), n2);
+    QCOMPARE(target.get_child(1), n3);
+    QCOMPARE(target.get_child(2), n4);
+    QCOMPARE(target.get_last_child(), n5);
+
+    QCOMPARE(n2->get_parent(), &target);
+    QCOMPARE(n3->get_parent(), &target);
+    QCOMPARE(n4->get_parent(), &target);
+    QCOMPARE(n5->get_parent(), &target);
+}
+
+void NaryNodeTest::constructFromBinaryNode() {
+    binary_node<int> binary(
+        n(0)(
+            n(1)(
+                n(2),
+                n(3)),
+            n(4)(
+                n(5))));
+    nary_node<int> nary(binary);
+
+    QVERIFY(nary == binary);
+    QVERIFY(binary == nary);
+    QVERIFY(!(nary != binary));
+    QVERIFY(!(binary != nary));
+
+    binary_node<int> bin1(
+        n(0)(
+            n(1)(
+                n(2),
+                n(3)),
+            n(4)));
+
+    QVERIFY(nary != bin1);
+    QVERIFY(bin1 != nary);
+
+    binary_node<int> bin2(
+        n(0)(
+            n(1)(
+                n(2),
+                n(3)),
+            n(100)(
+                n(5))));
+
+    QVERIFY(nary != bin2);
+    QVERIFY(bin2 != nary);
+    QVERIFY(bin1 != bin2);
 }
 
 void NaryNodeTest::equalityWithStructNode() {
@@ -191,14 +311,21 @@ void NaryNodeTest::positionalChildGetter() {
                 n("h"),
                 n("i"),
                 n("j"))));
+    const nary_node<string>* k
+        = (&node)
+              ->get_child(0)  // b
+              ->get_child(1)  // e
+              ->get_child(0); // k
     QCOMPARE(
-        (&node)
-            ->get_child(0)
-            ->get_child(1)
-            ->get_child(0)
-            ->get_child(3)
+        k
+            ->get_child(3) // p
             ->get_value(),
         "p");
+    QCOMPARE(k->get_following_siblings(), 1);
+    QCOMPARE(k->get_first_child()->get_following_siblings(), 3);
+    QCOMPARE(k->get_child(1)->get_following_siblings(), 2);
+    QCOMPARE(k->get_child(2)->get_following_siblings(), 1);
+    QCOMPARE(k->get_child(3)->get_following_siblings(), 0);
 }
 
 QTEST_MAIN(NaryNodeTest);

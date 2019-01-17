@@ -13,6 +13,7 @@ class PreliminaryTest : public QObject {
 
     private slots:
     void objectCreation();
+    void typeRequirements();
 };
 
 void PreliminaryTest::objectCreation() {
@@ -86,6 +87,23 @@ void PreliminaryTest::objectCreation() {
     // The tree has 1 element again
     QCOMPARE(t.size(), 1);
     QVERIFY(!t.empty());
+}
+
+void PreliminaryTest::typeRequirements() {
+    // binary_tree<int>
+    QVERIFY(std::is_default_constructible_v<binary_tree<int>>);
+    QVERIFY(std::is_copy_constructible_v<binary_tree<int>>);
+    QVERIFY(std::is_copy_assignable_v<binary_tree<int>>);
+    QVERIFY(std::is_move_constructible_v<binary_tree<int>>);
+    QVERIFY(std::is_move_assignable_v<binary_tree<int>>);
+    QVERIFY(std::is_swappable_v<binary_tree<int>>);
+    // binary_tree<Foo>
+    QVERIFY(std::is_default_constructible_v<binary_tree<Foo>>);
+    QVERIFY(std::is_copy_constructible_v<binary_tree<Foo>>);
+    QVERIFY(std::is_copy_assignable_v<binary_tree<Foo>>);
+    QVERIFY(std::is_move_constructible_v<binary_tree<Foo>>);
+    QVERIFY(std::is_move_assignable_v<binary_tree<Foo>>);
+    QVERIFY(std::is_swappable_v<binary_tree<Foo>>);
 }
 
 QTEST_MAIN(PreliminaryTest);

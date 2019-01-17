@@ -50,6 +50,15 @@ class tree_iterator {
             pointed_tree(&tree) {
     }
 
+    template <bool C = Constant, typename = std::enable_if_t<C>>
+    tree_iterator<Tree, Policy, !C> craft_non_constant_iterator() const {
+        tree_iterator<Tree, Policy, !C> result;
+        result.policy       = this->policy;
+        result.pointed_tree = const_cast<Tree*>(this->pointed_tree);
+        result.current_node = const_cast<typename Tree::node_type*>(this->current_node);
+        return result;
+    }
+
     public:
     ~tree_iterator() = default;
 
@@ -62,15 +71,16 @@ class tree_iterator {
     // Iterators must be CopyAssignable
     tree_iterator& operator=(const tree_iterator&) = default;
 
-    // Conversion from iterator to const_iterator
+    // Conversion constructor from iterator to const_iterator
     template <
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
-    explicit tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
+    tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
             pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
     }
 
+    // Conversion copy assignment from iterator to const_iterator
     template <
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
@@ -161,12 +171,12 @@ class tree_iterator {
         return it;
     }
 
-    void update(const node_type& current, const node_type& replacement) {
-        current_node = const_cast<node_type*>(&replacement);
+    void update(const node_type& current, const node_type* replacement) {
+        current_node = const_cast<node_type*>(replacement);
         if constexpr (is_updateable<policy_type, node_type>::value) {
             policy.update(current, replacement);
         }
     }
 };
 
-} // namespace ds
+} // namespace md

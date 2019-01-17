@@ -17,18 +17,28 @@ class in_order final {
     template <typename T>
     const binary_node<T>* increment(const binary_node<T>& from) {
         if (from.get_right_child()) {
-            return keep_calling(*from.get_right_child(), std::mem_fn(&binary_node<T>::get_left_child));
+            return keep_calling(
+                // from
+                *from.get_right_child(),
+                // keep calling
+                std::mem_fn(&binary_node<T>::get_left_child));
         } else {
-            const binary_node<T>* prev = &from;
-            const binary_node<T>* next = from.get_parent();
-            while (next) {
-                if (prev == next->get_left_child()) {
-                    return next; // found
-                }
-                prev = next;
-                next = next->get_parent();
-            }
-            return next;
+            bool found                   = false;
+            const binary_node<T>* result = keep_calling(
+                // from
+                from,
+                // keep calling
+                std::mem_fn(&binary_node<T>::get_parent),
+                // until
+                [](const binary_node<T>& child, const binary_node<T>& parent) {
+                    return &child == parent.get_left_child();
+                },
+                // then return
+                [&](const binary_node<T>&, const binary_node<T>& parent) {
+                    found = true;
+                    return &parent;
+                });
+            return found ? result : nullptr;
         }
     }
 
@@ -37,16 +47,19 @@ class in_order final {
         if (from.get_left_child()) {
             return keep_calling(*from.get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
         }
-        const binary_node<T>* prev = &from;
-        const binary_node<T>* next = from.get_parent();
-        while (next) {
-            if (prev == next->get_right_child()) {
-                return next; // found
-            }
-            prev = next;
-            next = next->get_parent();
-        }
-        return next;
+        return keep_calling(
+            // from
+            from,
+            // keep calling
+            std::mem_fn(&binary_node<T>::get_parent),
+            // until
+            [](const binary_node<T>& child, const binary_node<T>& parent) {
+                return &child == parent.get_right_child();
+            },
+            // then return
+            [](const binary_node<T>&, const binary_node<T>& parent) {
+                return &parent;
+            });
     }
 
     template <typename T>
@@ -60,4 +73,4 @@ class in_order final {
     }
 };
 
-} // namespace ds
+} // namespace md

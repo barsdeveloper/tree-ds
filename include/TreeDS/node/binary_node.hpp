@@ -36,11 +36,19 @@ class binary_node : public node<T, binary_node<T>> {
     public:
     using node<T, binary_node<T>>::node;
 
+    /*   ---   Move constructor   ---   */
+    binary_node(binary_node&& other) :
+            node<T, binary_node<T>>(other.value),
+            left(other.left),
+            right(other.right) {
+        other.move_resources_to(*this);
+    }
+
     /*   ---   Wide acceptance copy constructor using allocator   ---   */
-    template <typename Allocator = std::allocator<binary_node>>
+    template <typename Allocator>
     explicit binary_node(
         const binary_node<T>& other,
-        Allocator&& allocator = std::allocator<binary_node>()) :
+        Allocator&& allocator) :
             node<T, binary_node<T>>(other.value),
             left(
                 other.left
@@ -84,14 +92,6 @@ class binary_node : public node<T, binary_node<T>> {
         attach_children();
     }
 
-    /*   ---   Move constructor   ---   */
-    binary_node(binary_node&& other) :
-            node<T, binary_node<T>>(other.value),
-            left(other.left),
-            right(other.right) {
-        other.move_resources_to(*this);
-    }
-
     ~binary_node() = default;
 
     private:
@@ -132,15 +132,17 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     /// Discard this whole subtree and replace it with node
-    void replace_with(binary_node& node) {
-        assert(node.is_root());
+    void replace_with(binary_node* node) {
+        assert(node == nullptr or node->is_root());
         if (this->parent != nullptr) {
             if (this->is_left_child()) {
-                this->parent->left = &node;
+                this->parent->left = node;
             } else {
-                this->parent->right = &node;
+                this->parent->right = node;
             }
-            this->parent->attach_children(&node);
+            if (node != nullptr) {
+                this->parent->attach_children(node);
+            }
             this->parent = nullptr;
         }
     }
@@ -306,12 +308,14 @@ class binary_node : public node<T, binary_node<T>> {
 
 }; // namespace ds
 
-/*   ---   Expected equality properties  ---   */
+// TODO: replace as soon as space ship operator (<=>) is available
+// binary_node
 template <typename T>
 bool operator!=(const binary_node<T>& lhs, const binary_node<T>& rhs) {
     return !lhs.operator==(rhs);
 }
 
+// struct_node
 template <
     typename T,
     typename ConvertibleT,
@@ -345,4 +349,4 @@ bool operator!=(
     return !rhs.operator==(lhs);
 }
 
-} // namespace ds
+} // namespace md

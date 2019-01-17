@@ -17,7 +17,7 @@ template <typename Node, typename Allocator = std::allocator<Node>>
 class breadth_first final {
 
     private:
-    std::deque<const Node*, Allocator> open_nodes{};
+    std::deque<const Node*, Allocator> open_nodes {};
     Allocator allocator;
 
     public:
@@ -75,7 +75,7 @@ class breadth_first final {
         return deepest_rightmost_child(root);
     }
 
-    void update(const Node& current, const Node& replacement) {
+    void update(const Node& current, const Node* replacement) {
         // delete children of the previous nodes from open_nodes (invariants garantee that they are the last elements)
         while (!open_nodes.empty()) {
             const Node* last = open_nodes.back();
@@ -87,7 +87,9 @@ class breadth_first final {
             }
         }
         // push from back the children of the replacement node
-        const Node* child = replacement.get_first_child();
+        const Node* child = replacement != nullptr
+            ? replacement->get_first_child()
+            : nullptr;
         while (child != nullptr) {
             open_nodes.push_back(child);
             child = child->get_next_sibling();
@@ -95,4 +97,4 @@ class breadth_first final {
     }
 };
 
-} // namespace ds
+} // namespace md

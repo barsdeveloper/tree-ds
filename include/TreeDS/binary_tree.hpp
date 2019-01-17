@@ -28,4 +28,4 @@ class binary_tree : public tree<T, binary_node<T>, Policy, Allocator> {
     using tree<T, binary_node<T>, Policy, Allocator>::operator=;
 };
 
-} // namespace ds
+} // namespace md

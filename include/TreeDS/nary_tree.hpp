@@ -29,8 +29,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
 
     public:
     /// @brief Construct from {@link #binary_tree}
-    template <typename OtherPolicy, typename OtherAllocator>
-    nary_tree(const binary_tree<T, OtherPolicy, OtherAllocator>& other) :
+    template <typename OtherPolicy>
+    nary_tree(const binary_tree<T, OtherPolicy, Allocator>& other) :
             tree<T, nary_node<T>, Policy, Allocator>(
                 other.get_root()
                     ? allocate(this->allocator, *other.get_root(), this->allocator).release()
@@ -44,8 +44,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     // Import the overloads of the operator= into the current class (that would be shadowed otherwise)
     using tree<T, nary_node<T>, Policy, Allocator>::operator=;
 
-    template <typename OtherPolicy, typename OtherAllocator>
-    nary_tree& operator=(const binary_tree<T, OtherPolicy, OtherAllocator>& other) {
+    template <typename OtherPolicy>
+    nary_tree& operator=(const binary_tree<T, OtherPolicy, Allocator>& other) {
         static_assert(
             std::is_copy_assignable_v<T>,
             "Tried to assign to an nary_tree a binary_tree containing a non copyable type.");
@@ -57,26 +57,13 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
         return *this;
     }
 
-    template <typename OtherPolicy, typename OtherAllocator>
-    nary_tree& operator=(binary_tree<T, OtherPolicy, OtherAllocator>&& other) {
-        this->assign(
-            other.get_root(),
-            other.size());
-        other.emptify();
-        return *this;
-    }
-
     // Import the overloads of the operator== into the current class (would be shadowed otherwise)
     using tree<T, nary_node<T>, Policy, Allocator>::operator==;
 
-    template <typename OtherPolicy, typename OtherAllocator>
-    bool operator==(const binary_tree<T, OtherPolicy, OtherAllocator>& other) const {
-        // 1. Test if different size_value
+    template <typename OtherPolicy>
+    bool operator==(const binary_tree<T, OtherPolicy, Allocator>& other) const {
+        // Test if different size_value
         if (this->size() != other.size()) {
-            return false;
-        }
-        // 2. Test if one between this or other has a root that is set while the other doesn't.
-        if ((this->get_root() == nullptr) != (other.get_root() == nullptr)) {
             return false;
         }
         // At the end is either null (both) or same as the other.
@@ -88,11 +75,10 @@ template <
     typename T,
     typename Policy1,
     typename Policy2,
-    typename Allocator1,
-    typename Allocator2>
+    typename Allocator>
 bool operator==(
-    const binary_tree<T, Policy1, Allocator1>& lhs,
-    const nary_tree<T, Policy2, Allocator2>& rhs) {
+    const binary_tree<T, Policy1, Allocator>& lhs,
+    const nary_tree<T, Policy2, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 
@@ -100,11 +86,10 @@ template <
     typename T,
     typename Policy1,
     typename Policy2,
-    typename Allocator1,
-    typename Allocator2>
+    typename Allocator>
 bool operator!=(
-    const nary_tree<T, Policy2, Allocator2>& lhs,
-    const binary_tree<T, Policy1, Allocator1>& rhs) {
+    const nary_tree<T, Policy2, Allocator>& lhs,
+    const binary_tree<T, Policy1, Allocator>& rhs) {
     return !lhs.operator==(rhs);
 }
 
@@ -112,11 +97,10 @@ template <
     typename T,
     typename Policy1,
     typename Policy2,
-    typename Allocator1,
-    typename Allocator2>
+    typename Allocator>
 bool operator!=(
-    const binary_tree<T, Policy1, Allocator1>& lhs,
-    const nary_tree<T, Policy2, Allocator2>& rhs) {
+    const binary_tree<T, Policy1, Allocator>& lhs,
+    const nary_tree<T, Policy2, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }
 

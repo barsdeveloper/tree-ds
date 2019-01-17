@@ -6,30 +6,8 @@
 
 namespace md {
 
-template <typename, typename...>
-class struct_node;
-
-template <std::size_t index, typename T, typename... Children>
-constexpr const auto& get_child(const struct_node<T, Children...>&);
-
-template <typename T>
-constexpr struct_node<T> n(T);
-
-constexpr struct_node<std::nullptr_t> n();
-
 template <typename T, typename... Children>
 class struct_node {
-
-    //   ---   FRIENDS   ---
-    template <typename, typename...>
-    friend class struct_node; // other instantiations of this template
-
-    template <typename... TupleArgs>
-    friend constexpr struct_node<std::tuple<TupleArgs...>> n(TupleArgs...); // emplacing struct_node
-
-    friend constexpr struct_node<std::nullptr_t> n(); // empty node function creator
-
-    friend constexpr struct_node<T> n<T>(T); // node function creator
 
     //   ---   TYPES   ---
     public:
@@ -41,11 +19,10 @@ class struct_node {
     value_t value;                 // Value hold by this node
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
-    children_t children {};        // Tuple containing actual children
+    children_t children{};         // Tuple containing actual children
 
     //   ---   CONSTRUCTORS   ---
-    protected:
-    // Constructors are private because the instances must be constructed using function n().
+    public:
     constexpr struct_node(const T& value, Children&&... children) :
             value(value),
             children(std::forward<Children>(children)...) {
@@ -68,33 +45,13 @@ class struct_node {
         this->subtree_arity = std::max(children_count, prev_arity);
     }
 
-    public:
     ~struct_node() = default;
 
     constexpr struct_node(const struct_node& other) = default;
 
     //   ---   METHODS   ---
-    constexpr bool has_children() const {
-        return this->children_count() > 0;
-    }
-
     constexpr std::size_t children_count() const {
         return std::tuple_size_v<children_t>;
-    }
-
-    constexpr std::size_t valid_children_count() const {
-        std::size_t count    = 0;
-        auto check_not_empty = [&](auto& child) {
-            if constexpr (!std::is_same_v<decltype(child.get_value()), std::nullptr_t>) {
-                ++count;
-            }
-        };
-        std::apply(
-            [&](auto&... nodes) {
-                (..., check_not_empty(nodes));
-            },
-            this->children);
-        return count;
     }
 
     constexpr T get_value() const {

@@ -16,6 +16,8 @@ struct NonCopyable {
             a(a),
             b(b) {
     }
+    NonCopyable& operator=(const NonCopyable&) = delete;
+    NonCopyable& operator=(NonCopyable&&) = delete;
     bool operator==(const NonCopyable& other) const {
         return this->a == other.a && this->b == other.b;
     }

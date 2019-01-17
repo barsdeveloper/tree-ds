@@ -115,8 +115,8 @@ class tree {
             "Tried to COPY a tree containing a non copyable type.");
     }
 
-    template <typename OtherPolicy, typename OtherAllocator, CHECK_COPIABLE(T)>
-    explicit tree(const tree<T, Node, OtherPolicy, OtherAllocator>& other) :
+    template <typename OtherPolicy>
+    explicit tree(const tree<T, Node, OtherPolicy, Allocator>& other) :
             root(
                 other.root
                     ? allocate(allocator, *other.root, allocator).release()
@@ -128,16 +128,17 @@ class tree {
     }
 
     /**
-     * Move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument will be empty
+     * Other Policy move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument will be empty
      * after this operation.
      * @param other the tree to be moved
      */
     template <typename OtherPolicy>
     tree(tree<T, Node, OtherPolicy, Allocator>&& other) :
-            allocator(other.allocator),
+            allocator(std::move(other.allocator)),
             root(other.root),
             size_value(other.size_value) {
-        other.emptify();
+        other.root       = nullptr;
+        other.size_value = 0u;
     }
 
     /**
@@ -172,22 +173,38 @@ class tree {
 
     public:
     //   ---   ASSIGNMENT   ---
-    template <typename OtherPolicy, typename OtherAllocator>
-    tree& operator=(const tree<T, Node, OtherPolicy, OtherAllocator>& other) {
+    // Copy assignment
+    tree& operator=(const tree& other) {
+        return this->operator=<Policy, Allocator>(other);
+    }
+
+    // Any other policy copy assignment
+    template <typename OtherPolicy>
+    tree& operator=(const tree<T, Node, OtherPolicy, Allocator>& other) {
         static_assert(
             std::is_nothrow_copy_assignable_v<T>,
             "Tried to COPY ASSIGN a tree containing a non copyable type.");
         this->assign(
-            allocate(allocator, *other.root, allocator).release(),
-            other.size);
+            !other.empty()
+                ? allocate(allocator, *other.root, allocator).release()
+                : nullptr,
+            other.size());
+
         return *this;
     }
 
+    // Move assignment
+    tree& operator=(tree&& other) {
+        return this->operator=<Policy>(other);
+    }
+
+    // Any other policy move assignment
     template <typename OtherPolicy>
     tree& operator=(tree<T, Node, OtherPolicy, Allocator>&& other) {
-        allocator = other.allocator;
+        allocator = std::move(other.allocator);
         this->assign(other.root, other.size_value);
-        other.emptify();
+        other.root       = nullptr;
+        other.size_value = 0u;
         return *this;
     }
 
@@ -346,8 +363,18 @@ class tree {
         return root;
     }
 
+    Node* get_root() {
+        return root;
+    }
+
     //   ---   MODIFIERS   ---
     protected:
+    void replace_node(node_type* replaced, node_type* replacement) {
+        replaced->replace_with(replacement);
+        this->size_value -= count_nodes(*replaced);
+        deallocate(this->allocator, replaced);
+    }
+
     template <typename P, bool Constant>
     tree_iterator<tree, P, Constant>
     modify_subtree(
@@ -355,19 +382,17 @@ class tree {
         std::unique_ptr<node_type, deleter<allocator_type>> node,
         std::size_t replacement_size) {
         if (position.pointed_tree != this) {
-            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to.");
+            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
         }
         node_type* replacement = node.release();
         node_type* target      = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
             assert(root != nullptr);
-            position.update(*target, *replacement);
+            position.update(*target, replacement);
             if (target == root) {
-                assign(replacement, replacement_size);
+                this->assign(replacement, 0); // size will be incremented at the end
             } else {
-                target->replace_with(*replacement);
-                size_value -= count_nodes(*target);
-                deallocate(allocator, target);
+                this->replace_node(target, replacement);
             }
         } else if (root == nullptr) {
             root = replacement;
@@ -378,14 +403,26 @@ class tree {
         return position;
     }
 
-    void emptify() {
-        root       = nullptr;
-        size_value = 0u;
+    template <typename P, bool Constant>
+    void erase_subtree(tree_iterator<tree, P, Constant> position) {
+        node_type* target = const_cast<node_type*>(position.get_node());
+        if (target != nullptr) { // if iterator points to valid node
+            assert(root != nullptr);
+            position.update(*target, nullptr);
+            if (target == root) {
+                this->clear();
+            } else {
+                this->replace_node(target, nullptr);
+            }
+        } else if (root != nullptr) {
+            throw std::logic_error("The iterator points to a non valid position (end).");
+        }
     }
 
     void assign(node_type* root, std::size_t size) {
         if (this->root != nullptr) {
             deallocate(this->allocator, this->root);
+            this->size_value = 0u;
         }
         this->root       = root;
         this->size_value = size;
@@ -408,11 +445,12 @@ class tree {
      * not. Do not use iterator after you swapped trees.
      * @param other the tree to swap with
      */
-    void swap(tree& other) {
+    template <typename OtherPolicy>
+    void swap(tree<T, Node, OtherPolicy, Allocator>& other) {
         // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
         using namespace std;
-        swap(root, other.root);
-        swap(size_value, other.size_value);
+        std::swap(root, other.root);
+        std::swap(size_value, other.size_value);
     }
 
     /**
@@ -428,7 +466,10 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     It insert(It position, const struct_node<ConvertibleT, Children...>& node) {
-        return modify_subtree(position, allocate(allocator, node, allocator), node.get_subtree_size());
+        return this->modify_subtree(
+            position,
+            allocate(this->allocator, node, this->allocator),
+            node.get_subtree_size());
     }
 
     /**
@@ -440,7 +481,7 @@ class tree {
      */
     template <typename It>
     It insert(It position, const T& value) {
-        return modify_subtree(position, allocate(allocator, value), 1u);
+        return this->modify_subtree(position, allocate(allocator, value), 1u);
     }
 
     /**
@@ -451,12 +492,15 @@ class tree {
      */
     template <typename It>
     It insert(It position, T&& value) {
-        return modify_subtree(position, allocate(allocator, std::move(value)), 1u);
+        return this->modify_subtree(position, allocate(allocator, std::move(value)), 1u);
     }
 
-    template <typename It, typename... Args>
+    template <
+        typename It,
+        typename... Args,
+        CHECK_CONSTRUCTIBLE(T, Args&&...)>
     It emplace(It position, Args&&... args) {
-        return modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u);
+        return this->modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u);
     }
 
     template <
@@ -465,28 +509,32 @@ class tree {
         typename... Children,
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
     It emplace(It position, const struct_node<std::tuple<EmplacingArgs...>, Children...>& nodes) {
-        return modify_subtree(position, allocate(allocator, nodes, allocator), 1u);
+        return this->modify_subtree(position, allocate(allocator, nodes, allocator), nodes.get_subtree_size());
     }
 
-    iterator<post_order> erase(iterator<post_order> position) {
-        node_type* node = position++.get_node();
-        assert(node != nullptr);
-        deallocate(allocator, node);
-        return position;
-    }
-
-    iterator<post_order> erase(iterator<post_order> first, iterator<post_order> last) {
-        while (first != last) {
-            node_type* node = first++.get_node();
-            assert(node != nullptr);
-            deallocate(allocator, node);
+    iterator<post_order> erase(const_iterator<post_order> position) {
+        if (position.pointed_tree != this) {
+            throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
         }
-        return first;
+        iterator<post_order> result(position.craft_non_constant_iterator());
+        this->erase_subtree(position);
+        return ++result;
+    }
+
+    iterator<post_order> erase(const_iterator<post_order> first, const_iterator<post_order> last) {
+        if (first.pointed_tree != this || last.pointed_tree != this) {
+            throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
+        }
+        while (first != last) {
+            this->erase_subtree(first);
+            ++first;
+        }
+        return ++last.craft_non_constant_iterator();
     }
 
     //  ---   COMPARISON   ---
-    template <typename OtherPolicy, typename OtherAllocator>
-    bool operator==(const tree<T, Node, OtherPolicy, OtherAllocator>& other) const {
+    template <typename OtherPolicy>
+    bool operator==(const tree<T, Node, OtherPolicy, Allocator>& other) const {
         // 1. Test if different size_value
         if (this->size_value != other.size_value) {
             return false;
@@ -511,17 +559,96 @@ class tree {
         // Deep test for equality
         return root && root->operator==(other);
     }
+
+    bool operator==(const struct_node<std::nullptr_t>&) const {
+        return this->empty();
+    }
 };
 
+// TODO: replace as soon as space ship operator (<=>) is available
+// tree
 template <
     typename T,
     typename Node,
     typename Policy1,
     typename Policy2,
-    typename Allocator1,
-    typename Allocator2>
-bool operator!=(const tree<T, Node, Policy1, Allocator1>& lhs, const tree<T, Node, Policy2, Allocator2>& rhs) {
+    typename Allocator>
+bool operator!=(const tree<T, Node, Policy1, Allocator>& lhs, const tree<T, Node, Policy2, Allocator>& rhs) {
     return !lhs.operator==(rhs);
+}
+
+// struct_node
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator,
+    typename ConvertibleT,
+    typename... Children,
+    CHECK_CONVERTIBLE(ConvertibleT, T)>
+bool operator==(const struct_node<ConvertibleT, Children...>& lhs, const tree<T, Node, Policy, Allocator>& rhs) {
+    return rhs.operator==(lhs);
+}
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator,
+    typename ConvertibleT,
+    typename... Children,
+    CHECK_CONVERTIBLE(ConvertibleT, T)>
+bool operator!=(const tree<T, Node, Policy, Allocator>& lhs, const struct_node<ConvertibleT, Children...>& rhs) {
+    return !lhs.operator==(rhs);
+}
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator,
+    typename ConvertibleT,
+    typename... Children,
+    CHECK_CONVERTIBLE(ConvertibleT, T)>
+bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const tree<T, Node, Policy, Allocator>& rhs) {
+    return !rhs.operator==(lhs);
+}
+
+// empty struct_node
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator>
+bool operator==(const struct_node<std::nullptr_t>& lhs, const tree<T, Node, Policy, Allocator>& rhs) {
+    return rhs.operator==(lhs);
+}
+
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator>
+bool operator!=(const tree<T, Node, Policy, Allocator>& lhs, const struct_node<std::nullptr_t>& rhs) {
+    return !lhs.operator==(rhs);
+}
+
+template <
+    typename T,
+    typename Node,
+    typename Policy,
+    typename Allocator>
+bool operator!=(const struct_node<std::nullptr_t>& lhs, const tree<T, Node, Policy, Allocator>& rhs) {
+    return !rhs.operator==(lhs);
+}
+
+// Swappable requirement
+template <
+    typename T,
+    typename Node,
+    typename Policy1,
+    typename Policy2,
+    typename Allocator>
+void swap(tree<T, Node, Policy1, Allocator>& lhs, tree<T, Node, Policy2, Allocator>& rhs) noexcept {
+    return lhs.swap(rhs);
 }
 
 } // namespace md

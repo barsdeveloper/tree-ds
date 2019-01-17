@@ -15,7 +15,7 @@ class nary_node;
 
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
-#define CHECK_COPIABLE(TYPE) typename = std::enable_if<std::is_copy_constructible_v<TYPE>>
+#define CHECK_COPIABLE(TYPE) typename = std::enable_if_t<std::is_copy_constructible_v<TYPE>>
 
 template <typename Node, typename Call, typename Test, typename Result>
 const Node* keep_calling(const Node& from, Call call, Test test, Result result) {
@@ -140,7 +140,7 @@ const Node* upper_row_rightmost(const Node& from) {
                 return &child;
             });
         if (relative_level == -1) {
-            return deepest_last_child;
+            break;
         }
         // Go to the node that is on the left and at the same level
         left_crossed = prev_branch_sibling(*deepest_last_child);
@@ -167,9 +167,7 @@ const Node* deepest_rightmost_child(const Node& root) {
                 return false;
             },
             // the return
-            [](const Node&, const Node& child) {
-                return &child;
-            });
+            std::function<Node*(const Node&, const Node&)>()); // this is never called (until retuns always false)
         if (current_level > deepest_level) {
             deepest_level = current_level;
             deepest_node  = current_node;
@@ -185,7 +183,7 @@ const Node* deepest_rightmost_child(const Node& root) {
  * callable with a two arguments of type Arg. For a concrete example take a look at {@link breadth_first#update}.
  */
 template <
-    typename T,      // type to be cheacked
+    typename T,      // type to be checked
     typename Arg,    // arguments to be provided to method: "update"
     typename = void> // dummy argument to exclude this template overload from being taken into consideration
 struct is_updateable : std::false_type {};
@@ -204,7 +202,7 @@ struct is_updateable<
                 .update(
                     // provide it arguments Node
                     std::declval<const Arg&>(),
-                    std::declval<const Arg&>()))>>
+                    std::declval<const Arg*>()))>>
         : std::true_type {};
 
 template <
@@ -247,4 +245,4 @@ std::size_t count_nodes(const nary_node<T>& node) {
     return size;
 }
 
-} // namespace ds
+} // namespace md
