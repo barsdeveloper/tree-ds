@@ -112,8 +112,11 @@ struct CustomAllocator {
     static std::deque<T*> allocated;
     static int total_allocated;
     static int total_deallocated;
-    using value_type                        = T;
-    CustomAllocator()                       = default;
+    using value_type  = T;
+    CustomAllocator() = default;
+    template <typename Other>
+    CustomAllocator(const CustomAllocator<Other>&) {
+    }
     CustomAllocator(const CustomAllocator&) = default;
     T* allocate(std::size_t count) {
         T* ptr = static_cast<T*>(::operator new(count * sizeof(T)));

@@ -1,4 +1,5 @@
 #include <QtTest/QtTest>
+#include <stdexcept> // std::logic_error
 
 #include <TreeDS/tree>
 
@@ -7,8 +8,7 @@
 using namespace std;
 using namespace md;
 
-template class md::nary_tree<Foo>;
-template class md::binary_tree<Bar>;
+template class md::tree<int, nary_node<int>, pre_order, std::allocator<int>>;
 
 class TreeTest : public QObject {
 
@@ -20,22 +20,41 @@ class TreeTest : public QObject {
     void naryTree();
     void binaryTree();
     void nonCopyable();
+    void forbiddenOperations();
 };
 
 void TreeTest::naryTree() {
-    const narytree_t tree(
-        n('a')(
-            n('b')(
-                n('d'),
-                n('e')(
-                    n('h')),
-                n('f')),
-            n('c')(
-                n('g')(
-                    n('i')(
-                        n('l')),
-                    n('j'),
-                    n('k')))));
+    auto struct_tree = n('a')(
+        n('b')(
+            n('d'),
+            n('e')(
+                n('h')),
+            n('f')),
+        n('c')(
+            n('g')(
+                n('i')(
+                    n('l')),
+                n('j'),
+                n('k'))));
+    const narytree_t tree(struct_tree);
+    QVERIFY(tree == struct_tree);
+    QVERIFY(struct_tree == tree);
+    QVERIFY(!(tree != struct_tree));
+    QVERIFY(!(struct_tree != tree));
+    QVERIFY((
+        tree
+        != n('a')(
+               n('b')(
+                   n('d'),
+                   n('e')(
+                       n('h')),
+                   n('f')),
+               n('c')(
+                   n('g')(
+                       n('i')(
+                           n('l')),
+                       n('j')))))); // no 'k'
+
     vector<char> expected {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
     vector<char> actual(tree.begin(), tree.end());
     QCOMPARE(actual, expected);
@@ -43,9 +62,11 @@ void TreeTest::naryTree() {
 
     // h -> #
     narytree_t diff(tree);
-    diff.insert(
+    auto sharp_it = diff.insert(
         find(begin(diff), end(diff), 'h'),
         '#');
+    QCOMPARE(*sharp_it, '#');
+
     actual.clear();
     for (const auto& value : diff) actual.push_back(value);
     expected[7] = '#';
@@ -57,7 +78,8 @@ void TreeTest::naryTree() {
     QVERIFY(!(tree == diff));
     QVERIFY(!(diff == tree));
 
-    narytree_t copy(tree);
+    narytree_t copy;
+    copy = tree;
     QVERIFY(copy == tree);
     QVERIFY(tree == copy);
     QVERIFY(!(copy != tree));
@@ -75,7 +97,7 @@ void TreeTest::naryTree() {
     expected = vector<char> {'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'};
     QCOMPARE(actual, expected);
 
-    nary_tree<char, pre_order> moved(move(copy2));
+    nary_tree<char, post_order> moved(move(copy2));
     QCOMPARE(moved.size(), 12);
     QCOMPARE(copy2.size(), 0);
     QCOMPARE(copy2.get_root(), nullptr);
@@ -85,11 +107,25 @@ void TreeTest::naryTree() {
     QVERIFY(!(moved != tree));
     QVERIFY(!(tree != moved));
 
+    copy2 = move(moved);
+    QCOMPARE(copy2.size(), 12);
+    QCOMPARE(moved.size(), 0);
+    QVERIFY(moved.get_root() == nullptr);
+    QVERIFY(copy2.get_root() != nullptr);
+
+    moved = move(copy2);
+    QCOMPARE(copy2.size(), 0);
+    QCOMPARE(moved.size(), 12);
+    QVERIFY(moved.get_root() != nullptr);
+    QVERIFY(copy2.get_root() == nullptr);
+
     // g -> !
-    moved.insert(
+    auto bang_it = moved.insert(
         --find(moved.rbegin(), moved.rend(), 'g')
               .base(),
         '!');
+    QCOMPARE(*bang_it, '!');
+
     actual = vector<char>(
         moved.cbegin<breadth_first<nary_node<char>>>(),
         moved.cend<breadth_first<nary_node<char>>>());
@@ -113,22 +149,27 @@ void TreeTest::naryTree() {
     QCOMPARE(actual, expected);
 
     // e -> t
-    moved.insert(
+    auto t_it = moved.insert(
         find(moved.begin(), moved.end(), 'e'),
         't');
-
     QCOMPARE(
         find(moved.begin(), moved.end(), 't').get_node()->get_parent()->get_value(),
         '?');
+    QCOMPARE(*t_it, 't');
 
     // erase root
     auto end_it = moved.erase(find(moved.begin<post_order>(), moved.end<post_order>(), 'a'));
+    QVERIFY(end_it == moved.end<post_order>());
 
     QCOMPARE(moved, n());
     QCOMPARE(moved.size(), 0);
     QCOMPARE(moved.begin(), moved.end());
     QCOMPARE(moved.begin<post_order>(), end_it);
     QVERIFY(moved.empty());
+    QVERIFY(moved == n());
+    QVERIFY(n() == moved);
+    QVERIFY(!(moved != n()));
+    QVERIFY(!(n() != moved));
 }
 
 void TreeTest::binaryTree() {
@@ -150,8 +191,16 @@ void TreeTest::binaryTree() {
                             n(-12)))))));
     vector<int> expected {-10, -6, -7, -4, -11, -8, -12, -9, -5, -3, -2, -1};
     vector<int> actual(tree.begin(), tree.end());
-
     QCOMPARE(actual, expected);
+    QVERIFY((tree != binary_tree<int, breadth_first<binary_node<int>>>()));
+    QVERIFY((binary_tree<int, breadth_first<binary_node<int>>>() != tree));
+
+    binary_tree<int, pre_order> copy;
+    copy = tree;
+    QVERIFY(copy == tree);
+    QVERIFY(!(copy != tree));
+    QVERIFY(tree == copy);
+    QVERIFY(!(tree != copy));
 
     nary_tree<int, breadth_first<nary_node<int>>> nary;
     nary = tree;
@@ -163,11 +212,19 @@ void TreeTest::binaryTree() {
     QVERIFY(!(tree != nary));
 
     binary_tree<int> tree2(tree);
-    tree2.erase(std::find(tree2.begin<post_order>(), tree2.end<post_order>(), -11));
+    auto eight_it = tree2.erase(std::find(tree2.begin<post_order>(), tree2.end<post_order>(), -11));
+    QCOMPARE(*eight_it, -8);
 
     QCOMPARE(tree2.size(), nary.size() - 1);
     QVERIFY(nary != tree2);
     QVERIFY(tree2 != nary);
+
+    auto end_it = tree2.erase(
+        tree2.begin<post_order>(),
+        tree2.end<post_order>());
+    QCOMPARE(end_it, tree2.end<post_order>());
+
+    QVERIFY(tree2.empty());
 }
 
 void TreeTest::nonCopyable() {
@@ -188,9 +245,11 @@ void TreeTest::nonCopyable() {
     QVERIFY(movedTree != tree);
     QVERIFY(tree != movedTree);
 
-    movedTree.emplace(
+    auto z_it = movedTree.emplace(
         find(movedTree.begin(), movedTree.end(), NonCopyable('c', 3)),
         'z', 100);
+    QCOMPARE(*z_it, NonCopyable('z', 100));
+
     auto it    = movedTree.begin<in_order>();
     auto itEnd = movedTree.end<in_order>();
 
@@ -199,6 +258,44 @@ void TreeTest::nonCopyable() {
     QCOMPARE(*it++, NonCopyable('a', 1));
     QCOMPARE(*it++, NonCopyable('z', 100));
     QCOMPARE(it, itEnd);
+}
+
+void TreeTest::forbiddenOperations() {
+    binary_tree<std::string> binEmpty;
+    binary_tree<std::string> bin(
+        n("a")(
+            n("b")(
+                n(),
+                n("d")(
+                    n("e"),
+                    n("f"))),
+            n("c")));
+
+    QVERIFY(bin != binEmpty);
+    QVERIFY(binEmpty != bin);
+    QVERIFY(!(bin == binEmpty));
+    QVERIFY(!(binEmpty == bin));
+
+    // iterator belonging to another tree
+    QVERIFY_EXCEPTION_THROWN(
+        binEmpty.emplace(bin.begin(), "x"),
+        std::logic_error);
+    QVERIFY_EXCEPTION_THROWN(
+        bin.insert(binEmpty.begin(), std::string("x")),
+        std::logic_error);
+    QVERIFY_EXCEPTION_THROWN(
+        bin.erase(binEmpty.begin<post_order>()),
+        std::logic_error);
+    // iterator pointing to end
+    QVERIFY_EXCEPTION_THROWN(
+        bin.emplace(bin.end(), "x"),
+        std::logic_error);
+    QVERIFY_EXCEPTION_THROWN(
+        bin.erase(bin.end<post_order>()),
+        std::logic_error);
+    QVERIFY_EXCEPTION_THROWN(
+        binEmpty.erase(bin.begin<post_order>(), bin.end<post_order>()),
+        std::logic_error);
 }
 
 QTEST_MAIN(TreeTest);

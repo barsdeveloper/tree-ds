@@ -16,9 +16,11 @@ namespace md {
 template <typename Node, typename Allocator = std::allocator<Node>>
 class breadth_first final {
 
+    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<Node>;
+
     private:
     std::deque<const Node*, Allocator> open_nodes {};
-    Allocator allocator;
+    allocator_type allocator;
 
     public:
     breadth_first(const Allocator& allocator = Allocator()) :
