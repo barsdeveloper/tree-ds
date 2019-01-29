@@ -55,7 +55,7 @@ const Node* prev_branch_sibling(const Node& from) {
     const Node* deepest_last_child = &from;
     const Node* left_crossed;
     do {
-        // Climb up the tree until a node with a previous sibling is found, thne return that previous sibling
+        // Climb up the tree until a node with a previous sibling is found, then return that previous sibling
         left_crossed = keep_calling(
             // from
             *deepest_last_child,

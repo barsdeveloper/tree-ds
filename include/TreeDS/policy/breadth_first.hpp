@@ -29,72 +29,71 @@ class breadth_first final {
 
     // formward puhes into open back and pops front
     const Node* increment(const Node&) {
-        if (open_nodes.empty()) return nullptr;
-        // pop front the element to return
-        const Node* result = open_nodes.front();
-        open_nodes.pop_front();
+        if (this->open_nodes.empty()) {
+            return nullptr;
+        }
+        // get element to be returned
+        const Node* result = this->open_nodes.front();
+        // manage next sibling replacement in queue
+        const Node* sibling = result->get_next_sibling();
+        if (sibling != nullptr) {
+            this->open_nodes.front() = sibling;
+        } else {
+            this->open_nodes.pop_front();
+        }
+        // push back its first child
         const Node* first = result->get_first_child();
-        // push back its children
-        if (first) {
-            keep_calling(
-                *first,
-                [&](const Node& node) {
-                    open_nodes.push_back(&node);
-                    return node.get_next_sibling();
-                });
+        if (first != nullptr) {
+            this->open_nodes.push_back(first);
         }
         return result;
     }
 
     const Node* decrement(const Node& from) {
+        // delete the child of current node from open_nodes
+        if (from.get_first_child() != nullptr) {
+            assert(this->open_nodes.back()->get_parent() == &from);
+            // delete child of the previous node from open_nodes (invariants garantee that it is the last element)
+            this->open_nodes.pop_back();
+        }
+        // delete next sibling of the current node from open_nodes
+        if (from.get_next_sibling() != nullptr) {
+            assert(this->open_nodes.front()->get_prev_sibling() == &from);
+            this->open_nodes.pop_front();
+        }
         // calculate the previous element
         const Node* result = prev_branch_sibling(from);
-        if (!result) {
+        if (result == nullptr) {
             result = upper_row_rightmost(from);
         }
-        // delete the children of current node from open_nodes
-        if (from.get_first_child() != nullptr) {
-            // pop back the children of the previous element
-            const Node* last = open_nodes.back();
-            while (!open_nodes.empty() && last->get_parent() == &from) {
-                open_nodes.pop_back();
-                last = open_nodes.back();
-            }
-        }
-        // push front the current (so that it will be the next from a forward iterator POV
-        open_nodes.push_front(&from);
+        // update queue
+        this->open_nodes.push_front(&from);
         return result;
     }
 
     const Node* go_first(const Node& root) {
-        open_nodes.clear();
-        open_nodes.push_back(&root);
+        this->open_nodes.clear();
+        this->open_nodes.push_back(&root);
         return increment(root);
     }
 
     const Node* go_last(const Node& root) {
-        open_nodes.clear();
+        this->open_nodes.clear();
         return deepest_rightmost_child(root);
     }
 
     void update(const Node& current, const Node* replacement) {
-        // delete children of the previous nodes from open_nodes (invariants garantee that they are the last elements)
-        while (!open_nodes.empty()) {
-            const Node* last = open_nodes.back();
-            if (last->get_parent() == &current) {
-                open_nodes.pop_back();
-                last = open_nodes.back();
-            } else {
-                break;
-            }
+        // delete child of the previous nodes from open_nodes
+        if (current.get_first_child()) {
+            assert(this->open_nodes.back()->get_parent() == &current);
+            this->open_nodes.pop_back();
         }
         // push from back the children of the replacement node
         const Node* child = replacement != nullptr
             ? replacement->get_first_child()
             : nullptr;
-        while (child != nullptr) {
-            open_nodes.push_back(child);
-            child = child->get_next_sibling();
+        if (child != nullptr) {
+            this->open_nodes.push_back(child);
         }
     }
 };
