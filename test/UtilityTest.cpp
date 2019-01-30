@@ -1,11 +1,12 @@
 #include <QtTest/QtTest>
 
-#include <TreeDS/node/binary_node.hpp>
-#include <TreeDS/node/nary_node.hpp>
-#include <TreeDS/utility.hpp>
+#include <TreeDS/tree>
+
+#include "Types.hpp"
 
 using namespace std;
 using namespace md;
+using namespace md::detail;
 
 class UtilityTest : public QObject {
 
@@ -17,6 +18,8 @@ class UtilityTest : public QObject {
     void multipleChildren();
     void advancedBinary();
     void advancedNary();
+    void updateableTest();
+    void isTagOfPolicyTest();
 };
 
 void UtilityTest::singleNode() {
@@ -245,6 +248,85 @@ void UtilityTest::advancedNary() {
     QCOMPARE(upper_row_rightmost(*n27), n26);
 
     QCOMPARE(deepest_rightmost_child(node), n27);
+}
+
+void UtilityTest::updateableTest() {
+    QVERIFY((
+        is_updateable<
+            breadth_first_impl<binary_node<int>>,
+            binary_node<int>>::value));
+
+    QVERIFY((
+        !is_updateable<
+            breadth_first_impl<binary_node<int>>,
+            binary_node<float>>::value));
+
+    QVERIFY((
+        is_updateable<
+            breadth_first_impl<binary_node<Foo>>,
+            binary_node<Foo>>::value));
+
+    QVERIFY((
+        !is_updateable<
+            breadth_first_impl<binary_node<Foo>>,
+            binary_node<Bar>>::value));
+
+    QVERIFY((
+        is_updateable<
+            breadth_first_impl<nary_node<string>>,
+            nary_node<string>>::value));
+
+    QVERIFY((
+        !is_updateable<
+            breadth_first_impl<nary_node<string>>,
+            nary_node<char>>::value));
+
+    QVERIFY((
+        is_updateable<
+            breadth_first_impl<nary_node<Bar>>,
+            nary_node<Bar>>::value));
+}
+
+void UtilityTest::isTagOfPolicyTest() {
+    QVERIFY((is_tag_of_policy<
+             pre_order,
+             binary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((!is_tag_of_policy<
+             pre_order_impl,
+             binary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((is_tag_of_policy<
+             in_order,
+             nary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((!is_tag_of_policy<
+             in_order_impl,
+             nary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((is_tag_of_policy<
+             post_order,
+             nary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((!is_tag_of_policy<
+             post_order_impl,
+             nary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((is_tag_of_policy<
+             breadth_first,
+             nary_node<int>,
+             std::allocator<int>>::value));
+
+    QVERIFY((!is_tag_of_policy<
+             breadth_first_impl<nary_node<int>>,
+             nary_node<int>,
+             std::allocator<int>>::value));
 }
 
 QTEST_MAIN(UtilityTest);

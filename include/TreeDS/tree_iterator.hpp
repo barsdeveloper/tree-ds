@@ -12,8 +12,8 @@ class tree;
 
 template <
     typename Tree,
-    typename Policy = typename Tree::algorithm_type,
-    bool Constant   = false>
+    typename Policy,
+    bool Constant = false>
 class tree_iterator {
 
     template <typename, typename, typename, typename>
@@ -28,7 +28,11 @@ class tree_iterator {
         Constant,
         const typename tree_type::node_type,
         typename tree_type::node_type>;
-    using policy_type = Policy;
+    using actual_policy_type = decltype(
+        std::declval<Policy>()
+            .template get_instance<
+                typename Tree::node_type,
+                typename Tree::allocator_type>());
     // Iterators mandatory type declarations
     using value_type = std::conditional_t<
         Constant,
@@ -40,7 +44,7 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    policy_type policy {};
+    actual_policy_type policy {};
     tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
     node_type* current_node = nullptr; // nullptr => end()
 
@@ -173,7 +177,7 @@ class tree_iterator {
 
     void update(const node_type& current, const node_type* replacement) {
         current_node = const_cast<node_type*>(replacement);
-        if constexpr (is_updateable<policy_type, node_type>::value) {
+        if constexpr (is_updateable<actual_policy_type, node_type>::value) {
             policy.update(current, replacement);
         }
     }

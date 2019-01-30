@@ -71,6 +71,10 @@ class tree {
     template <typename P>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<P>>;
 
+    static_assert(
+        is_tag_of_policy<Policy, Node, allocator_type>::value,
+        "Policy template parameter is expected to be an actual policy tag");
+
     protected:
     //   ---   ATTRIBUTES   ---
     /// @brief Allocator object used to allocate the nodes.
@@ -259,7 +263,7 @@ class tree {
      */
     template <typename P = Policy>
     const_iterator<P> begin() const {
-        return cbegin();
+        return cbegin<P>();
     }
 
     /**

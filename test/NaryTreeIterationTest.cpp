@@ -39,8 +39,8 @@ void NaryTreeIterationTest::iteration() {
     copy(t.begin<pre_order>(), t.end<pre_order>(), back_inserter(actualPreOrder));
     copy(t.begin<post_order>(), t.end<post_order>(), back_inserter(actualPostOrder));
     copy(
-        t.begin<breadth_first<nary_node<char>>>(),
-        t.end<breadth_first<nary_node<char>>>(),
+        t.begin<breadth_first>(),
+        t.end<breadth_first>(),
         back_inserter(actualBreadthFirst));
 
     QCOMPARE(actualPreOrder, expectedPreOrder);
@@ -60,8 +60,8 @@ void NaryTreeIterationTest::iteration() {
     copy(t.rbegin<pre_order>(), t.rend<pre_order>(), back_inserter(actualNaryReversePreOrder));
     copy(t.rbegin<post_order>(), t.rend<post_order>(), back_inserter(actualNaryReversePostOrder));
     copy(
-        t.rbegin<breadth_first<nary_node<char>>>(),
-        t.rend<breadth_first<nary_node<char>>>(),
+        t.rbegin<breadth_first>(),
+        t.rend<breadth_first>(),
         back_inserter(actualNaryReverseBreadthFirst));
 
     copy(expectedPreOrder.rbegin(), expectedPreOrder.rend(), back_inserter(expectedReversePreOrder));
@@ -96,9 +96,9 @@ void NaryTreeIterationTest::iteration_data() {
                                    n('k'),
                                    n('l')))))))
         << 12
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'}
-        << list<char>{'f', 'g', 'h', 'i', 'j', 'k', 'l', 'e', 'd', 'c', 'b', 'a'}
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'}
+        << list<char> {'f', 'g', 'h', 'i', 'j', 'k', 'l', 'e', 'd', 'c', 'b', 'a'}
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
 
     /******************************************************************************************************************/
     QTest::newRow("Triangular")
@@ -122,9 +122,9 @@ void NaryTreeIterationTest::iteration_data() {
                                n('q')(
                                    n('r')))))))
         << 18
-        << list<char>{'a', 'b', 'i', 'c', 'd', 'j', 'm', 'e', 'f', 'k', 'n', 'p', 'g', 'h', 'l', 'o', 'q', 'r'}
-        << list<char>{'i', 'b', 'c', 'm', 'j', 'd', 'e', 'p', 'n', 'k', 'f', 'g', 'r', 'q', 'o', 'l', 'h', 'a'}
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'};
+        << list<char> {'a', 'b', 'i', 'c', 'd', 'j', 'm', 'e', 'f', 'k', 'n', 'p', 'g', 'h', 'l', 'o', 'q', 'r'}
+        << list<char> {'i', 'b', 'c', 'm', 'j', 'd', 'e', 'p', 'n', 'k', 'f', 'g', 'r', 'q', 'o', 'l', 'h', 'a'}
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'};
 
     /******************************************************************************************************************/
     QTest::newRow("Increasingly wide")
@@ -163,12 +163,12 @@ void NaryTreeIterationTest::iteration_data() {
                            n('6'),
                            n('7')))))
         << 33
-        << list<char>{'a', 'b', 'd', 'j', 'k', 'l', 'm', 'e', 'n', 'o', 'p', 'q', 'f', 'r', 's', 't', 'u',
-                      'c', 'g', 'v', 'x', 'y', 'z', 'h', '0', '1', '2', '3', 'i', '4', '5', '6', '7'}
-        << list<char>{'j', 'k', 'l', 'm', 'd', 'n', 'o', 'p', 'q', 'e', 'r', 's', 't', 'u', 'f', 'b', 'v',
-                      'x', 'y', 'z', 'g', '0', '1', '2', '3', 'h', '4', '5', '6', '7', 'i', 'c', 'a'}
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-                      'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7'};
+        << list<char> {'a', 'b', 'd', 'j', 'k', 'l', 'm', 'e', 'n', 'o', 'p', 'q', 'f', 'r', 's', 't', 'u',
+                       'c', 'g', 'v', 'x', 'y', 'z', 'h', '0', '1', '2', '3', 'i', '4', '5', '6', '7'}
+        << list<char> {'j', 'k', 'l', 'm', 'd', 'n', 'o', 'p', 'q', 'e', 'r', 's', 't', 'u', 'f', 'b', 'v',
+                       'x', 'y', 'z', 'g', '0', '1', '2', '3', 'h', '4', '5', '6', '7', 'i', 'c', 'a'}
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+                       'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7'};
 }
 
 QTEST_MAIN(NaryTreeIterationTest);

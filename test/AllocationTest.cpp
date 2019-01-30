@@ -66,9 +66,7 @@ void AllocationTest::test1() {
     { // Playing in a sub-scope
         nary_tree<
             Foo,
-            breadth_first<
-                nary_node<Foo>,
-                CustomAllocator<nary_node<Foo>>>,
+            breadth_first,
             CustomAllocator<Foo>>
             copyed(tree);
 

@@ -88,8 +88,8 @@ template <
     typename Policy2,
     typename Allocator>
 bool operator!=(
-    const nary_tree<T, Policy2, Allocator>& lhs,
-    const binary_tree<T, Policy1, Allocator>& rhs) {
+    const nary_tree<T, Policy1, Allocator>& lhs,
+    const binary_tree<T, Policy2, Allocator>& rhs) {
     return !lhs.operator==(rhs);
 }
 

@@ -178,6 +178,28 @@ const Node* deepest_rightmost_child(const Node& root) {
     return deepest_node;
 }
 
+template <typename T>
+std::size_t count_nodes(const binary_node<T>& node) {
+    return 1
+        + (node.get_left_child() != nullptr
+               ? count_nodes(*node.get_left_child())
+               : 0)
+        + (node.get_right_child() != nullptr
+               ? count_nodes(*node.get_right_child())
+               : 0);
+}
+
+template <typename T>
+std::size_t count_nodes(const nary_node<T>& node) {
+    std::size_t size          = 1;
+    const nary_node<T>* child = node.get_first_child();
+    while (child != nullptr) {
+        size += count_nodes(*child);
+        child = child->get_next_sibling();
+    }
+    return size;
+}
+
 /**
  * This is a type trait used to verify whheter a given traversal policy is updateable, i.e. if it has a method update
  * callable with a two arguments of type Arg. For a concrete example take a look at {@link breadth_first#update}.
@@ -223,26 +245,19 @@ struct is_constructible_from_tuple<
             const Tuple&>>>
         : std::true_type {};
 
-template <typename T>
-std::size_t count_nodes(const binary_node<T>& node) {
-    return 1
-        + (node.get_left_child() != nullptr
-               ? count_nodes(*node.get_left_child())
-               : 0)
-        + (node.get_right_child() != nullptr
-               ? count_nodes(*node.get_right_child())
-               : 0);
-}
+template <typename Policy, typename Node, typename Allocator, typename = void>
+struct is_tag_of_policy : std::false_type {};
 
-template <typename T>
-std::size_t count_nodes(const nary_node<T>& node) {
-    std::size_t size          = 1;
-    const nary_node<T>* child = node.get_first_child();
-    while (child != nullptr) {
-        size += count_nodes(*child);
-        child = child->get_next_sibling();
-    }
-    return size;
-}
+template <typename Policy, typename Node, typename Allocator>
+struct is_tag_of_policy<
+    Policy,
+    Node,
+    Allocator,
+    std::void_t<
+        decltype(
+            std::declval<Policy>()
+                .template get_instance<Node, Allocator>(std::declval<Allocator>())),
+        Policy>>
+        : std::true_type {};
 
 } // namespace md

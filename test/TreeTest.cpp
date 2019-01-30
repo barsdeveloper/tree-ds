@@ -14,7 +14,7 @@ class TreeTest : public QObject {
 
     Q_OBJECT
 
-    using narytree_t = nary_tree<char, breadth_first<nary_node<char>>>;
+    using narytree_t = nary_tree<char, breadth_first>;
 
     private slots:
     void naryTree();
@@ -127,8 +127,8 @@ void TreeTest::naryTree() {
     QCOMPARE(*bang_it, '!');
 
     actual = vector<char>(
-        moved.cbegin<breadth_first<nary_node<char>>>(),
-        moved.cend<breadth_first<nary_node<char>>>());
+        moved.cbegin<breadth_first>(),
+        moved.cend<breadth_first>());
     expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(moved.size(), 8);
     QCOMPARE(actual, expected);
@@ -136,13 +136,13 @@ void TreeTest::naryTree() {
 
     // b -> ?
     auto it = find(
-        moved.begin<breadth_first<nary_node<char>>>(),
-        moved.end<breadth_first<nary_node<char>>>(),
+        moved.begin<breadth_first>(),
+        moved.end<breadth_first>(),
         'b');
     *it    = '?';
     actual = vector<char>(
-        moved.cbegin<breadth_first<nary_node<char>>>(),
-        moved.cend<breadth_first<nary_node<char>>>());
+        moved.cbegin<breadth_first>(),
+        moved.cend<breadth_first>());
     expected = vector<char> {'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
 
     QCOMPARE(moved.size(), 8);
@@ -192,8 +192,8 @@ void TreeTest::binaryTree() {
     vector<int> expected {-10, -6, -7, -4, -11, -8, -12, -9, -5, -3, -2, -1};
     vector<int> actual(tree.begin(), tree.end());
     QCOMPARE(actual, expected);
-    QVERIFY((tree != binary_tree<int, breadth_first<binary_node<int>>>()));
-    QVERIFY((binary_tree<int, breadth_first<binary_node<int>>>() != tree));
+    QVERIFY((tree != binary_tree<int, breadth_first>()));
+    QVERIFY((binary_tree<int, breadth_first>() != tree));
 
     binary_tree<int, pre_order> copy;
     copy = tree;
@@ -202,7 +202,7 @@ void TreeTest::binaryTree() {
     QVERIFY(tree == copy);
     QVERIFY(!(tree != copy));
 
-    nary_tree<int, breadth_first<nary_node<int>>> nary;
+    nary_tree<int, breadth_first> nary;
     nary = tree;
 
     QCOMPARE(tree.size(), nary.size());

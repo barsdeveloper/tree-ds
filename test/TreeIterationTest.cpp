@@ -51,15 +51,15 @@ void TreeIterationTest::iteration() {
     copy(binary.begin<in_order>(), binary.end<in_order>(), back_inserter(actualBinaryInOrder));
     copy(binary.begin<post_order>(), binary.end<post_order>(), back_inserter(actualBinaryPostOrder));
     copy(
-        binary.begin<breadth_first<binary_node<char>>>(),
-        binary.end<breadth_first<binary_node<char>>>(),
+        binary.begin<breadth_first>(),
+        binary.end<breadth_first>(),
         back_inserter(actualBinaryBreadthFirst));
     // Traverse nary
     copy(nary.begin<pre_order>(), nary.end<pre_order>(), back_inserter(actualNaryPreOrder));
     copy(nary.begin<post_order>(), nary.end<post_order>(), back_inserter(actualNaryPostOrder));
     copy(
-        nary.begin<breadth_first<nary_node<char>>>(),
-        nary.end<breadth_first<nary_node<char>>>(),
+        nary.begin<breadth_first>(),
+        nary.end<breadth_first>(),
         back_inserter(actualNaryBreadthFirst));
 
     // Compare results binary
@@ -93,16 +93,16 @@ void TreeIterationTest::iteration() {
     copy(binary.rbegin<in_order>(), binary.rend<in_order>(), back_inserter(actualBinaryReverseInOrder));
     copy(binary.rbegin<post_order>(), binary.rend<post_order>(), back_inserter(actualBinaryReversePostOrder));
     copy(
-        binary.rbegin<breadth_first<binary_node<char>>>(),
-        binary.rend<breadth_first<binary_node<char>>>(),
+        binary.rbegin<breadth_first>(),
+        binary.rend<breadth_first>(),
         back_inserter(actualBinaryReverseBreadthFirst));
 
     // Reverse traverse nary
     copy(nary.rbegin<pre_order>(), nary.rend<pre_order>(), back_inserter(actualNaryReversePreOrder));
     copy(nary.rbegin<post_order>(), nary.rend<post_order>(), back_inserter(actualNaryReversePostOrder));
     copy(
-        nary.rbegin<breadth_first<nary_node<char>>>(),
-        nary.rend<breadth_first<nary_node<char>>>(),
+        nary.rbegin<breadth_first>(),
+        nary.rend<breadth_first>(),
         back_inserter(actualNaryReverseBreadthFirst));
 
     // Reverse expected
@@ -134,10 +134,10 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Single character")
         << binary_tree<char>(n('#'))
         << 1
-        << list<char>{'#'}
-        << list<char>{'#'}
-        << list<char>{'#'}
-        << list<char>{'#'};
+        << list<char> {'#'}
+        << list<char> {'#'}
+        << list<char> {'#'}
+        << list<char> {'#'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a left child")
@@ -145,10 +145,10 @@ void TreeIterationTest::iteration_data() {
                n('1')(
                    n('2')))
         << 2
-        << list<char>{'1', '2'}
-        << list<char>{'2', '1'}
-        << list<char>{'2', '1'}
-        << list<char>{'1', '2'};
+        << list<char> {'1', '2'}
+        << list<char> {'2', '1'}
+        << list<char> {'2', '1'}
+        << list<char> {'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a right child")
@@ -157,10 +157,10 @@ void TreeIterationTest::iteration_data() {
                    n(),
                    n('2')))
         << 2
-        << list<char>{'1', '2'}
-        << list<char>{'1', '2'}
-        << list<char>{'2', '1'}
-        << list<char>{'1', '2'};
+        << list<char> {'1', '2'}
+        << list<char> {'1', '2'}
+        << list<char> {'2', '1'}
+        << list<char> {'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Small tree")
@@ -178,10 +178,10 @@ void TreeIterationTest::iteration_data() {
                            n('k')),
                        n('g'))))
         << 10
-        << list<char>{'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
-        << list<char>{'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
-        << list<char>{'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k'};
+        << list<char> {'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
+        << list<char> {'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
+        << list<char> {'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k'};
 
     /******************************************************************************************************************/
     QTest::newRow("Big tree")
@@ -218,10 +218,10 @@ void TreeIterationTest::iteration_data() {
                                    n(),
                                    n('u')))))))
         << 21
-        << list<char>{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
-        << list<char>{'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
-        << list<char>{'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
-        << list<char>{'a', 'b', 'k', 'c', 'j', 'l', 'd', 'i', 'm', 'r', 'e', 'h', 'n', 'q', 's', 'f', 'g', 'o', 'p', 't', 'u'};
+        << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
+        << list<char> {'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
+        << list<char> {'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
+        << list<char> {'a', 'b', 'k', 'c', 'j', 'l', 'd', 'i', 'm', 'r', 'e', 'h', 'n', 'q', 's', 'f', 'g', 'o', 'p', 't', 'u'};
 
     /******************************************************************************************************************/
     QTest::newRow("All left child")
@@ -242,10 +242,10 @@ void TreeIterationTest::iteration_data() {
                                                                    n('E')(
                                                                        n('F'))))))))))))))))
         << 15
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("All right child")
@@ -280,10 +280,10 @@ void TreeIterationTest::iteration_data() {
                                                                        n(),
                                                                        n('F'))))))))))))))))
         << 15
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("ZigZag")
@@ -311,10 +311,10 @@ void TreeIterationTest::iteration_data() {
                                                                        n(),
                                                                        n('F'))))))))))))))))
         << 15
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << list<char>{'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
-        << list<char>{'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << list<char>{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << list<char> {'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
+        << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 }
 
 QTEST_MAIN(TreeIterationTest);
