@@ -200,6 +200,22 @@ std::size_t count_nodes(const nary_node<T>& node) {
     return size;
 }
 
+template <typename Node>
+std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
+    const Node* child = node.get_first_child();
+    std::size_t arity = child
+        ? child->get_following_siblings() + 1
+        : 0u;
+    while (child) {
+        if (arity == max_expected_arity) {
+            return arity;
+        }
+        arity = std::max(arity, calculate_arity(*child, max_expected_arity));
+        child = child->get_next_sibling();
+    }
+    return arity;
+}
+
 /**
  * This is a type trait used to verify whheter a given traversal policy is updateable, i.e. if it has a method update
  * callable with a two arguments of type Arg. For a concrete example take a look at {@link breadth_first#update}.

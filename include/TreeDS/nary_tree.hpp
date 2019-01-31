@@ -35,7 +35,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
                 other.get_root()
                     ? allocate(this->allocator, *other.get_root(), this->allocator).release()
                     : nullptr,
-                static_cast<std::size_t>(other.size())) {
+                other.size(),
+                other.arity()) {
         static_assert(
             std::is_copy_constructible_v<T>,
             "Tried to construct an nary_tree from a binary_tree containing a non copyable type.");
@@ -53,7 +54,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
             other.get_root() != nullptr
                 ? allocate(this->allocator, *other.get_root(), this->allocator).release()
                 : nullptr,
-            other.size());
+            other.size(),
+            other.arity());
         return *this;
     }
 
@@ -63,7 +65,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     template <typename OtherPolicy>
     bool operator==(const binary_tree<T, OtherPolicy, Allocator>& other) const {
         // Test if different size_value
-        if (this->size() != other.size()) {
+        if (this->size() != other.size()
+            || this->arity() != other.arity()) {
             return false;
         }
         // At the end is either null (both) or same as the other.

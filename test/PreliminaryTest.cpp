@@ -24,6 +24,7 @@ void PreliminaryTest::emptyBinary() {
 
     // The trees is empty
     QCOMPARE(t.size(), 0);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(t.empty());
 
     // Iterator point to the end
@@ -45,6 +46,7 @@ void PreliminaryTest::emptyBinary() {
 
     // The tree has 1 element
     QCOMPARE(t.size(), 1);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(!t.empty());
 
     // All iterators begin from the unique element
@@ -82,6 +84,7 @@ void PreliminaryTest::emptyBinary() {
 
     // The tree is again empty
     QCOMPARE(t.size(), 0);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(t.empty());
 
     // Iterators point again at the end
@@ -97,6 +100,7 @@ void PreliminaryTest::emptyBinary() {
 
     // The tree has 1 element again
     QCOMPARE(t.size(), 1);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(!t.empty());
     QCOMPARE(t.max_size(), std::numeric_limits<std::size_t>::max());
 }
@@ -111,6 +115,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
 
     // The trees is empty
     QCOMPARE(t.size(), 0);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(t.empty());
 
     // Iterator point to the end
@@ -142,6 +147,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
 
     // The tree has 1 element
     QCOMPARE(t.size(), 1);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(!t.empty());
 
     // All iterators begin from the unique element
@@ -178,6 +184,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
 
     // The tree is again empty
     QCOMPARE(t.size(), 0);
+    QCOMPARE(t.arity(), 0);
     QVERIFY(t.empty());
 
     // Iterators point again at the end

@@ -83,11 +83,14 @@ class tree {
     node_type* root = nullptr;
     /// @brief The number of nodes in the tree.
     size_type size_value = 0u;
+    /// @brief Maximum number of children a node can have.
+    size_type arity_value = 0u;
 
     protected:
-    tree(node_type* root, size_type size) :
+    tree(node_type* root, size_type size, size_type arity) :
             root(root),
-            size_value(size) {
+            size_value(size),
+            arity_value(arity) {
     }
 
     public:
@@ -113,7 +116,8 @@ class tree {
                 other.root
                     ? allocate(allocator, *other.root, allocator).release()
                     : nullptr),
-            size_value(other.size_value) {
+            size_value(other.size_value),
+            arity_value(other.arity_value) {
         static_assert(
             std::is_copy_constructible_v<T>,
             "Tried to COPY a tree containing a non copyable type.");
@@ -125,7 +129,8 @@ class tree {
                 other.root
                     ? allocate(allocator, *other.root, allocator).release()
                     : nullptr),
-            size_value(other.size_value) {
+            size_value(other.size_value),
+            arity_value(other.arity_value) {
         static_assert(
             std::is_copy_constructible_v<T>,
             "Tried to COPY a tree containing a non copyable type.");
@@ -134,9 +139,11 @@ class tree {
     tree(tree&& other) :
             allocator(std::move(other.allocator)),
             root(other.root),
-            size_value(other.size_value) {
-        other.root       = nullptr;
-        other.size_value = 0u;
+            size_value(other.size_value),
+            arity_value(other.arity_value) {
+        other.root        = nullptr;
+        other.size_value  = 0u;
+        other.arity_value = 0u;
     }
 
     /**
@@ -148,9 +155,11 @@ class tree {
     tree(tree<T, Node, OtherPolicy, Allocator>&& other) :
             allocator(std::move(other.allocator)),
             root(other.root),
-            size_value(other.size_value) {
-        other.root       = nullptr;
-        other.size_value = 0u;
+            size_value(other.size_value),
+            arity_value(other.arity_value) {
+        other.root        = nullptr;
+        other.size_value  = 0u;
+        other.arity_value = 0u;
     }
 
     /**
@@ -164,7 +173,8 @@ class tree {
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree(const struct_node<ConvertibleT, Children...>& root) :
             root(allocate(allocator, root, allocator).release()),
-            size_value(root.get_subtree_size()) {
+            size_value(root.get_subtree_size()),
+            arity_value(root.get_subtree_arity()) {
     }
 
     template <
@@ -173,7 +183,8 @@ class tree {
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
     tree(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) :
             root(allocate(allocator, root, allocator).release()),
-            size_value(root.get_subtree_size()) {
+            size_value(root.get_subtree_size()),
+            arity_value(root.get_subtree_arity()) {
     }
 
     /*
@@ -200,7 +211,8 @@ class tree {
             !other.empty()
                 ? allocate(allocator, *other.root, allocator).release()
                 : nullptr,
-            other.size());
+            other.size_value,
+            other.arity_value);
 
         return *this;
     }
@@ -214,9 +226,10 @@ class tree {
     template <typename OtherPolicy>
     tree& operator=(tree<T, Node, OtherPolicy, Allocator>&& other) {
         allocator = std::move(other.allocator);
-        this->assign(other.root, other.size_value);
-        other.root       = nullptr;
-        other.size_value = 0u;
+        this->assign(other.root, other.size_value, other.arity_value);
+        other.root        = nullptr;
+        other.size_value  = 0u;
+        other.arity_value = 0u;
         return *this;
     }
 
@@ -227,7 +240,8 @@ class tree {
     tree& operator=(const struct_node<ConvertibleT, Nodes...>& root) {
         this->assign(
             allocate(allocator, root, allocator).release(),
-            root.get_subtree_size());
+            root.get_subtree_size(),
+            root.get_subtree_arity());
         return *this;
     }
 
@@ -238,7 +252,8 @@ class tree {
     tree& operator=(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) {
         this->assign(
             allocate(allocator, root, allocator).release(),
-            root.get_subtree_size());
+            root.get_subtree_size(),
+            root.get_subtree_arity());
         return *this;
     }
 
@@ -263,12 +278,9 @@ class tree {
      */
     template <typename P = Policy>
     const_iterator<P> begin() const {
-        return cbegin<P>();
+        return this->cbegin<P>();
     }
 
-    /**
-     * @copydoc #begin() const
-     */
     template <typename P = Policy>
     const_iterator<P> cbegin() const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
@@ -290,7 +302,7 @@ class tree {
 
     template <typename P = Policy>
     const_iterator<P> end() const {
-        return cend<P>();
+        return this->cend<P>();
     }
 
     template <typename P = Policy>
@@ -300,40 +312,40 @@ class tree {
 
     template <typename P = Policy>
     reverse_iterator<P> rbegin() {
-        return std::make_reverse_iterator(end<P>());
+        return std::make_reverse_iterator(this->end<P>());
     }
 
     template <typename P = Policy>
     const_reverse_iterator<P> rbegin() const {
-        return crbegin<P>();
+        return this->crbegin<P>();
     }
 
     template <typename P = Policy>
     const_reverse_iterator<P> crbegin() const {
-        return std::make_reverse_iterator(cend<P>());
+        return std::make_reverse_iterator(this->cend<P>());
     }
 
     // reverse end
     template <typename P = Policy>
     reverse_iterator<P> rend() {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(begin<P>());
+        return std::make_reverse_iterator(this->begin<P>());
     }
 
     template <typename P = Policy>
     const_reverse_iterator<P> rend() const {
-        return crend<P>();
+        return this->crend<P>();
     }
 
     template <typename P = Policy>
     const_reverse_iterator<P> crend() const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(cbegin<P>());
+        return std::make_reverse_iterator(this->cbegin<P>());
     }
 
     public:
     allocator_type get_allocator() const {
-        return allocator;
+        return this->allocator;
     }
 
     //   ---   CAPACITY   ---
@@ -349,7 +361,7 @@ class tree {
      * @return true if the tree is empty
      */
     bool empty() const {
-        return size_value == 0;
+        return this->size_value == 0;
     }
 
     /**
@@ -357,7 +369,11 @@ class tree {
      * @return the number of nodes
      */
     size_type size() const {
-        return size_value;
+        return this->size_value;
+    }
+
+    size_type arity() const {
+        return this->arity_value;
     }
 
     /**
@@ -372,18 +388,31 @@ class tree {
     }
 
     const Node* get_root() const {
-        return root;
+        return this->root;
     }
 
     Node* get_root() {
-        return root;
+        return this->root;
     }
 
     //   ---   MODIFIERS   ---
     protected:
-    void replace_node(node_type* replaced, node_type* replacement) {
+    void replace_node(
+        node_type* replaced,
+        node_type* replacement,
+        size_type replacement_size,
+        size_type replacement_arity) {
+        assert(replaced != nullptr);
+        assert(this->root != nullptr);
         replaced->replace_with(replacement);
-        this->size_value -= count_nodes(*replaced);
+        if (replaced == this->root) {
+            this->size_value  = replacement_size;
+            this->arity_value = replacement_arity;
+        } else {
+            std::size_t replaced_size = count_nodes(*replaced);
+            this->size_value += -replaced_size + replacement_size;
+            this->arity_value = calculate_arity(*this->root, this->arity_value);
+        }
         deallocate(this->allocator, replaced);
     }
 
@@ -392,26 +421,26 @@ class tree {
     modify_subtree(
         tree_iterator<tree, P, Constant> position,
         std::unique_ptr<node_type, deleter<allocator_type>> node,
-        std::size_t replacement_size) {
+        size_type replacement_size,
+        size_type replacement_arity) {
         if (position.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
         }
         node_type* replacement = node.release();
         node_type* target      = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
-            assert(root != nullptr);
+            assert(this->root != nullptr);
             position.update(*target, replacement);
-            if (target == root) {
-                this->assign(replacement, 0); // size will be incremented at the end
+            if (target == this->root) {
+                this->assign(replacement, replacement_size, replacement_arity);
             } else {
-                this->replace_node(target, replacement);
+                this->replace_node(target, replacement, replacement_size, replacement_arity);
             }
-        } else if (root == nullptr) {
-            root = replacement;
+        } else if (this->root == nullptr) {
+            this->assign(replacement, replacement_size, replacement_arity);
         } else {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
-        size_value += replacement_size;
         return position;
     }
 
@@ -419,24 +448,25 @@ class tree {
     void erase_subtree(tree_iterator<tree, P, Constant> position) {
         node_type* target = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
-            assert(root != nullptr);
+            assert(this->root != nullptr);
             position.update(*target, nullptr);
             if (target == root) {
                 this->clear();
             } else {
-                this->replace_node(target, nullptr);
+                this->replace_node(target, nullptr, 0u, 0u);
             }
         } else if (root != nullptr) {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
     }
 
-    void assign(node_type* root, std::size_t size) {
+    void assign(node_type* root, size_type size, size_type arity) {
         if (this->root != nullptr) {
             deallocate(this->allocator, this->root);
         }
-        this->root       = root;
-        this->size_value = size;
+        this->root        = root;
+        this->size_value  = size;
+        this->arity_value = arity;
     }
 
     public:
@@ -446,7 +476,7 @@ class tree {
      * element iterator ({@link tree#end() end()}) remains valid.
      */
     void clear() {
-        assign(nullptr, 0u);
+        assign(nullptr, 0u, 0u);
     }
 
     /**
@@ -460,8 +490,9 @@ class tree {
     void swap(tree<T, Node, OtherPolicy, Allocator>& other) {
         // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
         using namespace std;
-        std::swap(root, other.root);
-        std::swap(size_value, other.size_value);
+        std::swap(this->root, other.root);
+        std::swap(this->size_value, other.size_value);
+        std::swap(this->arity_value, other.arity_value);
     }
 
     /**
@@ -483,7 +514,8 @@ class tree {
         return this->modify_subtree(
             position,
             allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size());
+            node.get_subtree_size(),
+            node.get_subtree_arity());
     }
 
     /**
@@ -497,7 +529,7 @@ class tree {
     iterator<P> insert(
         tree_iterator<tree, P, C> position,
         const T& value) {
-        return this->modify_subtree(position, allocate(allocator, value), 1u);
+        return this->modify_subtree(position, allocate(allocator, value), 1u, 0u);
     }
 
     /**
@@ -510,7 +542,7 @@ class tree {
     iterator<P> insert(
         tree_iterator<tree, P, C> position,
         T&& value) {
-        return this->modify_subtree(position, allocate(allocator, std::move(value)), 1u);
+        return this->modify_subtree(position, allocate(allocator, std::move(value)), 1u, 0u);
     }
 
     template <
@@ -521,7 +553,7 @@ class tree {
     iterator<P> emplace(
         tree_iterator<tree, P, C> position,
         Args&&... args) {
-        return this->modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u);
+        return this->modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u, 0u);
     }
 
     template <
@@ -532,8 +564,12 @@ class tree {
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
     iterator<P> emplace(
         tree_iterator<tree, P, C> position,
-        const struct_node<std::tuple<EmplacingArgs...>, Children...>& nodes) {
-        return this->modify_subtree(position, allocate(allocator, nodes, allocator), nodes.get_subtree_size());
+        const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
+        return this->modify_subtree(
+            position,
+            allocate(allocator, node, allocator),
+            node.get_subtree_size(),
+            node.get_subtree_arity());
     }
 
     iterator<post_order> erase(const_iterator<post_order> position) {
@@ -561,8 +597,9 @@ class tree {
     //  ---   COMPARISON   ---
     template <typename OtherPolicy>
     bool operator==(const tree<T, Node, OtherPolicy, Allocator>& other) const {
-        // Test if different size_value
-        if (this->size_value != other.size_value) {
+        // Test if different size or arity
+        if (this->size_value != other.size_value
+            || this->arity_value != other.arity_value) {
             return false;
         }
         // At the end is either null (both) or same as the other.
@@ -574,8 +611,9 @@ class tree {
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
-        // Test if different size_value (trivial case for performance)
-        if (this->size_value != other.get_subtree_size()) {
+        // Test if different size or arity
+        if (this->size_value != other.get_subtree_size()
+            || this->arity_value != other.get_subtree_arity()) {
             return false;
         }
         // Deep test for equality

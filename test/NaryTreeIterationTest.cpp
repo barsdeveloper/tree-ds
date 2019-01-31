@@ -23,13 +23,16 @@ class NaryTreeIterationTest : public QObject {
 void NaryTreeIterationTest::iteration() {
     QFETCH(nary_tree<char>, t);
     QFETCH(int, expectedSize);
+    QFETCH(int, expectedArity);
     QFETCH(list<char>, expectedPreOrder);
     QFETCH(list<char>, expectedPostOrder);
     QFETCH(list<char>, expectedBreadthFirst);
-    int actualSize = static_cast<int>(t.size());
+    int actualSize  = static_cast<int>(t.size());
+    int actualArity = static_cast<int>(t.arity());
 
     // Preliminary test
     QCOMPARE(actualSize, expectedSize);
+    QCOMPARE(actualArity, expectedArity);
 
     /*   ---   Forward order test   ---   */
     list<char> actualPreOrder;
@@ -76,6 +79,7 @@ void NaryTreeIterationTest::iteration() {
 void NaryTreeIterationTest::iteration_data() {
     QTest::addColumn<nary_tree<char>>("t");
     QTest::addColumn<int>("expectedSize");
+    QTest::addColumn<int>("expectedArity");
     QTest::addColumn<list<char>>("expectedPreOrder");
     QTest::addColumn<list<char>>("expectedPostOrder");
     QTest::addColumn<list<char>>("expectedBreadthFirst");
@@ -96,6 +100,7 @@ void NaryTreeIterationTest::iteration_data() {
                                    n('k'),
                                    n('l')))))))
         << 12
+        << 7
         << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'}
         << list<char> {'f', 'g', 'h', 'i', 'j', 'k', 'l', 'e', 'd', 'c', 'b', 'a'}
         << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
@@ -122,6 +127,7 @@ void NaryTreeIterationTest::iteration_data() {
                                n('q')(
                                    n('r')))))))
         << 18
+        << 7
         << list<char> {'a', 'b', 'i', 'c', 'd', 'j', 'm', 'e', 'f', 'k', 'n', 'p', 'g', 'h', 'l', 'o', 'q', 'r'}
         << list<char> {'i', 'b', 'c', 'm', 'j', 'd', 'e', 'p', 'n', 'k', 'f', 'g', 'r', 'q', 'o', 'l', 'h', 'a'}
         << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'};
@@ -163,6 +169,7 @@ void NaryTreeIterationTest::iteration_data() {
                            n('6'),
                            n('7')))))
         << 33
+        << 4
         << list<char> {'a', 'b', 'd', 'j', 'k', 'l', 'm', 'e', 'n', 'o', 'p', 'q', 'f', 'r', 's', 't', 'u',
                        'c', 'g', 'v', 'x', 'y', 'z', 'h', '0', '1', '2', '3', 'i', '4', '5', '6', '7'}
         << list<char> {'j', 'k', 'l', 'm', 'd', 'n', 'o', 'p', 'q', 'e', 'r', 's', 't', 'u', 'f', 'b', 'v',

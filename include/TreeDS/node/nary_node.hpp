@@ -9,7 +9,7 @@
 #include <TreeDS/node/binary_node.hpp>
 #include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/utility.hpp>
+#include <TreeDS/utility.hpp> // keep_calling()
 
 namespace md {
 

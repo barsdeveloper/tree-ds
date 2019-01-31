@@ -10,7 +10,6 @@
 #include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/utility.hpp>
 
 namespace md {
 
@@ -215,6 +214,14 @@ class binary_node : public node<T, binary_node<T>> {
             : this->left;
     }
 
+    const binary_node* get_prev_sibling() const {
+        auto parent = this->parent;
+        if (parent) {
+            if (this == parent->right) return parent->left;
+        }
+        return nullptr;
+    }
+
     const binary_node* get_next_sibling() const {
         auto parent = this->parent;
         if (parent) {
@@ -223,12 +230,12 @@ class binary_node : public node<T, binary_node<T>> {
         return nullptr;
     }
 
-    const binary_node* get_prev_sibling() const {
-        auto parent = this->parent;
+    std::size_t get_following_siblings() const {
+        const binary_node* parent = this->parent;
         if (parent) {
-            if (this == parent->right) return parent->left;
+            return parent->get_last_child() != this ? 1u : 0;
         }
-        return nullptr;
+        return 0u;
     }
 
     std::tuple<binary_node*, binary_node*> release() {

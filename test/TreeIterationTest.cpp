@@ -23,16 +23,19 @@ class TreeIterationTest : public QObject {
 void TreeIterationTest::iteration() {
     QFETCH(binary_tree<char>, binary);
     QFETCH(int, expectedSize);
+    QFETCH(int, expectedArity);
     QFETCH(list<char>, expectedPreOrder);
     QFETCH(list<char>, expectedInOrder);
     QFETCH(list<char>, expectedPostOrder);
     QFETCH(list<char>, expectedBreadthFirst);
     nary_tree<char> nary(binary);
-    int actualSize = static_cast<int>(binary.size());
+    int actualSize  = static_cast<int>(binary.size());
+    int actualArity = static_cast<int>(binary.arity());
 
     // Preliminary test
     QCOMPARE(nary, binary);
     QCOMPARE(actualSize, expectedSize);
+    QCOMPARE(actualArity, expectedArity);
 
     /*   ---   Forward order test   ---   */
     // Binary
@@ -125,6 +128,7 @@ void TreeIterationTest::iteration() {
 void TreeIterationTest::iteration_data() {
     QTest::addColumn<binary_tree<char>>("binary");
     QTest::addColumn<int>("expectedSize");
+    QTest::addColumn<int>("expectedArity");
     QTest::addColumn<list<char>>("expectedPreOrder");
     QTest::addColumn<list<char>>("expectedInOrder");
     QTest::addColumn<list<char>>("expectedPostOrder");
@@ -134,6 +138,7 @@ void TreeIterationTest::iteration_data() {
     QTest::newRow("Single character")
         << binary_tree<char>(n('#'))
         << 1
+        << 0
         << list<char> {'#'}
         << list<char> {'#'}
         << list<char> {'#'}
@@ -145,6 +150,7 @@ void TreeIterationTest::iteration_data() {
                n('1')(
                    n('2')))
         << 2
+        << 1
         << list<char> {'1', '2'}
         << list<char> {'2', '1'}
         << list<char> {'2', '1'}
@@ -157,6 +163,7 @@ void TreeIterationTest::iteration_data() {
                    n(),
                    n('2')))
         << 2
+        << 1
         << list<char> {'1', '2'}
         << list<char> {'1', '2'}
         << list<char> {'2', '1'}
@@ -178,6 +185,7 @@ void TreeIterationTest::iteration_data() {
                            n('k')),
                        n('g'))))
         << 10
+        << 2
         << list<char> {'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
         << list<char> {'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
         << list<char> {'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
@@ -218,6 +226,7 @@ void TreeIterationTest::iteration_data() {
                                    n(),
                                    n('u')))))))
         << 21
+        << 2
         << list<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
         << list<char> {'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
         << list<char> {'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
@@ -242,6 +251,7 @@ void TreeIterationTest::iteration_data() {
                                                                    n('E')(
                                                                        n('F'))))))))))))))))
         << 15
+        << 1
         << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
         << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
@@ -280,6 +290,7 @@ void TreeIterationTest::iteration_data() {
                                                                        n(),
                                                                        n('F'))))))))))))))))
         << 15
+        << 1
         << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
@@ -311,6 +322,7 @@ void TreeIterationTest::iteration_data() {
                                                                        n(),
                                                                        n('F'))))))))))))))))
         << 15
+        << 1
         << list<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
         << list<char> {'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
         << list<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
