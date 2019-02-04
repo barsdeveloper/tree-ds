@@ -87,7 +87,7 @@ class nary_node : public node<T, nary_node<T>> {
                           allocator)
                           .release()
                     : nullptr),
-            following_siblings(other.get_next_sibling() ? 1 : 0) {
+            following_siblings(other.get_following_siblings()) {
     }
 
     /*   ---   Construct from struct_node using allocator   ---   */
@@ -100,7 +100,7 @@ class nary_node : public node<T, nary_node<T>> {
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
             node<T, nary_node>(other.get_value()),
-            first_child(extract_children(other.get_children(), allocator)) {
+            first_child(this->extract_children(other.get_children(), allocator)) {
     }
 
     /*   ---   Construct from emplacing struct_node using allocator   ---   */
@@ -113,7 +113,7 @@ class nary_node : public node<T, nary_node<T>> {
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
             node<T, nary_node>(other.get_value()),
-            first_child(extract_children(other.get_children(), allocator)) {
+            first_child(this->extract_children(other.get_children(), allocator)) {
     }
 
     private:
@@ -163,17 +163,32 @@ class nary_node : public node<T, nary_node<T>> {
     void replace_with(nary_node* node) {
         assert(node == nullptr || (node->is_root() && node->next_sibling == nullptr));
         if (this->parent != nullptr) {
-            node->parent = this->parent;
-            if (this->is_first_child()) {
-                this->parent->first_child = node;
+            nary_node** back_link  = nullptr;
+            nary_node* link_target = nullptr;
+            if (node != nullptr) {
+                node->parent             = this->parent;
+                node->next_sibling       = this->next_sibling;
+                node->following_siblings = this->following_siblings;
+                link_target              = node;
             } else {
-                this->get_prev_sibling()->next_sibling = node;
+                nary_node* child = this->parent->first_child;
+                // get_prev_sibling
+                while (child && child != this) {
+                    --child->following_siblings;
+                    back_link = &child->next_sibling;
+                    child     = child->next_sibling;
+                }
+                link_target = this->next_sibling;
             }
-            if (this->next_sibling != nullptr) {
-                node->next_sibling = this->next_sibling;
-                this->next_sibling = nullptr;
+            if (back_link == nullptr) {
+                back_link = this->is_first_child()
+                    ? &this->parent->first_child
+                    : &this->get_prev_sibling()->next_sibling;
             }
-            this->parent = nullptr;
+            *back_link               = link_target;
+            this->next_sibling       = nullptr;
+            this->following_siblings = 0u;
+            this->parent             = nullptr;
         }
     }
 
@@ -186,6 +201,43 @@ class nary_node : public node<T, nary_node<T>> {
             next = next->next_sibling;
         }
         return node;
+    }
+
+    template <typename Node>
+    static Node* calculate_prev_sibling(Node* ptr) {
+        if (ptr->parent && ptr->parent->first_child) {
+            const nary_node* first = ptr->parent->first_child;
+            if (first == ptr) {
+                return nullptr;
+            }
+            /*
+             * const_cast is safe because. All the methods of the nodes (get_parent(), get_whatever(), ...) return
+             * pointers to const Node*. This was done in order to simplify the API and, at the same time, prevent users
+             * from modifying the subtree structure (without using tree::insert(), tree::erase(), ...). At the same
+             * time, the pointers returned by those getter methods refer to modifiable tree node (when the node it was
+             * called from, is modifiable itself). In practire either all the tree structure is modifiable or no node
+             * can be modified. For this reason, doing a const_cast is safe when you start from a modifiable node and
+             * remain inside the starting tree structure.
+             */
+            return const_cast<Node*>(
+                keep_calling(
+                    // starting from
+                    *first,
+                    // keep calling
+                    [](const nary_node& node) {
+                        return node.get_next_sibling();
+                    },
+                    // until
+                    [&](const nary_node&, const nary_node& next) {
+                        return &next == ptr;
+                    },
+                    // then return
+                    [](const nary_node& prev, const nary_node&) {
+                        return &prev;
+                    }));
+        } else {
+            return nullptr;
+        }
     }
 
     public:
@@ -210,35 +262,11 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     const nary_node* get_prev_sibling() const {
-        if (this->parent && this->parent->first_child) {
-            const nary_node* first = this->parent->first_child;
-            if (first == this) {
-                return nullptr;
-            }
-            return keep_calling(
-                // starting from
-                *first,
-                // keep calling
-                [](const nary_node& node) {
-                    return node.get_next_sibling();
-                },
-                // until
-                [=](const nary_node&, const nary_node& next) {
-                    return &next == this;
-                },
-                // then return
-                [](const nary_node& prev, const nary_node&) {
-                    return &prev;
-                });
-        } else {
-            return nullptr;
-        }
+        return nary_node::calculate_prev_sibling(this);
     }
 
     nary_node* get_prev_sibling() {
-        return const_cast<nary_node*>(
-            static_cast<const nary_node*>(this)
-                ->get_prev_sibling());
+        return nary_node::calculate_prev_sibling(this);
     }
 
     const nary_node* get_next_sibling() const {
