@@ -24,18 +24,19 @@ class TreeTest : public QObject {
 };
 
 void TreeTest::naryTree() {
-    auto struct_tree = n('a')(
-        n('b')(
-            n('d'),
-            n('e')(
-                n('h')),
-            n('f')),
-        n('c')(
-            n('g')(
-                n('i')(
-                    n('l')),
-                n('j'),
-                n('k'))));
+    auto struct_tree
+        = n('a')(
+            n('b')(
+                n('d'),
+                n('e')(
+                    n('h')),
+                n('f')),
+            n('c')(
+                n('g')(
+                    n('i')(
+                        n('l')),
+                    n('j'),
+                    n('k'))));
     const narytree_t tree(struct_tree);
     QVERIFY(tree == struct_tree);
     QVERIFY(struct_tree == tree);
@@ -133,50 +134,74 @@ void TreeTest::naryTree() {
         --find(moved.rbegin(), moved.rend(), 'g')
               .base(),
         '!');
-    QCOMPARE(*bang_it, '!');
-
-    actual = vector<char>(
-        moved.cbegin<breadth_first>(),
-        moved.cend<breadth_first>());
-    expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(moved.size(), 8);
     QCOMPARE(moved.arity(), 3);
+    QCOMPARE(*bang_it, '!');
+    actual = vector<char>(
+        moved.cbegin(breadth_first()),
+        moved.cend(breadth_first()));
+    expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
+    QCOMPARE(bang_it.get_node()->get_following_siblings(), 0);
 
     // b -> ?
     auto it = find(
-        moved.begin<breadth_first>(),
-        moved.end<breadth_first>(),
+        moved.begin(breadth_first()),
+        moved.end(breadth_first()),
         'b');
     *it    = '?';
     actual = vector<char>(
-        moved.cbegin<breadth_first>(),
-        moved.cend<breadth_first>());
+        moved.cbegin(breadth_first()),
+        moved.cend(breadth_first()));
     expected = vector<char> {'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
-
     QCOMPARE(moved.size(), 8);
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(actual, expected);
+    QCOMPARE(it.get_node()->get_following_siblings(), 1);
 
     // e -> t
     auto t_it = moved.insert(
         find(moved.begin(), moved.end(), 'e'),
         't');
+    // parent of t is now ?
     QCOMPARE(
         find(moved.begin(), moved.end(), 't').get_node()->get_parent()->get_value(),
         '?');
     QCOMPARE(*t_it, 't');
 
-    // erase root
-    auto end_it = moved.erase(find(moved.begin<post_order>(), moved.end<post_order>(), 'a'));
-    QVERIFY(end_it == moved.end<post_order>());
+    nary_node<char>* n_d = find(moved.begin(), moved.end(), 'd').get_node();
+    nary_node<char>* n_t = find(moved.begin(), moved.end(), 't').get_node();
+    nary_node<char>* n_f = find(moved.begin(), moved.end(), 'f').get_node();
+    QCOMPARE(n_d->get_prev_sibling(), nullptr);
+    QCOMPARE(n_d->get_next_sibling(), n_t);
+    QCOMPARE(n_d->get_following_siblings(), 2);
+    QCOMPARE(n_t->get_prev_sibling(), n_d);
+    QCOMPARE(n_t->get_next_sibling(), n_f);
+    QCOMPARE(n_t->get_following_siblings(), 1);
+    QCOMPARE(n_f->get_prev_sibling(), n_t);
+    QCOMPARE(n_f->get_next_sibling(), nullptr);
+    QCOMPARE(n_f->get_following_siblings(), 0);
 
+    // erase t
+    auto it_f = moved.erase(find(moved.begin(post_order()), moved.end(post_order()), 't'));
+    QCOMPARE(it_f.get_node(), n_f);
+    QCOMPARE(n_d->get_prev_sibling(), nullptr);
+    QCOMPARE(n_d->get_next_sibling(), n_f);
+    QCOMPARE(n_d->get_following_siblings(), 1);
+    QCOMPARE(n_f->get_prev_sibling(), n_d);
+    QCOMPARE(n_f->get_next_sibling(), nullptr);
+    QCOMPARE(n_f->get_following_siblings(), 0);
+
+    // erase root
+    auto end_it
+        = moved.erase(find(moved.begin(post_order()), moved.end(post_order()), 'a'));
+    QVERIFY(end_it == moved.end(post_order()));
     QCOMPARE(moved, n());
     QCOMPARE(moved.size(), 0);
     QCOMPARE(moved.arity(), 0);
     QCOMPARE(moved.begin(), moved.end());
-    QCOMPARE(moved.begin<post_order>(), end_it);
+    QCOMPARE(moved.begin(post_order()), end_it);
     QVERIFY(moved.empty());
     QVERIFY(moved == n());
     QVERIFY(n() == moved);
@@ -227,7 +252,7 @@ void TreeTest::binaryTree() {
     QVERIFY(!(tree != nary));
 
     binary_tree<int> tree2(tree);
-    auto eight_it = tree2.erase(std::find(tree2.begin<post_order>(), tree2.end<post_order>(), -11));
+    auto eight_it = tree2.erase(std::find(tree2.begin(post_order()), tree2.end(post_order()), -11));
     QCOMPARE(*eight_it, -8);
 
     QCOMPARE(tree2.size(), nary.size() - 1);
@@ -235,9 +260,9 @@ void TreeTest::binaryTree() {
     QVERIFY(tree2 != nary);
 
     auto end_it = tree2.erase(
-        tree2.begin<post_order>(),
-        tree2.end<post_order>());
-    QCOMPARE(end_it, tree2.end<post_order>());
+        tree2.begin(post_order()),
+        tree2.end(post_order()));
+    QCOMPARE(end_it, tree2.end(post_order()));
 
     QVERIFY(tree2.empty());
 }
@@ -268,8 +293,8 @@ void TreeTest::nonCopyable() {
         'z', 100);
     QCOMPARE(*z_it, NonCopyable('z', 100));
 
-    auto it    = movedTree.begin<in_order>();
-    auto itEnd = movedTree.end<in_order>();
+    auto it    = movedTree.begin(in_order());
+    auto itEnd = movedTree.end(in_order());
 
     QCOMPARE(movedTree.size(), 3);
     QCOMPARE(movedTree.arity(), 2);
@@ -303,17 +328,17 @@ void TreeTest::forbiddenOperations() {
         bin.insert(binEmpty.begin(), std::string("x")),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        bin.erase(binEmpty.begin<post_order>()),
+        bin.erase(binEmpty.begin(post_order())),
         std::logic_error);
     // iterator pointing to end
     QVERIFY_EXCEPTION_THROWN(
         bin.emplace(bin.end(), "x"),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        bin.erase(bin.end<post_order>()),
+        bin.erase(bin.end(post_order())),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        binEmpty.erase(bin.begin<post_order>(), bin.end<post_order>()),
+        binEmpty.erase(bin.begin(post_order()), bin.end(post_order())),
         std::logic_error);
 }
 

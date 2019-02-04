@@ -141,14 +141,12 @@ class tree {
             root(other.root),
             size_value(other.size_value),
             arity_value(other.arity_value) {
-        other.root        = nullptr;
-        other.size_value  = 0u;
-        other.arity_value = 0u;
+        other.nullify();
     }
 
     /**
-     * Other Policy move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument will be empty
-     * after this operation.
+     * Other Policy move constructor. Create a tree by movings the tree passed as argument. The tree passed as argument
+     * will be empty after this operation.
      * @param other the tree to be moved
      */
     template <typename OtherPolicy>
@@ -157,16 +155,14 @@ class tree {
             root(other.root),
             size_value(other.size_value),
             arity_value(other.arity_value) {
-        other.root        = nullptr;
-        other.size_value  = 0u;
-        other.arity_value = 0u;
+        other.nullify();
     }
 
     /**
-     * Create a tree by copying the nodes structure starting from the {@link temporary_node} passed as argument. A new
-     * {@link node_type} will be allocated for each node in the structure passed. The allocation will use the allocator.
-     * @param root the root of the newly created tree
-     */
+ * Create a tree by copying the nodes structure starting from the {@link temporary_node} passed as argument. A new
+ * {@link node_type} will be allocated for each node in the structure passed. The allocation will use the allocator.
+ * @param root the root of the newly created tree
+ */
     template <
         typename ConvertibleT,
         typename... Children,
@@ -187,7 +183,7 @@ class tree {
             arity_value(root.get_subtree_arity()) {
     }
 
-    /*
+    /**
      * Destruct all the nodes and deallocate the memory owned by this tree.
      */
     ~tree() {
@@ -209,7 +205,7 @@ class tree {
             "Tried to COPY ASSIGN a tree containing a non copyable type.");
         this->assign(
             !other.empty()
-                ? allocate(allocator, *other.root, allocator).release()
+                ? allocate(this->allocator, *other.root, this->allocator).release()
                 : nullptr,
             other.size_value,
             other.arity_value);
@@ -225,11 +221,9 @@ class tree {
     // Any other policy move assignment
     template <typename OtherPolicy>
     tree& operator=(tree<T, Node, OtherPolicy, Allocator>&& other) {
-        allocator = std::move(other.allocator);
+        this->allocator = std::move(other.allocator);
         this->assign(other.root, other.size_value, other.arity_value);
-        other.root        = nullptr;
-        other.size_value  = 0u;
-        other.arity_value = 0u;
+        other.nullify();
         return *this;
     }
 
@@ -239,7 +233,7 @@ class tree {
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     tree& operator=(const struct_node<ConvertibleT, Nodes...>& root) {
         this->assign(
-            allocate(allocator, root, allocator).release(),
+            allocate(this->allocator, root, this->allocator).release(),
             root.get_subtree_size(),
             root.get_subtree_arity());
         return *this;
@@ -251,7 +245,7 @@ class tree {
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
     tree& operator=(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) {
         this->assign(
-            allocate(allocator, root, allocator).release(),
+            allocate(this->allocator, root, this->allocator).release(),
             root.get_subtree_size(),
             root.get_subtree_arity());
         return *this;
@@ -265,7 +259,7 @@ class tree {
      * @return iterator to the first element
      */
     template <typename P = Policy>
-    iterator<P> begin() {
+    iterator<P> begin(P = Policy()) {
         // Incremented to shift it to the first element (initially it's end-equivalent)
         return ++iterator<P>(*this);
     }
@@ -277,12 +271,12 @@ class tree {
      * @return constant iterator to the first element
      */
     template <typename P = Policy>
-    const_iterator<P> begin() const {
-        return this->cbegin<P>();
+    const_iterator<P> begin(P policy = P()) const {
+        return this->cbegin(policy);
     }
 
     template <typename P = Policy>
-    const_iterator<P> cbegin() const {
+    const_iterator<P> cbegin(P = P()) const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
         return ++const_iterator<P>(*this);
     }
@@ -296,51 +290,51 @@ class tree {
      * @return iterator the element following the last element
      */
     template <typename P = Policy>
-    iterator<P> end() {
+    iterator<P> end(P = Policy()) {
         return iterator<P>(*this);
     }
 
     template <typename P = Policy>
-    const_iterator<P> end() const {
-        return this->cend<P>();
+    const_iterator<P> end(P policy = P()) const {
+        return this->cend(policy);
     }
 
     template <typename P = Policy>
-    const_iterator<P> cend() const {
+    const_iterator<P> cend(P = P()) const {
         return const_iterator<P>(*this);
     }
 
     template <typename P = Policy>
-    reverse_iterator<P> rbegin() {
-        return std::make_reverse_iterator(this->end<P>());
+    reverse_iterator<P> rbegin(P policy = Policy()) {
+        return std::make_reverse_iterator(this->end(policy));
     }
 
     template <typename P = Policy>
-    const_reverse_iterator<P> rbegin() const {
-        return this->crbegin<P>();
+    const_reverse_iterator<P> rbegin(P policy = P()) const {
+        return this->crbegin(policy);
     }
 
     template <typename P = Policy>
-    const_reverse_iterator<P> crbegin() const {
-        return std::make_reverse_iterator(this->cend<P>());
+    const_reverse_iterator<P> crbegin(P policy = P()) const {
+        return std::make_reverse_iterator(this->cend(policy));
     }
 
     // reverse end
     template <typename P = Policy>
-    reverse_iterator<P> rend() {
+    reverse_iterator<P> rend(P policy = Policy()) {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(this->begin<P>());
+        return std::make_reverse_iterator(this->begin(policy));
     }
 
     template <typename P = Policy>
-    const_reverse_iterator<P> rend() const {
-        return this->crend<P>();
+    const_reverse_iterator<P> rend(P policy = P()) const {
+        return this->crend(policy);
     }
 
     template <typename P = Policy>
-    const_reverse_iterator<P> crend() const {
+    const_reverse_iterator<P> crend(P policy = P()) const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return std::make_reverse_iterator(this->cbegin<P>());
+        return std::make_reverse_iterator(this->cbegin(policy));
     }
 
     public:
@@ -469,6 +463,12 @@ class tree {
         this->arity_value = arity;
     }
 
+    void nullify() {
+        this->root        = nullptr; // deallocation was already node somewhere else
+        this->size_value  = 0u;
+        this->arity_value = 0u;
+    }
+
     public:
     /**
      * @brief Removes all elements from the tree.
@@ -476,7 +476,7 @@ class tree {
      * element iterator ({@link tree#end() end()}) remains valid.
      */
     void clear() {
-        assign(nullptr, 0u, 0u);
+        this->assign(nullptr, 0u, 0u);
     }
 
     /**
@@ -529,7 +529,7 @@ class tree {
     iterator<P> insert(
         tree_iterator<tree, P, C> position,
         const T& value) {
-        return this->modify_subtree(position, allocate(allocator, value), 1u, 0u);
+        return this->modify_subtree(position, allocate(this->allocator, value), 1u, 0u);
     }
 
     /**
@@ -542,7 +542,7 @@ class tree {
     iterator<P> insert(
         tree_iterator<tree, P, C> position,
         T&& value) {
-        return this->modify_subtree(position, allocate(allocator, std::move(value)), 1u, 0u);
+        return this->modify_subtree(position, allocate(this->allocator, std::move(value)), 1u, 0u);
     }
 
     template <
@@ -553,7 +553,7 @@ class tree {
     iterator<P> emplace(
         tree_iterator<tree, P, C> position,
         Args&&... args) {
-        return this->modify_subtree(position, allocate(allocator, std::forward<Args>(args)...), 1u, 0u);
+        return this->modify_subtree(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
     }
 
     template <
@@ -567,7 +567,7 @@ class tree {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(
             position,
-            allocate(allocator, node, allocator),
+            allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
     }

@@ -42,7 +42,7 @@ void AllocationTest::test1() {
 
     // Replacing 1 node with 1 node
     tree.emplace(
-        std::find(tree.begin<pre_order>(), tree.end<pre_order>(), Foo(3, 4)),
+        std::find(tree.begin(pre_order()), tree.end(pre_order()), Foo(3, 4)),
         6, 7);
 
     QCOMPARE(tree.get_allocator().allocated.size(), 5);
@@ -51,7 +51,7 @@ void AllocationTest::test1() {
 
     // Replacing 3 nodes with 5
     tree.insert(
-        std::find(tree.begin<in_order>(), tree.end<in_order>(), Foo(2, 3)),
+        std::find(tree.begin(in_order()), tree.end(in_order()), Foo(2, 3)),
         n(Foo(7, 8))(
             n(),
             n(Foo(8, 9))(
@@ -147,7 +147,7 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 0);
 
     // Deleting 2-sized subtree from bin2
-    bin2.erase(std::find(bin2.begin<post_order>(), bin2.end<post_order>(), Bar(2, 3)));
+    bin2.erase(std::find(bin2.begin(post_order()), bin2.end(post_order()), Bar(2, 3)));
     QCOMPARE(bin2.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 5);

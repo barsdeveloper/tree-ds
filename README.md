@@ -130,14 +130,14 @@ for (auto& value : inOrder) {
 cout << endl;
 ```
 
-You can always traverse a tree in a personalized manner, independently on the Policy parameter the tree has. Just call the `begin` method with a specific policy template parameter.
+You can always traverse a tree in a personalized manner, independently on the Policy parameter the tree has. Just call the `begin` method with a specific policy argument.
 
 ```c++
 // Post-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Post-order: ";
 result << "Post-order: ";
-auto it = inOrderTree.begin<md::post_order>();
-while (it != inOrderTree.end<md::post_order>()) {
+auto it = inOrderTree.begin(md::post_order());
+while (it != inOrderTree.end(md::post_order()) {
     result << *it++ << ", ";
 }
 }// end of main

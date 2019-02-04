@@ -43,7 +43,7 @@ void IteratorTest::test2() {
     binary_tree<Bar> tree(n(1, 2)(n(2, 3), n(3, 4)));
 
     // obtained using std::find
-    iterator_t it1 = std::find(tree.begin<in_order>(), tree.end<in_order>(), Bar(1, 2));
+    iterator_t it1 = std::find(tree.begin(in_order()), tree.end(in_order()), Bar(1, 2));
     // copy constructed
     iterator_t it2(it1);
     // copy assignment (below)

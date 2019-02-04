@@ -50,19 +50,19 @@ void TreeIterationTest::iteration() {
     list<char> actualNaryBreadthFirst;
 
     // Traverse binary
-    copy(binary.begin<pre_order>(), binary.end<pre_order>(), back_inserter(actualBinaryPreOrder));
-    copy(binary.begin<in_order>(), binary.end<in_order>(), back_inserter(actualBinaryInOrder));
-    copy(binary.begin<post_order>(), binary.end<post_order>(), back_inserter(actualBinaryPostOrder));
+    copy(binary.begin(pre_order()), binary.end(pre_order()), back_inserter(actualBinaryPreOrder));
+    copy(binary.begin(in_order()), binary.end(in_order()), back_inserter(actualBinaryInOrder));
+    copy(binary.begin(post_order()), binary.end(post_order()), back_inserter(actualBinaryPostOrder));
     copy(
-        binary.begin<breadth_first>(),
-        binary.end<breadth_first>(),
+        binary.begin(breadth_first()),
+        binary.end(breadth_first()),
         back_inserter(actualBinaryBreadthFirst));
     // Traverse nary
-    copy(nary.begin<pre_order>(), nary.end<pre_order>(), back_inserter(actualNaryPreOrder));
-    copy(nary.begin<post_order>(), nary.end<post_order>(), back_inserter(actualNaryPostOrder));
+    copy(nary.begin(pre_order()), nary.end(pre_order()), back_inserter(actualNaryPreOrder));
+    copy(nary.begin(post_order()), nary.end(post_order()), back_inserter(actualNaryPostOrder));
     copy(
-        nary.begin<breadth_first>(),
-        nary.end<breadth_first>(),
+        nary.begin(breadth_first()),
+        nary.end(breadth_first()),
         back_inserter(actualNaryBreadthFirst));
 
     // Compare results binary
@@ -92,20 +92,20 @@ void TreeIterationTest::iteration() {
     list<char> expectedReverseBreadthFirst;
 
     // Reverse traverse binary
-    copy(binary.rbegin<pre_order>(), binary.rend<pre_order>(), back_inserter(actualBinaryReversePreOrder));
-    copy(binary.rbegin<in_order>(), binary.rend<in_order>(), back_inserter(actualBinaryReverseInOrder));
-    copy(binary.rbegin<post_order>(), binary.rend<post_order>(), back_inserter(actualBinaryReversePostOrder));
+    copy(binary.rbegin(pre_order()), binary.rend(pre_order()), back_inserter(actualBinaryReversePreOrder));
+    copy(binary.rbegin(in_order()), binary.rend(in_order()), back_inserter(actualBinaryReverseInOrder));
+    copy(binary.rbegin(post_order()), binary.rend(post_order()), back_inserter(actualBinaryReversePostOrder));
     copy(
-        binary.rbegin<breadth_first>(),
-        binary.rend<breadth_first>(),
+        binary.rbegin(breadth_first()),
+        binary.rend(breadth_first()),
         back_inserter(actualBinaryReverseBreadthFirst));
 
     // Reverse traverse nary
-    copy(nary.rbegin<pre_order>(), nary.rend<pre_order>(), back_inserter(actualNaryReversePreOrder));
-    copy(nary.rbegin<post_order>(), nary.rend<post_order>(), back_inserter(actualNaryReversePostOrder));
+    copy(nary.rbegin(pre_order()), nary.rend(pre_order()), back_inserter(actualNaryReversePreOrder));
+    copy(nary.rbegin(post_order()), nary.rend(post_order()), back_inserter(actualNaryReversePostOrder));
     copy(
-        nary.rbegin<breadth_first>(),
-        nary.rend<breadth_first>(),
+        nary.rbegin(breadth_first()),
+        nary.rend(breadth_first()),
         back_inserter(actualNaryReverseBreadthFirst));
 
     // Reverse expected

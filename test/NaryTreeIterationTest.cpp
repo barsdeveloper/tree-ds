@@ -39,11 +39,11 @@ void NaryTreeIterationTest::iteration() {
     list<char> actualPostOrder;
     list<char> actualBreadthFirst;
 
-    copy(t.begin<pre_order>(), t.end<pre_order>(), back_inserter(actualPreOrder));
-    copy(t.begin<post_order>(), t.end<post_order>(), back_inserter(actualPostOrder));
+    copy(t.begin(pre_order()), t.end(pre_order()), back_inserter(actualPreOrder));
+    copy(t.begin(post_order()), t.end(post_order()), back_inserter(actualPostOrder));
     copy(
-        t.begin<breadth_first>(),
-        t.end<breadth_first>(),
+        t.begin(breadth_first()),
+        t.end(breadth_first()),
         back_inserter(actualBreadthFirst));
 
     QCOMPARE(actualPreOrder, expectedPreOrder);
@@ -60,11 +60,11 @@ void NaryTreeIterationTest::iteration() {
     list<char> expectedReversePostOrder;
     list<char> expectedReverseBreadthFirst;
 
-    copy(t.rbegin<pre_order>(), t.rend<pre_order>(), back_inserter(actualNaryReversePreOrder));
-    copy(t.rbegin<post_order>(), t.rend<post_order>(), back_inserter(actualNaryReversePostOrder));
+    copy(t.rbegin(pre_order()), t.rend(pre_order()), back_inserter(actualNaryReversePreOrder));
+    copy(t.rbegin(post_order()), t.rend(post_order()), back_inserter(actualNaryReversePostOrder));
     copy(
-        t.rbegin<breadth_first>(),
-        t.rend<breadth_first>(),
+        t.rbegin(breadth_first()),
+        t.rend(breadth_first()),
         back_inserter(actualNaryReverseBreadthFirst));
 
     copy(expectedPreOrder.rbegin(), expectedPreOrder.rend(), back_inserter(expectedReversePreOrder));

@@ -57,8 +57,8 @@ class ReadmeTest : public QObject {
         {
             std::stringstream cout;
             cout << "Post-order: ";
-            auto it = inOrderTree.begin<md::post_order>();
-            while (it != inOrderTree.end<md::post_order>()) {
+            auto it = inOrderTree.begin(md::post_order());
+            while (it != inOrderTree.end(md::post_order())) {
                 cout << *it++ << ", ";
             }
             QCOMPARE(cout.str(), "Post-order: -20, -40, -30, -10, 400, 200, 100, ");
