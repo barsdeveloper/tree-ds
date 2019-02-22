@@ -132,7 +132,7 @@ class binary_node : public node<T, binary_node<T>> {
 
     /// Discard this whole subtree and replace it with node
     void replace_with(binary_node* node) {
-        assert(node == nullptr or node->is_root());
+        assert(node == nullptr || node->is_root());
         if (this->parent != nullptr) {
             if (this->is_left_child()) {
                 this->parent->left = node;
@@ -230,6 +230,14 @@ class binary_node : public node<T, binary_node<T>> {
         return nullptr;
     }
 
+    const binary_node* get_prev_sibling_limit(const binary_node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_prev_sibling();
+    }
+
+    const binary_node* get_next_sibling_limit(const binary_node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
+    }
+
     std::size_t get_following_siblings() const {
         const binary_node* parent = this->parent;
         if (parent) {
@@ -238,7 +246,7 @@ class binary_node : public node<T, binary_node<T>> {
         return 0u;
     }
 
-    std::tuple<binary_node*, binary_node*> release() {
+    std::tuple<binary_node*, binary_node*> get_resources() {
         return std::make_tuple(this->left, this->right);
     }
 

@@ -40,8 +40,16 @@ class node {
         return value;
     }
 
+    const Node* get_parent_limit(const Node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_parent();
+    }
+
     const Node* get_parent() const {
         return parent;
+    }
+
+    bool is_root_limit(const Node& root) const {
+        return this == &root;
     }
 
     bool is_root() const {
@@ -54,4 +62,4 @@ class node {
     }
 };
 
-} // namespace ds
+} // namespace md

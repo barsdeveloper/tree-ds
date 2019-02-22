@@ -3,6 +3,9 @@
 #include <cassert> // assert()
 #include <memory>  // std::unique_ptr, std::allocator_traits
 #include <tuple>
+#include <type_traits> // std::conditional_t, std::is_same_v
+
+#include <TreeDS/utility.hpp>
 
 namespace md {
 
@@ -22,13 +25,15 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
     if (ptr == nullptr) {
         return;
     }
-    // first deallocate nodes that this node is responsible for
-    auto resources_to_deallocate = ptr->release();
-    std::apply(
-        [&](auto&... pointers) {
-            (..., deallocate(allocator, pointers));
-        },
-        resources_to_deallocate);
+    if constexpr (holds_resources<decltype(*ptr)>::value) {
+        // first deallocate nodes that this node is responsible for
+        auto resources_to_deallocate = ptr->get_resources();
+        std::apply(
+            [&](auto&... pointers) {
+                (..., deallocate(allocator, pointers));
+            },
+            resources_to_deallocate);
+    }
     // then the node itself
     // call destructor
     std::allocator_traits<Allocator>::destroy(allocator, ptr);

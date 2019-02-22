@@ -16,6 +16,7 @@ class nary_node;
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
 #define CHECK_COPIABLE(TYPE) typename = std::enable_if_t<std::is_copy_constructible_v<TYPE>>
+#define CHECK_NARY_NODE(TYPE) typename = std::enable_if_t<std::is_same_v<std::decay_t<Node>, nary_node<T>>>
 
 template <typename Node, typename Call, typename Test, typename Result>
 const Node* keep_calling(const Node& from, Call call, Test test, Result result) {
@@ -50,7 +51,7 @@ const Node* keep_calling(const Node& from, Callable call) {
 }
 
 template <typename Node>
-const Node* prev_branch_sibling(const Node& from) {
+const Node* prev_branch_sibling(const Node& from, const Node& root) {
     int relative_level             = 0;
     const Node* deepest_last_child = &from;
     const Node* left_crossed;
@@ -60,7 +61,9 @@ const Node* prev_branch_sibling(const Node& from) {
             // from
             *deepest_last_child,
             // keep calling
-            std::mem_fn(&Node::get_parent),
+            [&](const Node& node) {
+                return node.get_parent_limit(root);
+            },
             // until
             [&](const Node& child, const Node&) {
                 --relative_level;
@@ -73,7 +76,7 @@ const Node* prev_branch_sibling(const Node& from) {
                 // always present because it's the first child
                 return child.get_prev_sibling();
             });
-        if (left_crossed->is_root()) {
+        if (left_crossed->is_root_limit(root)) {
             return nullptr;
         } else if (relative_level == 0) {
             return left_crossed;
@@ -98,8 +101,8 @@ const Node* prev_branch_sibling(const Node& from) {
 }
 
 template <typename Node>
-const Node* upper_row_rightmost(const Node& from) {
-    if (from.is_root()) {
+const Node* upper_row_rightmost(const Node& from, const Node& root) {
+    if (from.is_root_limit(root)) {
         return nullptr;
     }
     int relative_level = 0;
@@ -113,7 +116,7 @@ const Node* upper_row_rightmost(const Node& from) {
         // until
         [&](const Node&, const Node& parent) {
             --relative_level;
-            return parent.is_root();
+            return parent.is_root_limit(root);
         },
         // then return
         [](const Node&, const Node& root) {
@@ -143,7 +146,7 @@ const Node* upper_row_rightmost(const Node& from) {
             break;
         }
         // Go to the node that is on the left and at the same level
-        left_crossed = prev_branch_sibling(*deepest_last_child);
+        left_crossed = prev_branch_sibling(*deepest_last_child, root);
     } while (relative_level < -1);
     return deepest_last_child;
 }
@@ -173,28 +176,28 @@ const Node* deepest_rightmost_child(const Node& root) {
             deepest_node  = current_node;
         }
         // Go to the node that is on the left and at the same level
-        current_node = prev_branch_sibling(*current_node);
+        current_node = prev_branch_sibling(*current_node, root);
     } while (current_node != nullptr);
     return deepest_node;
 }
 
 template <typename T>
-std::size_t count_nodes(const binary_node<T>& node) {
+std::size_t calculate_size(const binary_node<T>& node) {
     return 1
         + (node.get_left_child() != nullptr
-               ? count_nodes(*node.get_left_child())
+               ? calculate_size(*node.get_left_child())
                : 0)
         + (node.get_right_child() != nullptr
-               ? count_nodes(*node.get_right_child())
+               ? calculate_size(*node.get_right_child())
                : 0);
 }
 
 template <typename T>
-std::size_t count_nodes(const nary_node<T>& node) {
+std::size_t calculate_size(const nary_node<T>& node) {
     std::size_t size          = 1;
     const nary_node<T>* child = node.get_first_child();
     while (child != nullptr) {
-        size += count_nodes(*child);
+        size += calculate_size(*child);
         child = child->get_next_sibling();
     }
     return size;
@@ -272,8 +275,21 @@ struct is_tag_of_policy<
     std::void_t<
         decltype(
             std::declval<Policy>()
-                .template get_instance<Node, Allocator>(std::declval<Allocator>())),
+                .template get_instance<Node, Allocator>(
+                    std::declval<const Node*>(),
+                    std::declval<Allocator>())),
         Policy>>
         : std::true_type {};
+
+template <typename Type, typename = void>
+struct holds_resources : std::false_type {};
+
+template <typename Type>
+struct holds_resources<
+    Type,
+    std::void_t<
+        decltype(
+            std::declval<Type>()
+                .get_resources())>> : std::true_type {};
 
 } // namespace md

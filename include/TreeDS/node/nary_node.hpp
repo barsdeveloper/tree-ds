@@ -183,7 +183,7 @@ class nary_node : public node<T, nary_node<T>> {
             if (back_link == nullptr) {
                 back_link = this->is_first_child()
                     ? &this->parent->first_child
-                    : &this->get_prev_sibling()->next_sibling;
+                    : &calculate_prev_sibling(this)->next_sibling;
             }
             *back_link               = link_target;
             this->next_sibling       = nullptr;
@@ -225,7 +225,7 @@ class nary_node : public node<T, nary_node<T>> {
                     *first,
                     // keep calling
                     [](const nary_node& node) {
-                        return node.get_next_sibling();
+                        return node.next_sibling;
                     },
                     // until
                     [&](const nary_node&, const nary_node& next) {
@@ -265,12 +265,16 @@ class nary_node : public node<T, nary_node<T>> {
         return nary_node::calculate_prev_sibling(this);
     }
 
-    nary_node* get_prev_sibling() {
-        return nary_node::calculate_prev_sibling(this);
-    }
-
     const nary_node* get_next_sibling() const {
         return this->next_sibling;
+    }
+
+    const nary_node* get_prev_sibling_limit(const nary_node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_prev_sibling();
+    }
+
+    const nary_node* get_next_sibling_limit(const nary_node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
     }
 
     std::size_t get_following_siblings() const {
@@ -285,7 +289,7 @@ class nary_node : public node<T, nary_node<T>> {
         return *current;
     }
 
-    std::tuple<nary_node*, nary_node*> release() {
+    std::tuple<nary_node*, nary_node*> get_resources() {
         return std::make_tuple(this->first_child, this->next_sibling);
     }
 

@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include <TreeDS/policy/policy.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md {
@@ -11,12 +12,21 @@ class binary_node;
 
 namespace detail {
 
-    class in_order_impl final {
+    template <typename Node>
+    class in_order_impl {}; // unimplemented
+
+    template <typename T>
+    class in_order_impl<binary_node<T>> final : public policy<binary_node<T>> {
 
         public:
-        constexpr in_order_impl() = default;
+        in_order_impl() :
+                in_order_impl(nullptr) {
+        }
 
-        template <typename T>
+        in_order_impl(const binary_node<T>* root) :
+                policy<binary_node<T>>(root) {
+        }
+
         const binary_node<T>* increment(const binary_node<T>& from) {
             if (from.get_right_child()) {
                 return keep_calling(
@@ -30,7 +40,9 @@ namespace detail {
                     // from
                     from,
                     // keep calling
-                    std::mem_fn(&binary_node<T>::get_parent),
+                    [&](const binary_node<T>& node) {
+                        return node.get_parent_limit(*this->root);
+                    },
                     // until
                     [](const binary_node<T>& child, const binary_node<T>& parent) {
                         return &child == parent.get_left_child();
@@ -44,7 +56,6 @@ namespace detail {
             }
         }
 
-        template <typename T>
         const binary_node<T>* decrement(const binary_node<T>& from) {
             if (from.get_left_child()) {
                 return keep_calling(*from.get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
@@ -53,7 +64,9 @@ namespace detail {
                 // from
                 from,
                 // keep calling
-                std::mem_fn(&binary_node<T>::get_parent),
+                [&](const binary_node<T>& node) {
+                    return node.get_parent_limit(*this->root);
+                },
                 // until
                 [](const binary_node<T>& child, const binary_node<T>& parent) {
                     return &child == parent.get_right_child();
@@ -64,13 +77,13 @@ namespace detail {
                 });
         }
 
-        template <typename T>
         const binary_node<T>* go_first(const binary_node<T>& root) {
+            this->root = &root;
             return keep_calling(root, std::mem_fn(&binary_node<T>::get_left_child));
         }
 
-        template <typename T>
         const binary_node<T>* go_last(const binary_node<T>& root) {
+            this->root = &root;
             return keep_calling(root, std::mem_fn(&binary_node<T>::get_right_child));
         }
     };
@@ -79,8 +92,10 @@ namespace detail {
 
 struct in_order {
     template <typename Node, typename Allocator>
-    detail::in_order_impl get_instance(const Allocator& = Allocator()) const {
-        return detail::in_order_impl();
+    detail::in_order_impl<Node> get_instance(
+        const Node* root,
+        const Allocator& = Allocator()) const {
+        return detail::in_order_impl(root);
     }
 };
 
