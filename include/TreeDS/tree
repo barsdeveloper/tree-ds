@@ -1,3 +1,5 @@
+#pragma once
+
 #include <TreeDS/binary_tree.hpp>
 #include <TreeDS/nary_tree.hpp>
 #include <TreeDS/policy/breadth_first.hpp>

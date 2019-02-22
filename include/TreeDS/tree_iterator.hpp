@@ -8,6 +8,9 @@
 namespace md {
 
 template <typename, typename, typename, typename>
+class basic_tree;
+
+template <typename, typename, typename, typename>
 class tree;
 
 template <
@@ -15,6 +18,9 @@ template <
     typename Policy,
     bool Constant = false>
 class tree_iterator {
+
+    template <typename, typename, typename, typename>
+    friend class basic_tree;
 
     template <typename, typename, typename, typename>
     friend class tree;
@@ -32,7 +38,8 @@ class tree_iterator {
         std::declval<Policy>()
             .template get_instance<
                 typename Tree::node_type,
-                typename Tree::allocator_type>());
+                typename Tree::allocator_type>(
+                std::declval<const node_type*>()));
     // Iterators mandatory type declarations
     using value_type = std::conditional_t<
         Constant,
@@ -44,13 +51,14 @@ class tree_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
 
     protected:
-    actual_policy_type policy {};
+    actual_policy_type policy;
     tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
     node_type* current_node = nullptr; // nullptr => end()
 
     protected:
     // Constructor used by tree to create an iterator
     tree_iterator(tree_type& tree) :
+            policy(tree.get_root()),
             pointed_tree(&tree) {
     }
 
@@ -80,6 +88,7 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
+            policy(other.policy),
             pointed_tree(other.pointed_tree),
             current_node(other.current_node) {
     }
@@ -89,6 +98,7 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, Policy, OtherConstant>& other) {
+        this->policy       = other.policy;
         this->pointed_tree = other.pointed_tree;
         this->current_node = other.current_node;
         return *this;
