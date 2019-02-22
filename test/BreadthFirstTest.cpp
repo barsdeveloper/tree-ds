@@ -75,13 +75,10 @@ const nary_tree<int> BreadthFirstTest::tree(
                     n(23))))));
 
 void BreadthFirstTest::backAndForth() {
-    list<int> result;
-    list<int> expected(50);
+    vector<int> result;
+    vector<int> expected(50);
     // populate result with the actual result of tree traverse
-    copy(
-        tree.cbegin(breadth_first()),
-        tree.cend(breadth_first()),
-        back_inserter(result));
+    result.assign(tree.cbegin(breadth_first()), tree.cend(breadth_first()));
     // the expected traversal is 1...50
     iota(expected.begin(), expected.end(), 1);
 
