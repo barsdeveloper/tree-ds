@@ -25,9 +25,12 @@
 #include <limits>   // std::numeric_limits()
 #include <memory>   // std::unique_ptr, std::allocator_traits
 
+#include <TreeDS/policy/breadth_first.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace md {
+
+using default_policy = breadth_first;
 
 template <typename, typename, typename, typename>
 class tree;
