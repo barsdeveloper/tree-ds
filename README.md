@@ -15,7 +15,7 @@ Please feel free to open issues for any question and contribute to the code if y
 * STL compatible.
 * No external dependecies.
 * Permissive license.
-* Iterators provided: pre-order, in-order, post-order, breadth-first
+* Iterators provided: pre-order, in-order (```binary_tree``` only), post-order, breadth-first
 * Expandable with custom iterator types.
 * Tree pattern matching (conceptually similar to regex). Still a work in progress.
 
@@ -39,7 +39,8 @@ Here's a small example of utilization (you can merge and compile the code snippe
 #include <string>
 #include <iostream>
 #include <algorithm>
-#include <TreeDS/tree.hpp>
+#include <TreeDS/tree>
+#include <TreeDS/view> // needed only to use views
 using namespace std;
 using md::n;
 
@@ -48,7 +49,7 @@ int main() {
     cout << t.size_value() << endl; // 0
 ```
 
-We just created an empty nary_tree: a type of tree where each node can have an arbitrary number of children.
+We just created an empty ```nary_tree```: a type of tree where each node can have an arbitrary number of children.
 
 Add elements to the tree in the usual way:
 
@@ -84,7 +85,7 @@ md::binary_tree<int> myTree(
  */
 ```
 
-Use the same approach also for the insert method, let's substitute the node 300 (the whole subtree):
+Use the same approach also for the insert method, let's substitute the node 300 (the whole subtree) with another subtree:
 
 ```c++
 myTree.insert(
@@ -119,7 +120,7 @@ md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
 //                   ^^^^^^^^^^^^ default policy used to iterate the tree
 ```
 
-At this point moved the content from `myTree` (which now is empty) to `inOrder`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
+We just moved the content from `myTree` (which now is empty) to `inOrderTree`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
 
 ```c++
 // In-order: 100, -20, -10, -40, -30, 200, 400,
@@ -135,10 +136,22 @@ You can always traverse a tree in a personalized manner, independently on the Po
 ```c++
 // Post-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Post-order: ";
-result << "Post-order: ";
 auto it = inOrderTree.begin(md::post_order());
 while (it != inOrderTree.end(md::post_order()) {
-    result << *it++ << ", ";
+    cout << *it++ << ", ";
 }
+cout << endl;
+```
+
+Or create a view of the tree and specify the policy of it.
+
+```c++
+// Breadth-first: 100, 200, -10, 400, -20, -30, -40,
+md::binary_tree_view<int, md::breadth_first> view(inOrderTree);
+cout << "Breadth-first: ";
+for (auto& value : view) {
+    cout << value;
+}
+cout << endl;
 }// end of main
 ```

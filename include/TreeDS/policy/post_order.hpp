@@ -1,6 +1,6 @@
 #pragma once
 
-#include <functional>
+#include <functional> // std::mem_fn
 
 #include <TreeDS/policy/policy.hpp>
 #include <TreeDS/utility.hpp>

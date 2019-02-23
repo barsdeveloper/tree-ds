@@ -19,7 +19,7 @@ namespace md {
  */
 template <
     typename T,
-    typename Policy    = pre_order,
+    typename Policy    = default_policy,
     typename Allocator = std::allocator<T>>
 class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     using super = tree<T, nary_node<T>, Policy, Allocator>;

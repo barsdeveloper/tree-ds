@@ -3,7 +3,6 @@
 #include <cassert> // assert()
 #include <memory>  // std::unique_ptr, std::allocator_traits
 #include <tuple>
-#include <type_traits> // std::conditional_t, std::is_same_v
 
 #include <TreeDS/utility.hpp>
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <deque>
-#include <functional>
 #include <memory> // std::allocator
 
 #include <TreeDS/node/node.hpp>

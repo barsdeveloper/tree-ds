@@ -18,7 +18,7 @@ namespace md {
  */
 template <
     typename T,
-    typename Policy    = pre_order,
+    typename Policy    = default_policy,
     typename Allocator = std::allocator<T>>
 class binary_tree : public tree<T, binary_node<T>, Policy, Allocator> {
     using super = tree<T, binary_node<T>, Policy, Allocator>;

@@ -37,7 +37,7 @@ class tree_iterator {
     using actual_policy_type = decltype(
         std::declval<Policy>()
             .template get_instance<
-                typename Tree::node_type,
+                std::decay_t<typename Tree::node_type>,
                 typename Tree::allocator_type>(
                 std::declval<const node_type*>()));
     // Iterators mandatory type declarations
