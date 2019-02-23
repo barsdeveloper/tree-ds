@@ -1,4 +1,4 @@
 #pragma once
 
-#include <TreeDS/binary_tree_view.hpp>
-#include <TreeDS/nary_tree_view.hpp>
+#include <TreeDS/viewer/binary_tree_view.hpp>
+#include <TreeDS/viewer/nary_tree_view.hpp>

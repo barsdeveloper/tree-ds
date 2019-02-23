@@ -69,7 +69,7 @@ class ReadmeTest : public QObject {
             std::stringstream cout;
             md::binary_tree_view<int, md::breadth_first> view(inOrderTree);
             cout << "Breadth-first: ";
-            for (auto value : view) {
+            for (auto& value : view) {
                 cout << value << ", ";
             }
             QCOMPARE(cout.str(), "Breadth-first: 100, 200, -10, 400, -20, -30, -40, ");
