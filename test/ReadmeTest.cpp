@@ -5,6 +5,7 @@
 #include <string>
 
 #include <TreeDS/tree>
+#include <TreeDS/view>
 
 using namespace std;
 using md::n;
@@ -62,6 +63,16 @@ class ReadmeTest : public QObject {
                 cout << *it++ << ", ";
             }
             QCOMPARE(cout.str(), "Post-order: -20, -40, -30, -10, 400, 200, 100, ");
+        }
+
+        {
+            std::stringstream cout;
+            md::binary_tree_view<int, md::breadth_first> view(inOrderTree);
+            cout << "Breadth-first: ";
+            for (auto value : view) {
+                cout << value << ", ";
+            }
+            QCOMPARE(cout.str(), "Breadth-first: 100, 200, -10, 400, -20, -30, -40, ");
         }
     }
 };

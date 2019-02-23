@@ -39,74 +39,50 @@ void TreeIterationTest::iteration() {
 
     /*   ---   Forward order test   ---   */
     // Binary
-    vector<char> actualBinaryPreOrder;
-    vector<char> actualBinaryInOrder;
-    vector<char> actualBinaryPostOrder;
-    vector<char> actualBinaryBreadthFirst;
-    // Nary
-    vector<char> actualNaryPreOrder;
-    vector<char> actualNaryInOrder;
-    vector<char> actualNaryPostOrder;
-    vector<char> actualNaryBreadthFirst;
-
-    // Traverse binary
-    actualBinaryPreOrder.assign(binary.begin(pre_order()), binary.end(pre_order()));
-    actualBinaryInOrder.assign(binary.begin(in_order()), binary.end(in_order()));
-    actualBinaryPostOrder.assign(binary.begin(post_order()), binary.end(post_order()));
-    actualBinaryBreadthFirst.assign(binary.begin(breadth_first()), binary.end(breadth_first()));
-    // Traverse nary
-    actualNaryPreOrder.assign(nary.begin(pre_order()), nary.end(pre_order()));
-    actualNaryPostOrder.assign(nary.begin(post_order()), nary.end(post_order()));
-    actualNaryBreadthFirst.assign(nary.begin(breadth_first()), nary.end(breadth_first()));
+    vector<char> actualBinaryPreOrder(binary.begin(pre_order()), binary.end(pre_order()));
+    vector<char> actualBinaryInOrder(binary.begin(in_order()), binary.end(in_order()));
+    vector<char> actualBinaryPostOrder(binary.begin(post_order()), binary.end(post_order()));
+    vector<char> actualBinaryBreadthFirst(binary.begin(breadth_first()), binary.end(breadth_first()));
 
     // Compare results binary
     QCOMPARE(actualBinaryPreOrder, expectedPreOrder);
     QCOMPARE(actualBinaryInOrder, expectedInOrder);
     QCOMPARE(actualBinaryPostOrder, expectedPostOrder);
     QCOMPARE(actualBinaryBreadthFirst, expectedBreadthFirst);
+
+    // Nary
+    vector<char> actualNaryPreOrder(nary.begin(pre_order()), nary.end(pre_order()));
+    vector<char> actualNaryPostOrder(nary.begin(post_order()), nary.end(post_order()));
+    vector<char> actualNaryBreadthFirst(nary.begin(breadth_first()), nary.end(breadth_first()));
+
     // Compare results nary
     QCOMPARE(actualNaryPreOrder, expectedPreOrder);
     QCOMPARE(actualNaryPostOrder, expectedPostOrder);
     QCOMPARE(actualNaryBreadthFirst, expectedBreadthFirst);
 
     /*   ---   Backward order test   ---   */
+    vector<char> expectedReversePreOrder(expectedPreOrder.rbegin(), expectedPreOrder.rend());
+    vector<char> expectedReverseInOrder(expectedInOrder.rbegin(), expectedInOrder.rend());
+    vector<char> expectedReversePostOrder(expectedPostOrder.rbegin(), expectedPostOrder.rend());
+    vector<char> expectedReverseBreadthFirst(expectedBreadthFirst.rbegin(), expectedBreadthFirst.rend());
+
     // Binary
-    vector<char> actualBinaryReversePreOrder;
-    vector<char> actualBinaryReverseInOrder;
-    vector<char> actualBinaryReversePostOrder;
-    vector<char> actualBinaryReverseBreadthFirst;
-    // Nary
-    vector<char> actualNaryReversePreOrder;
-    vector<char> actualNaryReversePostOrder;
-    vector<char> actualNaryReverseBreadthFirst;
-
-    vector<char> expectedReversePreOrder;
-    vector<char> expectedReverseInOrder;
-    vector<char> expectedReversePostOrder;
-    vector<char> expectedReverseBreadthFirst;
-
-    // Reverse traverse binary
-    actualBinaryReversePreOrder.assign(binary.rbegin(pre_order()), binary.rend(pre_order()));
-    actualBinaryReverseInOrder.assign(binary.rbegin(in_order()), binary.rend(in_order()));
-    actualBinaryReversePostOrder.assign(binary.rbegin(post_order()), binary.rend(post_order()));
-    actualBinaryReverseBreadthFirst.assign(binary.rbegin(breadth_first()), binary.rend(breadth_first()));
-
-    // Reverse traverse nary
-    actualNaryReversePreOrder.assign(nary.rbegin(pre_order()), nary.rend(pre_order()));
-    actualNaryReversePostOrder.assign(nary.rbegin(post_order()), nary.rend(post_order()));
-    actualNaryReverseBreadthFirst.assign(nary.rbegin(breadth_first()), nary.rend(breadth_first()));
-
-    // Reverse expected
-    expectedReversePreOrder.assign(expectedPreOrder.rbegin(), expectedPreOrder.rend());
-    expectedReverseInOrder.assign(expectedInOrder.rbegin(), expectedInOrder.rend());
-    expectedReversePostOrder.assign(expectedPostOrder.rbegin(), expectedPostOrder.rend());
-    expectedReverseBreadthFirst.assign(expectedBreadthFirst.rbegin(), expectedBreadthFirst.rend());
+    vector<char> actualBinaryReversePreOrder(binary.rbegin(pre_order()), binary.rend(pre_order()));
+    vector<char> actualBinaryReverseInOrder(binary.rbegin(in_order()), binary.rend(in_order()));
+    vector<char> actualBinaryReversePostOrder(binary.rbegin(post_order()), binary.rend(post_order()));
+    vector<char> actualBinaryReverseBreadthFirst(binary.rbegin(breadth_first()), binary.rend(breadth_first()));
 
     // Compare results binary
     QCOMPARE(actualBinaryReversePreOrder, expectedReversePreOrder);
     QCOMPARE(actualBinaryReverseInOrder, expectedReverseInOrder);
     QCOMPARE(actualBinaryReversePostOrder, expectedReversePostOrder);
     QCOMPARE(actualBinaryReverseBreadthFirst, expectedReverseBreadthFirst);
+
+    // Nary
+    vector<char> actualNaryReversePreOrder(nary.rbegin(pre_order()), nary.rend(pre_order()));
+    vector<char> actualNaryReversePostOrder(nary.rbegin(post_order()), nary.rend(post_order()));
+    vector<char> actualNaryReverseBreadthFirst(nary.rbegin(breadth_first()), nary.rend(breadth_first()));
+
     // Compare results nary
     QCOMPARE(actualNaryReversePreOrder, expectedReversePreOrder);
     QCOMPARE(actualNaryReversePostOrder, expectedReversePostOrder);
@@ -127,10 +103,10 @@ void TreeIterationTest::iteration_data() {
         << binary_tree<char>(n('#'))
         << 1
         << 0
-        << vector<char> {'#'}
-        << vector<char> {'#'}
-        << vector<char> {'#'}
-        << vector<char> {'#'};
+        << vector {'#'}
+        << vector {'#'}
+        << vector {'#'}
+        << vector {'#'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a left child")
@@ -139,10 +115,10 @@ void TreeIterationTest::iteration_data() {
                    n('2')))
         << 2
         << 1
-        << vector<char> {'1', '2'}
-        << vector<char> {'2', '1'}
-        << vector<char> {'2', '1'}
-        << vector<char> {'1', '2'};
+        << vector {'1', '2'}
+        << vector {'2', '1'}
+        << vector {'2', '1'}
+        << vector {'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Root with a right child")
@@ -152,10 +128,10 @@ void TreeIterationTest::iteration_data() {
                    n('2')))
         << 2
         << 1
-        << vector<char> {'1', '2'}
-        << vector<char> {'1', '2'}
-        << vector<char> {'2', '1'}
-        << vector<char> {'1', '2'};
+        << vector {'1', '2'}
+        << vector {'1', '2'}
+        << vector {'2', '1'}
+        << vector {'1', '2'};
 
     /******************************************************************************************************************/
     QTest::newRow("Small tree")
@@ -174,10 +150,10 @@ void TreeIterationTest::iteration_data() {
                        n('g'))))
         << 10
         << 2
-        << vector<char> {'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
-        << vector<char> {'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
-        << vector<char> {'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
-        << vector<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k'};
+        << vector {'a', 'b', 'd', 'h', 'e', 'c', 'f', 'j', 'k', 'g'}
+        << vector {'h', 'd', 'b', 'e', 'a', 'j', 'f', 'k', 'c', 'g'}
+        << vector {'h', 'd', 'e', 'b', 'j', 'k', 'f', 'g', 'c', 'a'}
+        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k'};
 
     /******************************************************************************************************************/
     QTest::newRow("Big tree")
@@ -215,10 +191,10 @@ void TreeIterationTest::iteration_data() {
                                    n('u')))))))
         << 21
         << 2
-        << vector<char> {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
-        << vector<char> {'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
-        << vector<char> {'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
-        << vector<char> {'a', 'b', 'k', 'c', 'j', 'l', 'd', 'i', 'm', 'r', 'e', 'h', 'n', 'q', 's', 'f', 'g', 'o', 'p', 't', 'u'};
+        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'i', 'n', 'p', 'j', 'm', 'q', 't', 'k', 'l', 'r', 's', 'u'}
+        << vector {'f', 'e', 'g', 'd', 'h', 'o', 'c', 'i', 'n', 'p', 'b', 'j', 'm', 'q', 't', 'a', 'k', 'l', 'r', 's', 'u'}
+        << vector {'f', 'g', 'e', 'o', 'h', 'd', 'p', 'n', 'i', 'c', 't', 'q', 'm', 'j', 'b', 'u', 's', 'r', 'l', 'k', 'a'}
+        << vector {'a', 'b', 'k', 'c', 'j', 'l', 'd', 'i', 'm', 'r', 'e', 'h', 'n', 'q', 's', 'f', 'g', 'o', 'p', 't', 'u'};
 
     /******************************************************************************************************************/
     QTest::newRow("All left child")
@@ -240,10 +216,10 @@ void TreeIterationTest::iteration_data() {
                                                                        n('F'))))))))))))))))
         << 15
         << 1
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << vector<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << vector<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << vector {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << vector {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("All right child")
@@ -279,10 +255,10 @@ void TreeIterationTest::iteration_data() {
                                                                        n('F'))))))))))))))))
         << 15
         << 1
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << vector<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << vector {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /******************************************************************************************************************/
     QTest::newRow("ZigZag")
@@ -311,10 +287,10 @@ void TreeIterationTest::iteration_data() {
                                                                        n('F'))))))))))))))))
         << 15
         << 1
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
-        << vector<char> {'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
-        << vector<char> {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
-        << vector<char> {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'}
+        << vector {'2', '4', '6', '8', 'A', 'C', 'E', 'F', 'D', 'B', '9', '7', '5', '3', '1'}
+        << vector {'F', 'E', 'D', 'C', 'B', 'A', '9', '8', '7', '6', '5', '4', '3', '2', '1'}
+        << vector {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 }
 
 QTEST_MAIN(TreeIterationTest);
