@@ -23,71 +23,80 @@ class nary_node : public node<T, nary_node<T>> {
     friend class tree;
 
     protected:
-    nary_node* first_child         = nullptr;
+    std::size_t following_siblings = 0u;
     nary_node* next_sibling        = nullptr;
-    std::size_t following_siblings = 0;
+    nary_node* first_child         = nullptr;
+    nary_node* last_child; // it will be set by manage_parent_last_child() <- every constructor must call this method
 
     public:
     using node<T, nary_node<T>>::node;
 
     public:
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
+    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
+    explicit nary_node(Args&&... args) :
+            node<T, nary_node>(nullptr, std::forward<Args>(args)...) {
+        this->manage_parent_last_child();
+    }
+
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
+    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
+    explicit nary_node(const std::tuple<Args...>& args_tuple) :
+            node<T, nary_node>(nullptr, args_tuple) {
+        this->manage_parent_last_child();
+    }
+
     /*   ---   Move Constructor   ---   */
     explicit nary_node(nary_node&& other) :
             node<T, nary_node>(std::move(other.get_value())),
-            first_child(other.first_child),
+            following_siblings(other.following_siblings),
             next_sibling(other.next_sibling),
-            following_siblings(other.following_siblings) {
+            first_child(other.first_child),
+            last_child(other.last_child) {
         other.move_resources_to(*this);
     }
 
     /*   ---   Copy constructor using allocator   ---   */
     template <typename Allocator>
-    explicit nary_node(
-        const nary_node<T>& other,
-        Allocator&& allocator) :
-            node<T, nary_node<T>>(other.value),
-            first_child(
-                other.first_child != nullptr
-                    ? attach(
-                          allocate(
-                              allocator,
-                              *other.first_child,
-                              allocator)
-                              .release())
-                    : nullptr),
+    explicit nary_node(const nary_node& other, nary_node* parent, Allocator&& allocator = Allocator()) :
+            node<T, nary_node<T>>(parent, other.value),
+            following_siblings(other.following_siblings),
             next_sibling(
                 other.next_sibling != nullptr
-                    ? allocate(
-                          allocator,
-                          *other.next_sibling,
-                          allocator)
-                          .release()
+                    ? allocate(allocator, *other.next_sibling, this->parent, allocator).release()
                     : nullptr),
-            following_siblings(other.following_siblings) {
+            first_child(
+                other.first_child != nullptr
+                    ? allocate(allocator, *other.first_child, this, allocator).release()
+                    : nullptr) {
+        this->manage_parent_last_child();
+    }
+
+    template <typename Allocator>
+    explicit nary_node(const nary_node& other, Allocator&& allocator = Allocator()) :
+            nary_node(other, nullptr, allocator) {
     }
 
     /*   ---   Conversion constructor from binary_node using allocator   ---   */
     template <typename Allocator = std::allocator<nary_node>>
-    explicit nary_node(const binary_node<T>& other, Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()),
+    explicit nary_node(const binary_node<T>& other, nary_node* parent, Allocator&& allocator = Allocator()) :
+            node<T, nary_node>(parent, other.get_value()),
+            following_siblings(other.get_following_siblings()),
+            next_sibling(
+                other.get_next_sibling()
+                    ? allocate(allocator, *other.get_next_sibling(), this->parent, allocator).release()
+                    : nullptr),
             first_child(
                 other.get_first_child() != nullptr
-                    ? attach(
-                          allocate(
-                              allocator,
-                              *other.get_first_child(),
-                              allocator)
-                              .release())
-                    : nullptr),
-            next_sibling(
-                other.get_next_sibling() != nullptr
-                    ? allocate(
-                          allocator,
-                          *other.get_next_sibling(),
-                          allocator)
-                          .release()
-                    : nullptr),
-            following_siblings(other.get_following_siblings()) {
+                    ? allocate(allocator, *other.get_first_child(), this, allocator).release()
+                    : nullptr) {
+        this->manage_parent_last_child();
+    }
+
+    /*   ---   Conversion constructor from binary_node using allocator   ---   */
+    template <typename Allocator = std::allocator<nary_node>>
+    explicit nary_node(const binary_node<T>& other, Allocator&& allocator = Allocator()) :
+            nary_node(other, nullptr, allocator) {
     }
 
     /*   ---   Construct from struct_node using allocator   ---   */
@@ -99,8 +108,9 @@ class nary_node : public node<T, nary_node<T>> {
     explicit nary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()),
-            first_child(this->extract_children(other.get_children(), allocator)) {
+            node<T, nary_node>(other.get_value()) {
+        this->manage_children(other.get_children(), allocator);
+        this->manage_parent_last_child();
     }
 
     /*   ---   Construct from emplacing struct_node using allocator   ---   */
@@ -111,24 +121,38 @@ class nary_node : public node<T, nary_node<T>> {
         CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
     explicit nary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
-        Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()),
-            first_child(this->extract_children(other.get_children(), allocator)) {
+        Allocator&& allocator = Allocator()) :
+            node<T, nary_node>(other.get_value()) {
+        this->manage_children(other.get_children(), allocator);
+        this->manage_parent_last_child();
     }
 
-    private:
+    protected:
+    // every constructor must call this in order to initialize last_child for itself or parent
+    void manage_parent_last_child() {
+        if (this->parent && !this->next_sibling) {
+            this->parent->last_child = this;
+        }
+        if (!this->first_child) {
+            this->last_child = nullptr;
+        }
+    }
+
     template <typename Allocator, typename... Nodes>
-    nary_node* extract_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
+    void manage_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
         std::size_t children_count = sizeof...(Nodes);
         // pointer to the considered child (which is itself a pointer to nary_node)
         nary_node* result         = nullptr;
         nary_node** current_child = &result;
         // lambda that assigns one child at time
         auto assign_child = [&](auto node) {
-            *current_child                       = node;                            // assign child
-            (*current_child)->following_siblings = --children_count;                // assign siblings count
-            (*current_child)->parent             = this;                            // set the parent of that child
-            current_child                        = &(*current_child)->next_sibling; // go to next child
+            *current_child                       = node;             // assign child
+            (*current_child)->following_siblings = --children_count; // assign siblings count
+            (*current_child)->parent             = this;             // set the parent of that child
+            if (children_count == 0) {
+                this->last_child = *current_child;
+            }
+            current_child = &(*current_child)->next_sibling; // go to next child
         };
         // lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto process_child = [&](auto& structure_node) {
@@ -143,25 +167,30 @@ class nary_node : public node<T, nary_node<T>> {
                 (..., process_child(nodes));
             },
             nodes);
-        return result;
+        this->first_child = result;
     }
 
-    protected:
     /// Move the resources hold by this node to another node
     void move_resources_to(nary_node& node) {
         nary_node* current = this->first_child;
+        nary_node* last    = nullptr;
         while (current) {
+            last            = current;
             current->parent = &node;
             current         = current->next_sibling;
         }
+        if (last != nullptr) {
+            last->parent->last_child = last;
+        }
         this->parent       = nullptr;
         this->first_child  = nullptr;
+        this->last_child   = nullptr;
         this->next_sibling = nullptr;
     }
 
     /// Discard this whole subtree and replace it with node
     void replace_with(nary_node* node) {
-        assert(node == nullptr || (node->is_root() && node->next_sibling == nullptr));
+        assert(node == nullptr || (node->parent == nullptr && node->next_sibling == nullptr));
         if (this->parent != nullptr) {
             nary_node** back_link  = nullptr;
             nary_node* link_target = nullptr;
@@ -180,12 +209,17 @@ class nary_node : public node<T, nary_node<T>> {
                 }
                 link_target = this->next_sibling;
             }
+            // set parent't first_child or prev_siblings's next_sibling
             if (back_link == nullptr) {
                 back_link = this->is_first_child()
                     ? &this->parent->first_child
                     : &calculate_prev_sibling(this)->next_sibling;
             }
-            *back_link               = link_target;
+            *back_link = link_target;
+            // set parent's last_child
+            if (this->next_sibling == nullptr) {
+                this->parent->last_child = link_target;
+            }
             this->next_sibling       = nullptr;
             this->following_siblings = 0u;
             this->parent             = nullptr;
@@ -242,7 +276,9 @@ class nary_node : public node<T, nary_node<T>> {
 
     public:
     bool is_last_child() const {
-        return this->parent != nullptr && this->next_sibling == nullptr;
+        return this->parent
+            ? this->parent->last_child == this
+            : false;
     }
 
     bool is_first_child() const {
@@ -256,9 +292,7 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     const nary_node* get_last_child() const {
-        return this->first_child
-            ? keep_calling(*this->first_child, std::mem_fn(&nary_node::get_next_sibling))
-            : nullptr;
+        return this->last_child;
     }
 
     const nary_node* get_prev_sibling() const {
@@ -281,9 +315,12 @@ class nary_node : public node<T, nary_node<T>> {
         return this->following_siblings;
     }
 
-    const nary_node* get_child(int index) const {
+    const nary_node* get_child(std::size_t index) const {
         const nary_node* const* current = &this->first_child;
-        for (int i = 0; i < index && *current != nullptr; ++i) {
+        if (*current != nullptr && index == (*current)->following_siblings) {
+            return this->last_child;
+        }
+        for (std::size_t i = 0; i < index && *current != nullptr; ++i) {
             current = &(*current)->next_sibling;
         }
         return *current;
