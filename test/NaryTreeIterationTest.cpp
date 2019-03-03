@@ -35,18 +35,18 @@ void NaryTreeIterationTest::iteration() {
     QCOMPARE(actualArity, expectedArity);
 
     /*   ---   Forward order test   ---   */
-    vector<char> actualPreOrder(t.begin(pre_order()), t.end(pre_order()));
-    vector<char> actualPostOrder(t.begin(post_order()), t.end(post_order()));
-    vector<char> actualBreadthFirst(t.begin(breadth_first()), t.end(breadth_first()));
+    vector<char> actualPreOrder(t.begin(policy::pre_order()), t.end(policy::pre_order()));
+    vector<char> actualPostOrder(t.begin(policy::post_order()), t.end(policy::post_order()));
+    vector<char> actualBreadthFirst(t.begin(policy::breadth_first()), t.end(policy::breadth_first()));
 
     QCOMPARE(actualPreOrder, expectedPreOrder);
     QCOMPARE(actualPostOrder, expectedPostOrder);
     QCOMPARE(actualBreadthFirst, expectedBreadthFirst);
 
     /*   ---   Backward order test   ---   */
-    vector<char> actualReversePreOrder(t.rbegin(pre_order()), t.rend(pre_order()));
-    vector<char> actualReversePostOrder(t.rbegin(post_order()), t.rend(post_order()));
-    vector<char> actualReverseBreadthFirst(t.rbegin(breadth_first()), t.rend(breadth_first()));
+    vector<char> actualReversePreOrder(t.rbegin(policy::pre_order()), t.rend(policy::pre_order()));
+    vector<char> actualReversePostOrder(t.rbegin(policy::post_order()), t.rend(policy::post_order()));
+    vector<char> actualReverseBreadthFirst(t.rbegin(policy::breadth_first()), t.rend(policy::breadth_first()));
 
     vector<char> expectedReversePreOrder(expectedPreOrder.rbegin(), expectedPreOrder.rend());
     vector<char> expectedReversePostOrder(expectedPostOrder.rbegin(), expectedPostOrder.rend());

@@ -116,7 +116,7 @@ myTree.insert(
 Let's now iterate the tree. You can create a tree with a specified traversal policy by setting the second template parameter. This algorithm will be the default choice (used in the range based loops, for example).
 
 ```c++
-md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
+md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
 //                   ^^^^^^^^^^^^ default policy used to iterate the tree
 ```
 
@@ -136,8 +136,8 @@ You can always traverse a tree in a personalized manner, independently on the Po
 ```c++
 // Post-order: -20, -40, -30, -10, 400, 200, 100, 
 cout << "Post-order: ";
-auto it = inOrderTree.begin(md::post_order());
-while (it != inOrderTree.end(md::post_order()) {
+auto it = inOrderTree.begin(md::policy::post_order());
+while (it != inOrderTree.end(md::policy::post_order()) {
     cout << *it++ << ", ";
 }
 cout << endl;
@@ -147,7 +147,7 @@ Or create a view of the tree and specify the policy of it.
 
 ```c++
 // Breadth-first: 100, 200, -10, 400, -20, -30, -40,
-md::binary_tree_view<int, md::breadth_first> view(inOrderTree);
+md::binary_tree_view<int, md::policy::breadth_first> view(inOrderTree);
 cout << "Breadth-first: ";
 for (auto& value : view) {
     cout << value;

@@ -42,7 +42,7 @@ class ReadmeTest : public QObject {
                 n(-30)(
                     n(-40))));
 
-        md::binary_tree<int, md::in_order> inOrderTree(move(myTree));
+        md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
         //            ^^^^^^^^^^^^ default algorithm used to iterate the tree
 
         {
@@ -58,8 +58,8 @@ class ReadmeTest : public QObject {
         {
             std::stringstream cout;
             cout << "Post-order: ";
-            auto it = inOrderTree.begin(md::post_order());
-            while (it != inOrderTree.end(md::post_order())) {
+            auto it = inOrderTree.begin(md::policy::post_order());
+            while (it != inOrderTree.end(md::policy::post_order())) {
                 cout << *it++ << ", ";
             }
             QCOMPARE(cout.str(), "Post-order: -20, -40, -30, -10, 400, 200, 100, ");
@@ -67,7 +67,7 @@ class ReadmeTest : public QObject {
 
         {
             std::stringstream cout;
-            md::binary_tree_view<int, md::breadth_first> view(inOrderTree);
+            md::binary_tree_view<int, md::policy::breadth_first> view(inOrderTree);
             cout << "Breadth-first: ";
             for (auto& value : view) {
                 cout << value << ", ";

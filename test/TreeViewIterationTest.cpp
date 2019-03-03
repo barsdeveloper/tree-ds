@@ -71,10 +71,10 @@ void TreeViewIterationTest::iteration() {
 
     /*   ---   Forward order test   ---   */
     // Binary
-    vector<int> actualBinaryPreOrder(binary.begin(pre_order()), binary.end(pre_order()));
-    vector<int> actualBinaryInOrder(binary.begin(in_order()), binary.end(in_order()));
-    vector<int> actualBinaryPostOrder(binary.begin(post_order()), binary.end(post_order()));
-    vector<int> actualBinaryBreadthFirst(binary.begin(breadth_first()), binary.end(breadth_first()));
+    vector<int> actualBinaryPreOrder(binary.begin(policy::pre_order()), binary.end(policy::pre_order()));
+    vector<int> actualBinaryInOrder(binary.begin(policy::in_order()), binary.end(policy::in_order()));
+    vector<int> actualBinaryPostOrder(binary.begin(policy::post_order()), binary.end(policy::post_order()));
+    vector<int> actualBinaryBreadthFirst(binary.begin(policy::breadth_first()), binary.end(policy::breadth_first()));
 
     // Compare results binary
     QCOMPARE(actualBinaryPreOrder, expectedPreOrder);
@@ -83,9 +83,9 @@ void TreeViewIterationTest::iteration() {
     QCOMPARE(actualBinaryBreadthFirst, expectedBreadthFirst);
 
     // Nary
-    vector<int> actualNaryPreOrder(nary.begin(pre_order()), nary.end(pre_order()));
-    vector<int> actualNaryPostOrder(nary.begin(post_order()), nary.end(post_order()));
-    vector<int> actualNaryBreadthFirst(nary.begin(breadth_first()), nary.end(breadth_first()));
+    vector<int> actualNaryPreOrder(nary.begin(policy::pre_order()), nary.end(policy::pre_order()));
+    vector<int> actualNaryPostOrder(nary.begin(policy::post_order()), nary.end(policy::post_order()));
+    vector<int> actualNaryBreadthFirst(nary.begin(policy::breadth_first()), nary.end(policy::breadth_first()));
 
     // Compare results nary
     QCOMPARE(actualNaryPreOrder, expectedPreOrder);
@@ -99,10 +99,10 @@ void TreeViewIterationTest::iteration() {
     vector<char> expectedReverseBreadthFirst(expectedBreadthFirst.rbegin(), expectedBreadthFirst.rend());
 
     // Binary
-    vector<char> actualBinaryReversePreOrder(binary.rbegin(pre_order()), binary.rend(pre_order()));
-    vector<char> actualBinaryReverseInOrder(binary.rbegin(in_order()), binary.rend(in_order()));
-    vector<char> actualBinaryReversePostOrder(binary.rbegin(post_order()), binary.rend(post_order()));
-    vector<char> actualBinaryReverseBreadthFirst(binary.rbegin(breadth_first()), binary.rend(breadth_first()));
+    vector<char> actualBinaryReversePreOrder(binary.rbegin(policy::pre_order()), binary.rend(policy::pre_order()));
+    vector<char> actualBinaryReverseInOrder(binary.rbegin(policy::in_order()), binary.rend(policy::in_order()));
+    vector<char> actualBinaryReversePostOrder(binary.rbegin(policy::post_order()), binary.rend(policy::post_order()));
+    vector<char> actualBinaryReverseBreadthFirst(binary.rbegin(policy::breadth_first()), binary.rend(policy::breadth_first()));
 
     // Compare results binary
     QCOMPARE(actualBinaryReversePreOrder, expectedReversePreOrder);
@@ -111,9 +111,9 @@ void TreeViewIterationTest::iteration() {
     QCOMPARE(actualBinaryReverseBreadthFirst, expectedReverseBreadthFirst);
 
     // Nary
-    vector<char> actualNaryReversePreOrder(nary.rbegin(pre_order()), nary.rend(pre_order()));
-    vector<char> actualNaryReversePostOrder(nary.rbegin(post_order()), nary.rend(post_order()));
-    vector<char> actualNaryReverseBreadthFirst(nary.rbegin(breadth_first()), nary.rend(breadth_first()));
+    vector<char> actualNaryReversePreOrder(nary.rbegin(policy::pre_order()), nary.rend(policy::pre_order()));
+    vector<char> actualNaryReversePostOrder(nary.rbegin(policy::post_order()), nary.rend(policy::post_order()));
+    vector<char> actualNaryReverseBreadthFirst(nary.rbegin(policy::breadth_first()), nary.rend(policy::breadth_first()));
 
     // Compare results nary
     QCOMPARE(actualNaryReversePreOrder, expectedReversePreOrder);

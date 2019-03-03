@@ -454,19 +454,19 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             node.get_subtree_arity());
     }
 
-    iterator<post_order> erase(const_iterator<post_order> position) {
+    iterator<policy::post_order> erase(const_iterator<policy::post_order> position) {
         if (position.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
         }
-        iterator<post_order> result(position.craft_non_constant_iterator());
+        iterator<policy::post_order> result(position.craft_non_constant_iterator());
         ++result;
         this->erase_subtree(position);
         return result;
     }
 
-    iterator<post_order> erase(
-        const_iterator<post_order> first,
-        const_iterator<post_order> last) {
+    iterator<policy::post_order> erase(
+        const_iterator<policy::post_order> first,
+        const_iterator<policy::post_order> last) {
         if (first.pointed_tree != this || last.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
         }

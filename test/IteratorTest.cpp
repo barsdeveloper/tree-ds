@@ -7,8 +7,8 @@
 using namespace std;
 using namespace md;
 
-template class md::tree_iterator<nary_tree<int>, pre_order, false>;
-template class md::tree_iterator<binary_tree<Bar>, in_order, true>;
+template class md::tree_iterator<nary_tree<int>, policy::pre_order, false>;
+template class md::tree_iterator<binary_tree<Bar>, policy::in_order, true>;
 
 class IteratorTest : public QObject {
 
@@ -20,10 +20,10 @@ class IteratorTest : public QObject {
 };
 
 void IteratorTest::test1() {
-    nary_tree<int, post_order> tree;
-    decltype(tree)::iterator<post_order> unrelated;
+    nary_tree<int, policy::post_order> tree;
+    decltype(tree)::iterator<policy::post_order> unrelated;
     auto start = tree.begin();
-    decltype(tree)::iterator<post_order> related(start);
+    decltype(tree)::iterator<policy::post_order> related(start);
 
     QVERIFY(unrelated != related);
     QVERIFY(related != unrelated);
@@ -37,13 +37,13 @@ void IteratorTest::test1() {
 }
 
 void IteratorTest::test2() {
-    using iterator_t       = binary_tree<Bar>::iterator<in_order>;
-    using const_iterator_t = binary_tree<Bar>::const_iterator<in_order>;
+    using iterator_t       = binary_tree<Bar>::iterator<policy::in_order>;
+    using const_iterator_t = binary_tree<Bar>::const_iterator<policy::in_order>;
 
     binary_tree<Bar> tree(n(1, 2)(n(2, 3), n(3, 4)));
 
     // obtained using std::find
-    iterator_t it1 = std::find(tree.begin(in_order()), tree.end(in_order()), Bar(1, 2));
+    iterator_t it1 = std::find(tree.begin(policy::in_order()), tree.end(policy::in_order()), Bar(1, 2));
     // copy constructed
     iterator_t it2(it1);
     // copy assignment (below)

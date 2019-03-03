@@ -78,7 +78,7 @@ void BreadthFirstTest::backAndForth() {
     vector<int> result;
     vector<int> expected(50);
     // populate result with the actual result of tree traverse
-    result.assign(tree.cbegin(breadth_first()), tree.cend(breadth_first()));
+    result.assign(tree.cbegin(policy::breadth_first()), tree.cend(policy::breadth_first()));
     // the expected traversal is 1...50
     iota(expected.begin(), expected.end(), 1);
 
@@ -90,8 +90,8 @@ void BreadthFirstTest::backAndForth() {
     auto expectedIt    = expectedStart;
 
     // Iterators of the actual tree
-    auto actualStart = tree.cbegin(breadth_first());
-    auto actualEnd   = tree.cend(breadth_first());
+    auto actualStart = tree.cbegin(policy::breadth_first());
+    auto actualEnd   = tree.cend(policy::breadth_first());
     auto actualIt    = actualStart;
 
     // start jumping forward and backward
@@ -138,8 +138,8 @@ void BreadthFirstTest::backAndForth() {
 void BreadthFirstTest::checkUpdateConsistency() {
     nary_tree<int> t(BreadthFirstTest::tree);
     auto it24 = find(
-        t.begin(breadth_first()),
-        t.end(breadth_first()),
+        t.begin(policy::breadth_first()),
+        t.end(policy::breadth_first()),
         24);
     auto it23 = (--it24)++;
     auto it22 = (--it23)++;

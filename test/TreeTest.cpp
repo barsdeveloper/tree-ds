@@ -8,13 +8,13 @@
 using namespace std;
 using namespace md;
 
-template class md::tree<int, nary_node<int>, pre_order, std::allocator<int>>;
+template class md::tree<int, nary_node<int>, policy::breadth_first, std::allocator<int>>;
 
 class TreeTest : public QObject {
 
     Q_OBJECT
 
-    using narytree_t = nary_tree<char, breadth_first>;
+    using narytree_t = nary_tree<char, policy::breadth_first>;
 
     private slots:
     void naryTree();
@@ -92,7 +92,7 @@ void TreeTest::naryTree() {
     QVERIFY(!(copy == diff));
     QVERIFY(!(diff == copy));
 
-    nary_tree<char, post_order> copy2(tree);
+    nary_tree<char, policy::post_order> copy2(tree);
     QCOMPARE(copy2.size(), 12);
     QCOMPARE(copy2.arity(), 3);
     QCOMPARE(copy, copy2);
@@ -101,7 +101,7 @@ void TreeTest::naryTree() {
     expected = vector<char> {'d', 'h', 'e', 'f', 'b', 'l', 'i', 'j', 'k', 'g', 'c', 'a'};
     QCOMPARE(actual, expected);
 
-    nary_tree<char, post_order> moved(move(copy2));
+    nary_tree<char, policy::post_order> moved(move(copy2));
     QCOMPARE(moved.size(), 12);
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(copy2.size(), 0);
@@ -138,8 +138,8 @@ void TreeTest::naryTree() {
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(*bang_it, '!');
     actual = vector<char>(
-        moved.cbegin(breadth_first()),
-        moved.cend(breadth_first()));
+        moved.cbegin(policy::breadth_first()),
+        moved.cend(policy::breadth_first()));
     expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
@@ -147,13 +147,13 @@ void TreeTest::naryTree() {
 
     // b -> ?
     auto it = find(
-        moved.begin(breadth_first()),
-        moved.end(breadth_first()),
+        moved.begin(policy::breadth_first()),
+        moved.end(policy::breadth_first()),
         'b');
     *it    = '?';
     actual = vector<char>(
-        moved.cbegin(breadth_first()),
-        moved.cend(breadth_first()));
+        moved.cbegin(policy::breadth_first()),
+        moved.cend(policy::breadth_first()));
     expected = vector<char> {'a', '?', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(moved.size(), 8);
     QCOMPARE(moved.arity(), 3);
@@ -184,7 +184,7 @@ void TreeTest::naryTree() {
     QCOMPARE(n_f->get_following_siblings(), 0);
 
     // erase t
-    auto it_f = moved.erase(find(moved.begin(post_order()), moved.end(post_order()), 't'));
+    auto it_f = moved.erase(find(moved.begin(policy::post_order()), moved.end(policy::post_order()), 't'));
     QCOMPARE(it_f.get_node(), n_f);
     QCOMPARE(n_d->get_prev_sibling(), nullptr);
     QCOMPARE(n_d->get_next_sibling(), n_f);
@@ -195,13 +195,13 @@ void TreeTest::naryTree() {
 
     // erase root
     auto end_it
-        = moved.erase(find(moved.begin(post_order()), moved.end(post_order()), 'a'));
-    QVERIFY(end_it == moved.end(post_order()));
+        = moved.erase(find(moved.begin(policy::post_order()), moved.end(policy::post_order()), 'a'));
+    QVERIFY(end_it == moved.end(policy::post_order()));
     QCOMPARE(moved, n());
     QCOMPARE(moved.size(), 0);
     QCOMPARE(moved.arity(), 0);
     QCOMPARE(moved.begin(), moved.end());
-    QCOMPARE(moved.begin(post_order()), end_it);
+    QCOMPARE(moved.begin(policy::post_order()), end_it);
     QVERIFY(moved.empty());
     QVERIFY(moved == n());
     QVERIFY(n() == moved);
@@ -210,7 +210,7 @@ void TreeTest::naryTree() {
 }
 
 void TreeTest::binaryTree() {
-    const binary_tree<int, post_order> tree(
+    const binary_tree<int, policy::post_order> tree(
         n(-1)(
             n(),
             n(-2)(
@@ -231,17 +231,17 @@ void TreeTest::binaryTree() {
     QCOMPARE(tree.size(), 12);
     QCOMPARE(tree.arity(), 2);
     QCOMPARE(actual, expected);
-    QVERIFY((tree != binary_tree<int, breadth_first>()));
-    QVERIFY((binary_tree<int, breadth_first>() != tree));
+    QVERIFY((tree != binary_tree<int, policy::breadth_first>()));
+    QVERIFY((binary_tree<int, policy::breadth_first>() != tree));
 
-    binary_tree<int, pre_order> copy;
+    binary_tree<int, policy::pre_order> copy;
     copy = tree;
     QVERIFY(copy == tree);
     QVERIFY(!(copy != tree));
     QVERIFY(tree == copy);
     QVERIFY(!(tree != copy));
 
-    nary_tree<int, breadth_first> nary;
+    nary_tree<int, policy::breadth_first> nary;
     nary = tree;
 
     QCOMPARE(tree.size(), nary.size());
@@ -252,7 +252,7 @@ void TreeTest::binaryTree() {
     QVERIFY(!(tree != nary));
 
     binary_tree<int> tree2(tree);
-    auto eight_it = tree2.erase(std::find(tree2.begin(post_order()), tree2.end(post_order()), -11));
+    auto eight_it = tree2.erase(std::find(tree2.begin(policy::post_order()), tree2.end(policy::post_order()), -11));
     QCOMPARE(*eight_it, -8);
 
     QCOMPARE(tree2.size(), nary.size() - 1);
@@ -260,9 +260,9 @@ void TreeTest::binaryTree() {
     QVERIFY(tree2 != nary);
 
     auto end_it = tree2.erase(
-        tree2.begin(post_order()),
-        tree2.end(post_order()));
-    QCOMPARE(end_it, tree2.end(post_order()));
+        tree2.begin(policy::post_order()),
+        tree2.end(policy::post_order()));
+    QCOMPARE(end_it, tree2.end(policy::post_order()));
 
     QVERIFY(tree2.empty());
 }
@@ -293,8 +293,8 @@ void TreeTest::nonCopyable() {
         'z', 100);
     QCOMPARE(*z_it, NonCopyable('z', 100));
 
-    auto it    = movedTree.begin(in_order());
-    auto itEnd = movedTree.end(in_order());
+    auto it    = movedTree.begin(policy::in_order());
+    auto itEnd = movedTree.end(policy::in_order());
 
     QCOMPARE(movedTree.size(), 3);
     QCOMPARE(movedTree.arity(), 2);
@@ -328,17 +328,17 @@ void TreeTest::forbiddenOperations() {
         bin.insert(binEmpty.begin(), std::string("x")),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        bin.erase(binEmpty.begin(post_order())),
+        bin.erase(binEmpty.begin(policy::post_order())),
         std::logic_error);
     // iterator pointing to end
     QVERIFY_EXCEPTION_THROWN(
         bin.emplace(bin.end(), "x"),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        bin.erase(bin.end(post_order())),
+        bin.erase(bin.end(policy::post_order())),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        binEmpty.erase(bin.begin(post_order()), bin.end(post_order())),
+        binEmpty.erase(bin.begin(policy::post_order()), bin.end(policy::post_order())),
         std::logic_error);
 }
 

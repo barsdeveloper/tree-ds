@@ -30,7 +30,7 @@
 
 namespace md {
 
-using default_policy = breadth_first;
+using default_policy = policy::breadth_first;
 
 template <typename, typename, typename, typename>
 class tree;

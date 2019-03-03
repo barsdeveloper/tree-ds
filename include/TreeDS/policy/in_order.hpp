@@ -1,8 +1,10 @@
 #pragma once
 
-#include <functional> // std::mem_fn
+#include <functional>  // std::mem_fn()
+#include <memory>      // std::allocator
+#include <type_traits> // std::is_same_v
 
-#include <TreeDS/policy/policy.hpp>
+#include <TreeDS/policy/basic_policy.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md {
@@ -12,33 +14,33 @@ class binary_node;
 
 namespace detail {
 
-    template <typename Node>
-    class in_order_impl {}; // unimplemented
+    template <typename Node, typename Allocator = std::allocator<Node>>
+    class in_order_impl {
+        static_assert(!std::is_same_v<Node, binary_node<int>>, "In_order iteration policy is implemented only for binary_tree");
+    };
 
-    template <typename T>
-    class in_order_impl<binary_node<T>> final : public policy<binary_node<T>> {
+    template <typename T, typename Allocator>
+    class in_order_impl<binary_node<T>, Allocator> final
+            : public basic_policy<
+                  in_order_impl<binary_node<T>, Allocator>,
+                  binary_node<T>,
+                  Allocator> {
 
         public:
-        in_order_impl() :
-                in_order_impl(nullptr) {
-        }
+        using basic_policy<in_order_impl, binary_node<T>, Allocator>::basic_policy;
 
-        in_order_impl(const binary_node<T>* root) :
-                policy<binary_node<T>>(root) {
-        }
-
-        const binary_node<T>* increment(const binary_node<T>& from) {
-            if (from.get_right_child()) {
+        const binary_node<T>* increment_impl() {
+            if (this->current->get_right_child()) {
                 return keep_calling(
                     // from
-                    *from.get_right_child(),
+                    *this->current->get_right_child(),
                     // keep calling
                     std::mem_fn(&binary_node<T>::get_left_child));
             } else {
                 bool found                   = false;
                 const binary_node<T>* result = keep_calling(
                     // from
-                    from,
+                    *this->current,
                     // keep calling
                     [&](const binary_node<T>& node) {
                         return node.get_parent_limit(*this->root);
@@ -56,13 +58,13 @@ namespace detail {
             }
         }
 
-        const binary_node<T>* decrement(const binary_node<T>& from) {
-            if (from.get_left_child()) {
-                return keep_calling(*from.get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
+        const binary_node<T>* decrement_impl() {
+            if (this->current->get_left_child()) {
+                return keep_calling(*this->current->get_left_child(), std::mem_fn(&binary_node<T>::get_right_child));
             }
             return keep_calling(
                 // from
-                from,
+                *this->current,
                 // keep calling
                 [&](const binary_node<T>& node) {
                     return node.get_parent_limit(*this->root);
@@ -77,26 +79,21 @@ namespace detail {
                 });
         }
 
-        const binary_node<T>* go_first(const binary_node<T>& root) {
-            this->root = &root;
-            return keep_calling(root, std::mem_fn(&binary_node<T>::get_left_child));
+        const binary_node<T>* go_first_impl() {
+            return keep_calling(*this->root, std::mem_fn(&binary_node<T>::get_left_child));
         }
 
-        const binary_node<T>* go_last(const binary_node<T>& root) {
-            this->root = &root;
-            return keep_calling(root, std::mem_fn(&binary_node<T>::get_right_child));
+        const binary_node<T>* go_last_impl() {
+            return keep_calling(*this->root, std::mem_fn(&binary_node<T>::get_right_child));
         }
     };
 
 } // namespace detail
 
-struct in_order {
-    template <typename Node, typename Allocator>
-    detail::in_order_impl<Node> get_instance(
-        const Node* root,
-        const Allocator& = Allocator()) const {
-        return detail::in_order_impl(root);
-    }
-};
+namespace policy {
+    struct in_order : detail::tag<detail::in_order_impl> {
+        // what needed is inherited
+    };
+} // namespace policy
 
 } // namespace md

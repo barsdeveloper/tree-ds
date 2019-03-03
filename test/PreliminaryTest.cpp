@@ -109,7 +109,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
     CustomAllocator<std::string> allocator;
     binary_tree<
         std::string,
-        breadth_first,
+        policy::breadth_first,
         CustomAllocator<std::string>>
         t(allocator);
 

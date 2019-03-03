@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+#include <cstddef>     // std::ptr_diff_t
+#include <functional>  // std::mem_fn()
 #include <type_traits> // std::enable_if, std::is_convertible, std::is_constructible, std::void_t
 #include <utility>     // std::forward(), std::declval
 
@@ -49,16 +50,16 @@ const Node* keep_calling(const Node& from, Callable call) {
     return prev;
 }
 
-template <typename Node>
-const Node* prev_branch_sibling(const Node& from, const Node& root) {
-    int relative_level             = 0;
-    const Node* deepest_last_child = &from;
-    const Node* left_crossed;
+template <typename Node, bool Left>
+const Node* calculate_other_branch_node(const Node& from, const Node& root) {
+    int relative_level        = 0;
+    const Node* deepest_child = &from;
+    const Node* crossed;
     do {
-        // Climb up the tree until a node with a previous sibling is found, then return that previous sibling
-        left_crossed = keep_calling(
+        // Climb up the tree until a node with a sibling is found, then return that sibling
+        crossed = keep_calling(
             // from
-            *deepest_last_child,
+            *deepest_child,
             // keep calling
             [&](const Node& node) {
                 return node.get_parent_limit(root);
@@ -66,26 +67,34 @@ const Node* prev_branch_sibling(const Node& from, const Node& root) {
             // until
             [&](const Node& child, const Node&) {
                 --relative_level;
-                return !child.is_first_child();
+                return Left
+                    ? !child.is_first_child()
+                    : !child.is_last_child();
             },
             // then return
             [&](const Node& child, const Node&) {
-                // because it considers the previous value (first argument)
+                // increment level because it considers the previous value (first argument)
                 ++relative_level;
-                // always present because it's the first child
-                return child.get_prev_sibling();
+                return Left
+                    // always present because it is not the first child
+                    ? child.get_prev_sibling()
+                    // always present because it is not the last child
+                    : child.get_next_sibling();
             });
-        if (left_crossed->is_root_limit(root)) {
+        if (crossed->is_root_limit(root)) {
             return nullptr;
         } else if (relative_level == 0) {
-            return left_crossed;
+            return crossed;
         }
         // Descend the tree following the last children until level is reached or no more children
-        deepest_last_child = keep_calling(
+        deepest_child = keep_calling(
             // from
-            *left_crossed,
+            *crossed,
             // keep calling
-            std::mem_fn(&Node::get_last_child),
+            std::mem_fn(
+                Left
+                    ? &Node::get_last_child
+                    : &Node::get_first_child),
             // until
             [&](const Node&, const Node&) {
                 ++relative_level;
@@ -96,18 +105,28 @@ const Node* prev_branch_sibling(const Node& from, const Node& root) {
                 return &child;
             });
     } while (relative_level < 0);
-    return deepest_last_child;
+    return deepest_child;
+} // namespace md
+
+template <typename Node>
+const Node* left_branch_node(const Node& from, const Node& root) {
+    return calculate_other_branch_node<Node, true>(from, root);
 }
 
 template <typename Node>
-const Node* upper_row_rightmost(const Node& from, const Node& root) {
+const Node* right_branch_node(const Node& from, const Node& root) {
+    return calculate_other_branch_node<Node, false>(from, root);
+}
+
+template <typename Node, bool Left>
+const Node* calculate_row_extremum(const Node& from, const Node& root) {
     if (from.is_root_limit(root)) {
-        return nullptr;
+        return &from;
     }
     int relative_level = 0;
-    const Node* deepest_last_child;
+    const Node* deepest_extremum_child;
     // Climb the tree up to the root
-    const Node* left_crossed = keep_calling(
+    const Node* breanch_crossed = keep_calling(
         // from
         from,
         // keep calling
@@ -121,33 +140,42 @@ const Node* upper_row_rightmost(const Node& from, const Node& root) {
         [](const Node&, const Node& root) {
             return &root;
         });
-    // if it climbed just once, then this is a child of the root anche the root is its upper_row_rightmost's
-    if (relative_level == -1) {
-        return left_crossed;
-    }
     do {
-        // Descend the tree keeping right (last child)
-        deepest_last_child = keep_calling(
+        // Descend the tree traversing extremum children
+        deepest_extremum_child = keep_calling(
             // from
-            *left_crossed,
+            *breanch_crossed,
             // keep calling
-            std::mem_fn(&Node::get_last_child),
+            std::mem_fn(
+                Left
+                    ? &Node::get_first_child
+                    : &Node::get_last_child),
             // until
             [&](const Node&, const Node&) {
                 ++relative_level;
-                return relative_level >= -1;
+                return relative_level >= 0;
             },
             // the return
             [](const Node&, const Node& child) {
                 return &child;
             });
-        if (relative_level == -1) {
+        if (relative_level == 0) {
             break;
         }
-        // Go to the node that is on the left and at the same level
-        left_crossed = prev_branch_sibling(*deepest_last_child, root);
-    } while (relative_level < -1);
-    return deepest_last_child;
+        // Go to the node that is on the other direction branch and at the same level
+        breanch_crossed = calculate_other_branch_node<Node, !Left>(*deepest_extremum_child, root);
+    } while (relative_level < 0);
+    return deepest_extremum_child;
+}
+
+template <typename Node>
+const Node* same_row_leftmost(const Node& from, const Node& root) {
+    return calculate_row_extremum<Node, true>(from, root);
+}
+
+template <typename Node>
+const Node* same_row_rightmost(const Node& from, const Node& root) {
+    return calculate_row_extremum<Node, false>(from, root);
 }
 
 template <typename Node>
@@ -175,7 +203,7 @@ const Node* deepest_rightmost_child(const Node& root) {
             deepest_node  = current_node;
         }
         // Go to the node that is on the left and at the same level
-        current_node = prev_branch_sibling(*current_node, root);
+        current_node = left_branch_node(*current_node, root);
     } while (current_node != nullptr);
     return deepest_node;
 }
@@ -218,33 +246,6 @@ std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
     return arity;
 }
 
-/**
- * This is a type trait used to verify whheter a given traversal policy is updateable, i.e. if it has a method update
- * callable with a two arguments of type Arg. For a concrete example take a look at {@link breadth_first#update}.
- */
-template <
-    typename T,      // type to be checked
-    typename Arg,    // arguments to be provided to method: "update"
-    typename = void> // dummy argument to exclude this template overload from being taken into consideration
-struct is_updateable : std::false_type {};
-
-template <typename T, typename Arg>
-struct is_updateable<
-    T,   // type to be cheacked
-    Arg, // arguments to be provided to method: "update"
-    // the whole thing result in void (it is just to satisfy template parameter 3
-    std::void_t<
-        // unevaluated context
-        decltype(
-            // declare a value of type T (works also if T is not default constructible
-            std::declval<T>()
-                // call method update
-                .update(
-                    // provide it arguments Node
-                    std::declval<const Arg&>(),
-                    std::declval<const Arg*>()))>>
-        : std::true_type {};
-
 template <
     typename T,
     typename Tuple,
@@ -275,7 +276,8 @@ struct is_tag_of_policy<
         decltype(
             std::declval<Policy>()
                 .template get_instance<Node, Allocator>(
-                    std::declval<const Node*>(),
+                    std::declval<Node*>(),
+                    std::declval<Node*>(),
                     std::declval<Allocator>())),
         Policy>>
         : std::true_type {};
