@@ -53,6 +53,7 @@ class IteratorChangePolicyTest : public QObject {
 
     private slots:
     void test1();
+    void test2();
 };
 
 void IteratorChangePolicyTest::test1() {
@@ -110,9 +111,46 @@ void IteratorChangePolicyTest::test1() {
     QCOMPARE(*--it_f, 8);
     QCOMPARE(*--it_f, 7);
 
-    auto it_g = it_f.other_policy(policy::children());
+    auto it_g = it_f.other_policy(policy::siblings());
     QCOMPARE(*it_g, 7);
     QCOMPARE(*++it_g, 8);
+    QCOMPARE(++it_g, binary.end(policy::siblings()));
+}
+
+void IteratorChangePolicyTest::test2() {
+    nary_tree<int> nary(this->binary);
+
+    auto it_a = nary.rbegin(policy::breadth_first());
+    QCOMPARE(*it_a, 32);
+    QCOMPARE(*++it_a, 31);
+    QCOMPARE(*++it_a, 30);
+    QCOMPARE(*++it_a, 29);
+    QCOMPARE(*++it_a, 28);
+    QCOMPARE(*++it_a, 27);
+
+    auto it_b = std::prev(it_a.base()).other_policy(policy::siblings());
+    QCOMPARE(*it_b, 27);
+    QCOMPARE(*--it_b, 26);
+
+    auto it_c = it_b.other_policy(policy::pre_order());
+    QCOMPARE(*it_c, 26);
+    QCOMPARE(*--it_c, 23);
+
+    auto it_d = it_c.other_policy(policy::breadth_first());
+    QCOMPARE(*it_d, 23);
+    QCOMPARE(*--it_d, 22);
+    QCOMPARE(*--it_d, 21);
+    QCOMPARE(*--it_d, 20);
+
+    auto it_e = it_d.other_policy(policy::post_order());
+    std::advance(it_e, -12);
+    QCOMPARE(*it_e, 3);
+
+    it_d = it_e.other_policy(policy::breadth_first());
+    std::advance(it_d, 13);
+    QCOMPARE(*it_d, 16);
+    std::advance(it_d, -15);
+    QCOMPARE(*it_d, 1);
 }
 
 QTEST_MAIN(IteratorChangePolicyTest);

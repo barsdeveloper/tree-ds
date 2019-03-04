@@ -14,6 +14,13 @@ class children_impl final : public basic_policy<children_impl<Node, Allocator>, 
     public:
     using basic_policy<children_impl, Node, Allocator>::basic_policy;
 
+    children_impl(const Node* root, const Node* current, const Allocator& allocator) :
+            basic_policy<children_impl, Node, Allocator>(root, current, allocator) {
+        this->root = this->current && this->current->get_parent()
+            ? this->current->get_parent()
+            : nullptr;
+    }
+
     const Node* increment_impl() {
         return this->current->get_next_sibling();
     }
@@ -33,7 +40,7 @@ class children_impl final : public basic_policy<children_impl<Node, Allocator>, 
 
 } // namespace md::detail
 namespace md::policy {
-struct children : detail::tag<detail::children_impl> {
+struct siblings : detail::tag<detail::children_impl> {
     // what needed is inherited
 };
 } // namespace md::policy

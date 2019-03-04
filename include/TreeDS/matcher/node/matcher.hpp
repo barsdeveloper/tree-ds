@@ -10,11 +10,9 @@
 namespace md {
 
 template <
-    template <typename, typename, typename...> class Derived,
+    typename Derived,
     typename Node,
     typename ValueMatcher,
-    std::size_t MinSiblings,
-    std::size_t MaxSiblings,
     typename... Children>
 class matcher : public struct_node<ValueMatcher, Children...> {
 
@@ -33,18 +31,15 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     bool match_node(Node* node) {
         this->target_node = nullptr;
         Node* current     = node;
-        if (
-            static_cast<
-                Derived<Node, ValueMatcher, Children...>*>(this)
-                /*
-                 * Derived class is expected to have a bool match_impl(Node*) method. It is responsible to:
-                 *   1) implement the actual logic to match a node,
-                 *   2) call bool match_node(Node*) for each one of its children,
-                 *   3) return true if itself and children matched correctly, false otherwise.
-                 * Please note that node* passed to match_impl can also be a nullptr. Some matcher correctly accept it,
-                 * for example any(..., true_matcher)
-                 */
-                ->match_impl(node)) {
+        /*
+         * Derived class is expected to have a bool match_impl(Node*) method. It is responsible to:
+         *   1) implement the actual logic to match a node,
+         *   2) call bool match_node(Node*) for each one of its children,
+         *   3) return true if itself and children matched correctly, false otherwise.
+         * Please note that node* passed to match_impl can also be a nullptr. Some matcher correctly accept it,
+         * for example any(..., true_matcher)
+         */
+        if (static_cast<Derived*>(this)->match_impl(node)) {
             this->target_node = node;
             return true;
         }
@@ -66,7 +61,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename... Nodes>
-    constexpr Derived<Node, ValueMatcher, Nodes...> operator()(Nodes&&... nodes) const {
+    constexpr Derived operator()(Nodes&&... nodes) const {
         return {this->target_node, this->value, std::forward<Nodes>(nodes)...};
     }
 };
