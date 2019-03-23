@@ -155,3 +155,7 @@ for (auto& value : view) {
 cout << endl;
 }// end of main
 ```
+
+`nary_tree_view<T>` and `binary_tree_view<T>` are coneptually similar to STL's `string_view`: they create a "view" (read only) that is a part of some bigger data structure.
+Views can also refer to a subtree (take as root a node which is not the root of the original tree) and iterated coherently.
+Views are cheap to copy so please use them whenever deep copying a tree is something that must be avoided.
