@@ -250,47 +250,52 @@ template <
     typename T,
     typename Tuple,
     typename = void>
-struct is_constructible_from_tuple : std::false_type {};
+constexpr bool is_constructible_from_tuple = false;
 
 template <
     typename T,
     typename Tuple>
-struct is_constructible_from_tuple<
+constexpr bool is_constructible_from_tuple<
     T,
     Tuple,
     std::enable_if_t<
         std::is_invocable_v<
             std::make_from_tuple<T>,
-            const Tuple&>>>
-        : std::true_type {};
+            const Tuple&>>> = true;
 
 template <typename Policy, typename Node, typename Allocator, typename = void>
-struct is_tag_of_policy : std::false_type {};
+constexpr bool is_tag_of_policy = false;
 
 template <typename Policy, typename Node, typename Allocator>
-struct is_tag_of_policy<
+constexpr bool is_tag_of_policy<
     Policy,
     Node,
     Allocator,
     std::void_t<
         decltype(
-            std::declval<Policy>()
-                .template get_instance<Node, Allocator>(
-                    std::declval<Node*>(),
-                    std::declval<Node*>(),
-                    std::declval<Allocator>())),
-        Policy>>
-        : std::true_type {};
+            std::declval<Policy>().template get_instance<Node, Allocator>(
+                std::declval<Node*>(),
+                std::declval<Node*>(),
+                std::declval<Allocator>())),
+        Policy>> = true;
 
+// Check method Type::get_resources() exists
 template <typename Type, typename = void>
-struct holds_resources : std::false_type {};
+constexpr bool holds_resources = false;
 
 template <typename Type>
-struct holds_resources<
+constexpr bool holds_resources<
     Type,
-    std::void_t<
-        decltype(
-            std::declval<Type>()
-                .get_resources())>> : std::true_type {};
+    std::void_t<decltype(std::declval<Type>().get_resources())>> = true;
+
+// Check if two types are instantiation of the same template
+template <typename, typename>
+constexpr bool is_same_template = false;
+
+template <
+    template <typename...> class T,
+    typename... A,
+    typename... B>
+constexpr bool is_same_template<T<A...>, T<B...>> = true;
 
 } // namespace md

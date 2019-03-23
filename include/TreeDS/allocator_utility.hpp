@@ -24,7 +24,7 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
     if (ptr == nullptr) {
         return;
     }
-    if constexpr (holds_resources<decltype(*ptr)>::value) {
+    if constexpr (holds_resources<decltype(*ptr)>) {
         // first deallocate nodes that this node is responsible for
         auto resources_to_deallocate = ptr->get_resources();
         std::apply(

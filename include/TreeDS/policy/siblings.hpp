@@ -9,13 +9,13 @@
 namespace md::detail {
 
 template <typename Node, typename Allocator = std::allocator<Node>>
-class children_impl final : public basic_policy<children_impl<Node, Allocator>, Node, Allocator> {
+class siblings_impl final : public basic_policy<siblings_impl<Node, Allocator>, Node, Allocator> {
 
     public:
-    using basic_policy<children_impl, Node, Allocator>::basic_policy;
+    using basic_policy<siblings_impl, Node, Allocator>::basic_policy;
 
-    children_impl(const Node* root, const Node* current, const Allocator& allocator) :
-            basic_policy<children_impl, Node, Allocator>(root, current, allocator) {
+    siblings_impl(const Node* root, const Node* current, const Allocator& allocator) :
+            basic_policy<siblings_impl, Node, Allocator>(root, current, allocator) {
         this->root = this->current && this->current->get_parent()
             ? this->current->get_parent()
             : nullptr;
@@ -40,7 +40,7 @@ class children_impl final : public basic_policy<children_impl<Node, Allocator>, 
 
 } // namespace md::detail
 namespace md::policy {
-struct siblings : detail::tag<detail::children_impl> {
+struct siblings : detail::tag<detail::siblings_impl> {
     // what needed is inherited
 };
 } // namespace md::policy

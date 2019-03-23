@@ -30,7 +30,7 @@ class struct_node {
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
-            auto call = [&](auto& node) {
+            auto call = [&](auto&& node) {
                 if constexpr (std::is_same_v<decltype(node.get_value()), std::nullptr_t>) {
                     return;
                 } else {
@@ -39,7 +39,7 @@ class struct_node {
                 size += node.get_subtree_size();
                 prev_arity = std::max(prev_arity, node.get_subtree_arity());
             };
-            (call(children), ...);
+            (..., call(children));
         }
         this->subtree_size  = size;
         this->subtree_arity = std::max(children_count, prev_arity);

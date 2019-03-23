@@ -48,7 +48,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     DECLARE_TYPES(T, Node, Policy, Allocator)
 
     static_assert(
-        is_tag_of_policy<Policy, Node, allocator_type>::value,
+        is_tag_of_policy<Policy, Node, allocator_type>,
         "Policy template parameter is expected to be an actual policy tag");
 
     protected:
