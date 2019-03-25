@@ -6,6 +6,10 @@
 
 namespace md {
 
+namespace detail {
+    struct empty_node_t {};
+}; // namespace detail
+
 template <typename T, typename... Children>
 class struct_node {
 
@@ -25,13 +29,13 @@ class struct_node {
     public:
     constexpr struct_node(const T& value, Children&&... children) :
             value(value),
-            children(std::forward<Children>(children)...) {
-        std::size_t size           = std::is_same_v<T, std::nullptr_t> ? 0 : 1;
+            children(children...) {
+        std::size_t size           = std::is_same_v<T, detail::empty_node_t> ? 0 : 1;
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
             auto call = [&](auto&& node) {
-                if constexpr (std::is_same_v<decltype(node.get_value()), std::nullptr_t>) {
+                if constexpr (std::is_same_v<decltype(node.get_value()), detail::empty_node_t>) {
                     return;
                 } else {
                     children_count += 1;
@@ -76,7 +80,7 @@ class struct_node {
     }
 };
 
-// Functions to generate temporary_node objects.
+// Functions to generate struct_node objects.
 template <typename T>
 constexpr struct_node<T> n(T value) {
     return {value};
@@ -87,8 +91,8 @@ constexpr struct_node<std::tuple<Args...>> n(Args... args) {
     return {std::make_tuple(args...)};
 }
 
-constexpr struct_node<std::nullptr_t> n() {
-    return {nullptr};
+constexpr struct_node<detail::empty_node_t> n() {
+    return {detail::empty_node_t {}};
 }
 
 template <std::size_t index, typename T, typename... Children>

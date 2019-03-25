@@ -288,14 +288,4 @@ constexpr bool holds_resources<
     Type,
     std::void_t<decltype(std::declval<Type>().get_resources())>> = true;
 
-// Check if two types are instantiation of the same template
-template <typename, typename>
-constexpr bool is_same_template = false;
-
-template <
-    template <typename...> class T,
-    typename... A,
-    typename... B>
-constexpr bool is_same_template<T<A...>, T<B...>> = true;
-
 } // namespace md

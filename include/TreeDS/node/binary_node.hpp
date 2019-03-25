@@ -44,10 +44,8 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     /*   ---   Wide acceptance copy constructor using allocator   ---   */
-    template <typename Allocator>
-    explicit binary_node(
-        const binary_node<T>& other,
-        Allocator&& allocator) :
+    template <typename Allocator = std::allocator<binary_node<T>>>
+    explicit binary_node(const binary_node<T>& other, Allocator&& allocator = Allocator()) :
             node<T, binary_node<T>>(other.value),
             left(
                 other.left
@@ -67,7 +65,7 @@ class binary_node : public node<T, binary_node<T>> {
         CHECK_CONVERTIBLE(ConvertibleT, T)>
     explicit binary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
-        Allocator&& allocator = std::allocator<binary_node>()) :
+        Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
@@ -83,7 +81,7 @@ class binary_node : public node<T, binary_node<T>> {
         CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
     explicit binary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
-        Allocator&& allocator = std::allocator<binary_node>()) :
+        Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
@@ -98,7 +96,7 @@ class binary_node : public node<T, binary_node<T>> {
     binary_node* extract_left(const std::tuple<Nodes...>& children, Allocator&& allocator) {
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = std::get<0>(children);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
+            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_node_t>) {
                 return allocate(allocator, left, std::forward<Allocator>(allocator)).release();
             }
         }
@@ -109,7 +107,7 @@ class binary_node : public node<T, binary_node<T>> {
     binary_node* extract_right(const std::tuple<Nodes...>& children, Allocator&& allocator) {
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = std::get<1>(children);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
+            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_node_t>) {
                 return allocate(allocator, right, std::forward<Allocator>(allocator)).release();
             }
         }
@@ -143,6 +141,28 @@ class binary_node : public node<T, binary_node<T>> {
                 this->parent->attach_children(node);
             }
             this->parent = nullptr;
+        }
+    }
+
+    void prepend_child(binary_node* node) {
+        assert(node != nullptr);
+        if (this->right == nullptr) {
+            this->right = this->left;
+            this->left  = nullptr;
+        }
+        if (this->left == nullptr) {
+            this->left = this->attach_children(node);
+        }
+    }
+
+    void append_child(binary_node* node) {
+        assert(node != nullptr);
+        if (this->left == nullptr) {
+            this->left  = this->right;
+            this->right = nullptr;
+        }
+        if (this->right == nullptr) {
+            this->right = this->attach_children(node);
         }
     }
 
@@ -238,6 +258,17 @@ class binary_node : public node<T, binary_node<T>> {
         return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
     }
 
+    std::size_t children() const {
+        std::size_t result = 0u;
+        if (this->left) {
+            result += 1u;
+        }
+        if (this->right) {
+            result += 1u;
+        }
+        return result;
+    }
+
     std::size_t get_following_siblings() const {
         const binary_node* parent = this->parent;
         if (parent) {
@@ -289,7 +320,7 @@ class binary_node : public node<T, binary_node<T>> {
         }
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = get_child<0>(other);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), std::nullptr_t>) {
+            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_node_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
                     "The struct_node passed has a LEFT child with a value that is not compatible with T.");
@@ -304,7 +335,7 @@ class binary_node : public node<T, binary_node<T>> {
         }
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = get_child<1>(other);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), std::nullptr_t>) {
+            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_node_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
                     "The struct_node passed has a RIGHT child with a value that is not compatible with T.");

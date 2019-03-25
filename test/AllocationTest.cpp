@@ -63,6 +63,17 @@ void AllocationTest::test1() {
     QCOMPARE(tree.get_allocator().total_allocated, 11);
     QCOMPARE(tree.get_allocator().total_deallocated, 4);
 
+    // Adding 3 nodes
+    tree.emplace_child_front(
+        std::find(tree.begin(), tree.end(), Foo(7, 8)),
+        n(-1, -2)(
+            n(-3, -4),
+            n(-5, -6)));
+
+    QCOMPARE(tree.get_allocator().allocated.size(), 10);
+    QCOMPARE(tree.get_allocator().total_allocated, 14);
+    QCOMPARE(tree.get_allocator().total_deallocated, 4);
+
     { // Playing in a sub-scope
         nary_tree<
             Foo,
@@ -70,43 +81,73 @@ void AllocationTest::test1() {
             CustomAllocator<Foo>>
             copyed(tree);
 
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 7);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 10);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 10);
         QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 0);
 
-        // Replacing all 7 nodes with 2
+        // Replacing all 10 nodes with 2
         copyed = n(Foo(0, 1))(n(Foo(1, 2)));
 
         QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 12);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 10);
 
         // Move constructing a tree does not ask the allocator
         nary_tree<Foo, policy::pre_order, CustomAllocator<Foo>> moved(std::move(copyed));
 
         QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 12);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 10);
 
         // Move assigning a tree does not ask the allocator
         nary_tree<Foo, policy::pre_order, CustomAllocator<Foo>> moveds = std::move(copyed);
 
         QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 2);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
-        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 7);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 12);
+        QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 10);
 
     } // Implicit clear here
 
     QCOMPARE(CustomAllocator<nary_node<Foo>>::allocated.size(), 0);
-    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 9);
-    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 9);
+    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_allocated, 12);
+    QCOMPARE(CustomAllocator<nary_node<Foo>>::total_deallocated, 12);
 
-    // Now the allocator has no object allocated and counters are equal
+    // Adding 3 nodes
+    tree.insert_child_back(
+        tree.begin(policy::post_order()),
+        Foo(100, 101));
+    tree.insert_child_front(
+        tree.begin(policy::post_order()),
+        n(Foo(102, 103))(
+            n(Foo(104, 105))));
+
+    QCOMPARE(tree.get_allocator().allocated.size(), 13);
+    QCOMPARE(tree.get_allocator().total_allocated, 17);
+    QCOMPARE(tree.get_allocator().total_deallocated, 4);
+
+    // Erasing 2 nodes, adding 5 nodes
+    tree.erase(std::find(tree.begin(), tree.end(), Foo(102, 103)));
+    tree.emplace_child_back(
+        tree.begin(policy::post_order()),
+        -1, -2);
+    tree.emplace_child_back(
+        tree.begin(policy::post_order()),
+        n(-2, 3)(
+            n(-3, -4)(
+                n(),
+                n(-5, 6)),
+            n(-4, -5)));
+
+    QCOMPARE(tree.get_allocator().allocated.size(), 16);
+    QCOMPARE(tree.get_allocator().total_allocated, 22);
+    QCOMPARE(tree.get_allocator().total_deallocated, 6);
+
+    // Erasing all the ndes
     tree.clear();
 
     QCOMPARE(tree.get_allocator().allocated.size(), 0);
-    QCOMPARE(tree.get_allocator().total_allocated, 11);
-    QCOMPARE(tree.get_allocator().total_deallocated, 11);
+    QCOMPARE(tree.get_allocator().total_allocated, 22);
+    QCOMPARE(tree.get_allocator().total_deallocated, 22);
 }
 
 void AllocationTest::test2() {

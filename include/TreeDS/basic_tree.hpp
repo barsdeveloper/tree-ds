@@ -239,7 +239,7 @@ class basic_tree {
         return this->root != nullptr && this->root->operator==(other);
     }
 
-    bool operator==(const struct_node<std::nullptr_t>&) const {
+    bool operator==(const struct_node<detail::empty_node_t>&) const {
         return this->empty();
     }
 };
@@ -297,7 +297,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator==(const struct_node<std::nullptr_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator==(const struct_node<detail::empty_node_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 
@@ -306,7 +306,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<std::nullptr_t>& rhs) {
+bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<detail::empty_node_t>& rhs) {
     return !lhs.operator==(rhs);
 }
 
@@ -315,7 +315,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const struct_node<std::nullptr_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator!=(const struct_node<detail::empty_node_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }
 

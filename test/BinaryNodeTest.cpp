@@ -10,7 +10,7 @@ using namespace md;
 /*
  * Explicit template instantiation of the class being tested. Without this instantiation, the compiler will not generate
  * the code for all the methods. Those methods will NOT appear as NOT covered by tests (because they will be not
- * recognized as lines of code) giving the false information fo greater coverage percentage.
+ * recognized as lines of code) giving the false information of greater coverage percentage.
  */
 template class md::binary_node<Target>;
 
@@ -23,6 +23,7 @@ class BinaryNodeTest : public QObject {
     void constructFromStructNode();
     void equalityWithStructNode();
     void argumentImplicitConvertion();
+    void nodeTransform();
 };
 
 void BinaryNodeTest::defaultConstructed() {
@@ -35,10 +36,14 @@ void BinaryNodeTest::defaultConstructed() {
     QVERIFY(!(node2 != node));
 
     QCOMPARE(node.get_parent(), nullptr);
+    QCOMPARE(node.get_prev_sibling(), nullptr);
+    QCOMPARE(node.get_next_sibling(), nullptr);
     QCOMPARE(node.get_first_child(), nullptr);
     QCOMPARE(node.get_last_child(), nullptr);
     QCOMPARE(node.get_left_child(), nullptr);
     QCOMPARE(node.get_right_child(), nullptr);
+    QCOMPARE(node.children(), 0u);
+    QCOMPARE(node.get_following_siblings(), 0u);
 
     QVERIFY(node.is_root());
     QVERIFY(!node.is_unique_child());
@@ -75,6 +80,8 @@ void BinaryNodeTest::constructFromStructNode() {
     QVERIFY(!node.is_unique_child());
     QCOMPARE(node.get_prev_sibling(), nullptr);
     QCOMPARE(node.get_next_sibling(), nullptr);
+    QCOMPARE(node.children(), 2);
+    QCOMPARE(node.get_following_siblings(), 0u);
 
     QVERIFY(left.is_left_child());
     QVERIFY(!left.is_right_child());
@@ -83,6 +90,8 @@ void BinaryNodeTest::constructFromStructNode() {
     QVERIFY(!left.is_unique_child());
     QCOMPARE(left.get_prev_sibling(), nullptr);
     QCOMPARE(left.get_next_sibling(), &right);
+    QCOMPARE(left.children(), 0);
+    QCOMPARE(left.get_following_siblings(), 1u);
 
     QVERIFY(!right.is_left_child());
     QVERIFY(right.is_right_child());
@@ -91,6 +100,8 @@ void BinaryNodeTest::constructFromStructNode() {
     QVERIFY(!right.is_unique_child());
     QCOMPARE(right.get_prev_sibling(), &left);
     QCOMPARE(right.get_next_sibling(), nullptr);
+    QCOMPARE(right.children(), 0u);
+    QCOMPARE(right.get_following_siblings(), 0u);
 
     // move test
     binary_node<Target> newNode(move(node));
@@ -171,6 +182,18 @@ void BinaryNodeTest::argumentImplicitConvertion() {
     QVERIFY(!(regular != constructedFrom));
     QVERIFY(constructedFrom == regular);
     QVERIFY(!(constructedFrom != regular));
+}
+
+void BinaryNodeTest::nodeTransform() {
+    binary_node<int> node(
+        n(-1)(
+            n(),
+            n(-2)(
+                n(-3)(
+                    n(-5)),
+                n(-4)(
+                    n(),
+                    n(-6)))));
 }
 
 QTEST_MAIN(BinaryNodeTest);

@@ -34,6 +34,8 @@ void NaryNodeTest::defaultConstructed() {
     nary_node<int> node2;
 
     QCOMPARE(node.get_parent(), nullptr);
+    QCOMPARE(node.get_prev_sibling(), nullptr);
+    QCOMPARE(node.get_next_sibling(), nullptr);
     QCOMPARE(node.get_first_child(), nullptr);
     QCOMPARE(node.get_last_child(), nullptr);
     QCOMPARE(node.get_following_siblings(), 0);

@@ -293,8 +293,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     template <typename P, bool Constant>
-    tree_iterator<super, P, Constant>
-    modify_subtree(
+    iterator<P> modify_subtree(
         tree_iterator<super, P, Constant> position,
         std::unique_ptr<node_type, deleter<allocator_type>> node,
         size_type replacement_size,
@@ -317,7 +316,44 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         } else {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
-        return position;
+        if constexpr (Constant) {
+            return position.craft_non_constant_iterator();
+        } else {
+            return position;
+        }
+    }
+
+    template <bool First, typename P, bool C>
+    iterator<P>
+    add_child(
+        tree_iterator<super, P, C> position,
+        std::unique_ptr<node_type, deleter<allocator_type>> node,
+        size_type replacement_size,
+        size_type replacement_arity) {
+        if (!this->is_own_iterator(position)) {
+            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
+        }
+        node_type* target = const_cast<node_type*>(position.get_node());
+        if (target == nullptr) {
+            throw std::logic_error("The iterator points to a non valid position (end).");
+        }
+        if constexpr (std::is_same_v<std::decay_t<node_type>, binary_node<T>>) {
+            if (target->children() == 2u) {
+                throw std::logic_error("Tried to add a children to a binary_node with 2 children.");
+            }
+        }
+        if constexpr (First) {
+            target->prepend_child(node.release());
+        } else {
+            target->append_child(node.release());
+        }
+        this->size_value += replacement_size;
+        // +1 because get_following_siblings() counts just the node that follow next
+        std::size_t local_arity = 1 + target->get_first_child()
+            ? target->get_first_child()->get_following_siblings()
+            : 0u;
+        this->arity_value = std::max(replacement_arity, std::max(this->arity_value, local_arity));
+        return iterator<P>(this, target);
     }
 
     template <typename P, bool Constant>
@@ -381,29 +417,6 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      * Insert an element at the specified position by replacing the existent
      * node. This will use the copy semantics.
      * @param position where to insert the element
-     * @param node an r-value reference to a temporary_node
-     * @return an iterator that points to the inserted element
-     */
-    template <
-        typename P,
-        typename ConvertibleT,
-        bool C,
-        typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
-    iterator<P> insert(
-        const tree_iterator<super, P, C>& position,
-        const struct_node<ConvertibleT, Children...>& node) {
-        return this->modify_subtree(
-            position,
-            allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size(),
-            node.get_subtree_arity());
-    }
-
-    /**
-     * Insert an element at the specified position by replacing the existent
-     * node. This will use the copy semantics.
-     * @param position where to insert the element
      * @param value to insert in the tree, that will be copied
      * @return an iterator that points to the inserted element
      */
@@ -427,15 +440,43 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return this->modify_subtree(position, allocate(this->allocator, std::move(value)), 1u, 0u);
     }
 
+    /**
+     * Insert an element at the specified position by replacing the existent
+     * node. This will use the copy semantics.
+     * @param position where to insert the element
+     * @param node an r-value reference to a temporary_node
+     * @return an iterator that points to the inserted element
+     */
+    template <
+        typename P,
+        bool C,
+        typename ConvertibleT,
+        typename... Children,
+        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
+    iterator<P> insert(
+        const tree_iterator<super, P, C>& position,
+        const struct_node<ConvertibleT, Children...>& node) {
+        return this->modify_subtree(
+            position,
+            // last allocator is forwarded to Node constructor to allocate its children
+            allocate(this->allocator, node, this->allocator),
+            node.get_subtree_size(),
+            node.get_subtree_arity());
+    }
+
     template <
         typename P,
         bool C,
         typename... Args,
-        CHECK_CONSTRUCTIBLE(T, Args&&...)>
+        CHECK_CONSTRUCTIBLE(T, Args...)>
     iterator<P> emplace(
         const tree_iterator<super, P, C>& position,
         Args&&... args) {
-        return this->modify_subtree(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
+        return this->modify_subtree(
+            position,
+            allocate(this->allocator, std::forward<Args>(args)...),
+            1u,
+            0u);
     }
 
     template <
@@ -449,6 +490,121 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(
             position,
+            // last allocator is forwarded to Node constructor to allocate its children
+            allocate(this->allocator, node, this->allocator),
+            node.get_subtree_size(),
+            node.get_subtree_arity());
+    }
+
+    template <typename P, bool C>
+    iterator<P> insert_child_front(
+        const tree_iterator<super, P, C>& position,
+        T& value) {
+        return this->add_child<true>(position, allocate(this->allocator, value), 1u, 0u);
+    }
+
+    template <typename P, bool C>
+    iterator<P> insert_child_front(
+        const tree_iterator<super, P, C>& position,
+        T&& value) {
+        return this->add_child<true>(position, allocate(this->allocator, std::move(value)), 1u, 0u);
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename ConvertibleT,
+        typename... Children,
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
+    iterator<P> insert_child_front(
+        const tree_iterator<super, P, C>& position,
+        struct_node<ConvertibleT, Children...> value) {
+        // last allocator is forwarded to Node constructor to allocate its children
+        return this->add_child<true>(position, allocate(this->allocator, value, this->allocator), 1u, 0u);
+    }
+
+    template <typename P, bool C>
+    iterator<P> insert_child_back(
+        const tree_iterator<super, P, C>& position,
+        T& value) {
+        return this->add_child<false>(position, allocate(this->allocator, value), 1u, 0u);
+    }
+
+    template <typename P, bool C>
+    iterator<P> insert_child_back(
+        const tree_iterator<super, P, C>& position,
+        T&& value) {
+        return this->add_child<false>(position, allocate(this->allocator, std::move(value)), 1u, 0u);
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename ConvertibleT,
+        typename... Children,
+        CHECK_CONVERTIBLE(ConvertibleT, T)>
+    iterator<P> insert_child_back(
+        const tree_iterator<super, P, C>& position,
+        struct_node<ConvertibleT, Children...> value) {
+        return this->add_child<false>(
+            position,
+            // last allocator is forwarded to Node constructor to allocate its children
+            allocate(this->allocator, value, this->allocator),
+            value.get_subtree_size(),
+            value.get_subtree_arity());
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename... Args,
+        CHECK_CONSTRUCTIBLE(T, Args&&...)>
+    iterator<P> emplace_child_front(
+        const tree_iterator<super, P, C>& position,
+        Args&&... args) {
+        return this->add_child<true>(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename... EmplacingArgs,
+        typename... Children,
+        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+    iterator<P> emplace_child_front(
+        const tree_iterator<super, P, C>& position,
+        const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
+        return this->add_child<true>(
+            position,
+            // last allocator is forwarded to Node constructor to allocate its children
+            allocate(this->allocator, node, this->allocator),
+            node.get_subtree_size(),
+            node.get_subtree_arity());
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename... Args,
+        CHECK_CONSTRUCTIBLE(T, Args&&...)>
+    iterator<P> emplace_child_back(
+        const tree_iterator<super, P, C>& position,
+        Args&&... args) {
+        return this->add_child<false>(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
+    }
+
+    template <
+        typename P,
+        bool C,
+        typename... EmplacingArgs,
+        typename... Children,
+        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+    iterator<P> emplace_child_back(
+        const tree_iterator<super, P, C>& position,
+        const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
+        return this->add_child<false>(
+            position,
+            // last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());

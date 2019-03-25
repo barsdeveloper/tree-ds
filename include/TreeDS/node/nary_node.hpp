@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>    // std::nullptr_t
 #include <functional> // std::mem_fn()
 #include <tuple>
 #include <utility> // std::move(), std::forward()
@@ -157,7 +156,7 @@ class nary_node : public node<T, nary_node<T>> {
         // lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto process_child = [&](auto& structure_node) {
             static_assert(
-                !std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>,
+                !std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>,
                 "ds::nary_node does not accept empty nodes");
             assign_child(allocate(allocator, structure_node, allocator).release());
         };
@@ -226,15 +225,32 @@ class nary_node : public node<T, nary_node<T>> {
         }
     }
 
-    nary_node* attach(nary_node* node) {
+    void prepend_child(nary_node* node) {
         assert(node != nullptr);
-        node->parent    = this;
-        nary_node* next = node->next_sibling;
-        while (next) {
-            this->attach(next);
-            next = next->next_sibling;
+        assert(node->parent == nullptr);
+        assert(node->next_sibling == nullptr);
+        node->parent       = this;
+        node->next_sibling = this->first_child;
+        this->first_child  = node;
+        if (this->last_child == nullptr) {
+            this->last_child = node;
         }
-        return node;
+    }
+
+    void append_child(nary_node* node) {
+        assert(node != nullptr);
+        assert(node->parent == nullptr);
+        assert(node->next_sibling == nullptr);
+        node->parent = this;
+        if (this->last_child != nullptr) {
+            this->last_child->next_sibling = node;
+        }
+        this->last_child   = node;
+        nary_node* current = this->first_child;
+        do {
+            current->following_siblings += 1u;
+            current = current->next_sibling;
+        } while (current != nullptr);
     }
 
     template <typename Node>
@@ -309,6 +325,12 @@ class nary_node : public node<T, nary_node<T>> {
 
     const nary_node* get_next_sibling_limit(const nary_node& root) const {
         return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
+    }
+
+    std::size_t children() const {
+        return this->first_child
+            ? this->first_child->get_following_siblings() + 1
+            : 0u;
     }
 
     std::size_t get_following_siblings() const {
@@ -394,7 +416,7 @@ class nary_node : public node<T, nary_node<T>> {
         // lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto compare_child = [&](auto& structure_node) -> bool {
             bool result;
-            if constexpr (std::is_same_v<decltype(structure_node.get_value()), std::nullptr_t>) {
+            if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>) {
                 result = *current_child == nullptr;
             } else { // not empty node
                 result = *current_child && **current_child == structure_node;
