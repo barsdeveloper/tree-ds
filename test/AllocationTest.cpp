@@ -24,9 +24,9 @@ void AllocationTest::test1() {
         CustomAllocator<Foo>>
         tree {};
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 0);
-    QCOMPARE(tree.get_allocator().total_allocated, 0);
-    QCOMPARE(tree.get_allocator().total_deallocated, 0);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 0);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 0);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 0);
 
     // Assigning 5 nodes
     tree
@@ -36,18 +36,18 @@ void AllocationTest::test1() {
                 n(6, 7)),
             n(3, 4));
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 5);
-    QCOMPARE(tree.get_allocator().total_allocated, 5);
-    QCOMPARE(tree.get_allocator().total_deallocated, 0);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 5);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 5);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 0);
 
     // Replacing 1 node with 1 node
     tree.emplace(
         std::find(tree.begin(policy::pre_order()), tree.end(policy::pre_order()), Foo(3, 4)),
         6, 7);
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 5);
-    QCOMPARE(tree.get_allocator().total_allocated, 6);
-    QCOMPARE(tree.get_allocator().total_deallocated, 1);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 5);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 6);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 1);
 
     // Replacing 3 nodes with 5
     tree.insert(
@@ -59,9 +59,9 @@ void AllocationTest::test1() {
                 n(Foo(10, 11))(
                     n(Foo(11, 12))))));
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 7);
-    QCOMPARE(tree.get_allocator().total_allocated, 11);
-    QCOMPARE(tree.get_allocator().total_deallocated, 4);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 7);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 11);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 4);
 
     // Adding 3 nodes
     tree.emplace_child_front(
@@ -70,9 +70,9 @@ void AllocationTest::test1() {
             n(-3, -4),
             n(-5, -6)));
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 10);
-    QCOMPARE(tree.get_allocator().total_allocated, 14);
-    QCOMPARE(tree.get_allocator().total_deallocated, 4);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 10);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 14);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 4);
 
     { // Playing in a sub-scope
         nary_tree<
@@ -121,16 +121,16 @@ void AllocationTest::test1() {
         n(Foo(102, 103))(
             n(Foo(104, 105))));
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 13);
-    QCOMPARE(tree.get_allocator().total_allocated, 17);
-    QCOMPARE(tree.get_allocator().total_deallocated, 4);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 13);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 17);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 4);
 
     // Erasing 2 nodes, adding 5 nodes
     tree.erase(std::find(tree.begin(), tree.end(), Foo(102, 103)));
     tree.emplace_child_back(
         tree.begin(policy::post_order()),
         -1, -2);
-    tree.emplace_child_back(
+    tree.emplace_child_front(
         tree.begin(policy::post_order()),
         n(-2, 3)(
             n(-3, -4)(
@@ -138,16 +138,31 @@ void AllocationTest::test1() {
                 n(-5, 6)),
             n(-4, -5)));
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 16);
-    QCOMPARE(tree.get_allocator().total_allocated, 22);
-    QCOMPARE(tree.get_allocator().total_deallocated, 6);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 16);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 22);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 6);
+
+    // Creating a copy tree
+    binary_tree<Foo, policy::breadth_first, CustomAllocator<Foo>> tree2;
+    tree2.insert(tree2.begin(), tree);
+
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 32);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 38);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 6);
+
+    // Moving the tree back
+    tree.insert_child_back(tree.begin(policy::post_order()), std::move(tree2));
+
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 32);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 38);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 6);
 
     // Erasing all the ndes
     tree.clear();
 
-    QCOMPARE(tree.get_allocator().allocated.size(), 0);
-    QCOMPARE(tree.get_allocator().total_allocated, 22);
-    QCOMPARE(tree.get_allocator().total_deallocated, 22);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 0);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 38);
+    QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 38);
 }
 
 void AllocationTest::test2() {
@@ -163,7 +178,7 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 0);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 0);
 
-    // Adding 5-sized subtree to bin
+    // Adding 5 nodes to bin
     bin.emplace(
         bin.begin(),
         n(1, 2)(
@@ -181,20 +196,18 @@ void AllocationTest::test2() {
 
     // Swapping bin and bin2
     swap(bin, bin2);
-    QCOMPARE(bin2.size(), 5);
-    QVERIFY(bin.empty());
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 5);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 5);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 0);
 
-    // Deleting 2-sized subtree from bin2
+    // Deleting 2 nodes subtree from bin2
     bin2.erase(std::find(bin2.begin(policy::post_order()), bin2.end(policy::post_order()), Bar(2, 3)));
     QCOMPARE(bin2.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 5);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 2);
 
-    // Replacing one now in bin2
+    // Replacing 1 node in bin2
     bin2.emplace(std::find(bin2.begin(), bin2.end(), Bar(5, 6)), 100, 101);
     QCOMPARE(bin2.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 3);
@@ -229,39 +242,68 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 6);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 6);
 
-    // Assing 7-sized tree to bin
+    // Adding 1 node to bin
     bin.insert(bin.begin(), Bar(200, 201));
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 1);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 7);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 6);
 
+    // Replacing 1 node with 7 nodes
     bin.insert(
-        bin.begin(),
-        n(Bar(200, 201))(
-            n(Bar(201, 202))(
-                n(Bar(202, 203)),
-                n(Bar(203, 204))),
-            n(Bar(300, 301))(
-                n(),
-                n(Bar(301, 302))(
+        bin.begin(policy::pre_order()),
+        binary_tree<Bar, policy::post_order, CustomAllocator<Bar>>(
+            n(Bar(200, 201))(
+                n(Bar(201, 202))(
+                    n(Bar(202, 203)),
+                    n(Bar(203, 204))),
+                n(Bar(300, 301))(
                     n(),
-                    n(Bar(302, 303))))));
+                    n(Bar(301, 302))(
+                        n(),
+                        n(Bar(302, 303)))))));
     QCOMPARE(bin.size(), 7);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 7);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 14);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 7);
 
     {
+        // Moving bin to bin3
         binary_tree<Bar, policy::pre_order, CustomAllocator<Bar>> bin3(std::move(bin));
         QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 7);
         QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 14);
         QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 7);
+
+        // Situation unchanged (bin2 is empty)
+        bin3.insert_child_front(
+            std::find(bin3.begin(), bin3.end(), Bar(300, 301)),
+            bin2);
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 7);
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 14);
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 7);
+
+        // Adding 5 nodes to bin3
+        bin3.insert_child_back(
+            std::find(bin3.begin(), bin3.end(), Bar(300, 301)),
+            binary_tree<Bar, policy::breadth_first, CustomAllocator<Bar>>(
+                n(-1, -2)(
+                    n(-2, -3)(
+                        n(-4, -5)),
+                    n(-3, -4)(
+                        n(),
+                        n(-5, -6)))));
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 12);
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 19);
+        QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 7);
     }
+
+    // Erasing bin3
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 0);
-    QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 14);
-    QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 14);
+    QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 19);
+    QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 19);
 }
 
+// This is a meta test ;)
+// Distrust who trusts its code
 void AllocationTest::testAllocatorUsedForTests() {
     using allocator_t = CustomAllocator<binary_node<float>>;
 
