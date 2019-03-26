@@ -2,6 +2,7 @@
 
 #include <cstddef>     // std::ptr_diff_t
 #include <functional>  // std::mem_fn()
+#include <limits>      //std::numeric_limits
 #include <type_traits> // std::enable_if, std::is_convertible, std::is_constructible, std::void_t
 #include <utility>     // std::forward(), std::declval
 
@@ -231,7 +232,7 @@ std::size_t calculate_size(const nary_node<T>& node) {
 }
 
 template <typename Node>
-std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
+std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity = std::numeric_limits<std::size_t>::max()) {
     const Node* child = node.get_first_child();
     std::size_t arity = child
         ? child->get_following_siblings() + 1

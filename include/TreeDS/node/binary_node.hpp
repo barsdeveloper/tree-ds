@@ -145,24 +145,26 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     void prepend_child(binary_node* node) {
-        assert(node != nullptr);
-        if (this->right == nullptr) {
-            this->right = this->left;
-            this->left  = nullptr;
-        }
-        if (this->left == nullptr) {
-            this->left = this->attach_children(node);
+        if (node != nullptr) {
+            if (this->right == nullptr) {
+                this->right = this->left;
+                this->left  = nullptr;
+            }
+            if (this->left == nullptr) {
+                this->left = this->attach_children(node);
+            }
         }
     }
 
     void append_child(binary_node* node) {
-        assert(node != nullptr);
-        if (this->left == nullptr) {
-            this->left  = this->right;
-            this->right = nullptr;
-        }
-        if (this->right == nullptr) {
-            this->right = this->attach_children(node);
+        if (node != nullptr) {
+            if (this->left == nullptr) {
+                this->left  = this->right;
+                this->right = nullptr;
+            }
+            if (this->right == nullptr) {
+                this->right = this->attach_children(node);
+            }
         }
     }
 

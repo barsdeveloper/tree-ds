@@ -9,6 +9,7 @@
 #include <TreeDS/basic_tree.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/policy/post_order.hpp>
+#include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace md {
@@ -52,17 +53,17 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         "Policy template parameter is expected to be an actual policy tag");
 
     protected:
+    tree(node_type* root) :
+            super(root, 0u, 0u) {
+    }
+
     tree(node_type* root, size_type size, size_type arity) :
             super(root, size, arity) {
     }
 
     template <typename Alloc>
     tree(node_type* root, size_type size, size_type arity, Alloc&& allocator) :
-            super(
-                root,
-                size,
-                arity,
-                std::forward<Alloc>(allocator)) {
+            super(root, size, arity, std::forward<Alloc>(allocator)) {
     }
 
     public:
@@ -123,6 +124,10 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     tree(tree<T, Node, OtherPolicy, Allocator>&& other) :
             tree(other.root, other.size_value, other.arity_value, std::move(other.allocator)) {
         other.nullify();
+    }
+
+    tree(std::unique_ptr<Node, deleter<Allocator>> root, size_type size = 0u, size_type arity = 0u) :
+            tree(root.release(), size, arity) {
     }
 
     /**
@@ -273,23 +278,26 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
 
     //   ---   MODIFIERS   ---
     protected:
-    void replace_node(
+    std::unique_ptr<node_type, deleter<allocator_type>> replace_node(
         node_type* replaced,
         node_type* replacement,
         size_type replacement_size,
         size_type replacement_arity) {
-        assert(replaced != nullptr);
-        assert(this->root != nullptr);
-        replaced->replace_with(replacement);
-        if (replaced == this->root) {
-            this->size_value  = replacement_size;
-            this->arity_value = replacement_arity;
-        } else {
-            std::size_t replaced_size = calculate_size(*replaced);
-            this->size_value += -replaced_size + replacement_size;
-            this->arity_value = calculate_arity(*this->root, this->arity_value);
+        if (replaced != nullptr) {
+            assert(this->root != nullptr);
+            replaced->replace_with(replacement);
+            if (replaced == this->root) {
+                this->size_value  = replacement_size;
+                this->arity_value = replacement_arity;
+            } else if (!replaced->has_children()) {
+                this->size_value += replacement_size - 1;
+                this->arity_value = 0u; // we don't have useful information
+            } else {
+                this->size_value  = 0u;
+                this->arity_value = 0u;
+            }
         }
-        deallocate(this->allocator, replaced);
+        return {replaced, deleter(this->allocator)};
     }
 
     template <typename P, bool Constant>
@@ -324,8 +332,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     template <bool First, typename P, bool C>
-    iterator<P>
-    add_child(
+    iterator<P> add_child(
         tree_iterator<super, P, C> position,
         std::unique_ptr<node_type, deleter<allocator_type>> node,
         size_type replacement_size,
@@ -464,6 +471,38 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             node.get_subtree_arity());
     }
 
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert(
+        const tree_iterator<super, P, C>& position,
+        const basic_tree<T, Node, OtherP, Allocator>& other) {
+        return this->modify_subtree(
+            position,
+            // last allocator is forwarded to Node constructor to allocate its children
+            !other.empty()
+                ? allocate(this->allocator, *other.get_root(), this->allocator)
+                : nullptr,
+            other.size(),
+            other.arity());
+    }
+
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert(
+        const tree_iterator<super, P, C>& position,
+        tree<T, Node, OtherP, Allocator>&& other) {
+        if constexpr (std::is_same_v<policy_type, OtherP>) {
+            if (this == &other) {
+                throw std::logic_error("Cannot move from yourself and create a recursive tree.");
+            }
+        }
+        iterator<P> result = this->modify_subtree(
+            position,
+            other.replace_node(other.root, nullptr, 0u, 0u),
+            other.size(),
+            other.arity());
+        other.nullify();
+        return result;
+    }
+
     template <
         typename P,
         bool C,
@@ -523,6 +562,37 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return this->add_child<true>(position, allocate(this->allocator, value, this->allocator), 1u, 0u);
     }
 
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert_child_front(
+        const tree_iterator<super, P, C>& position,
+        const basic_tree<T, Node, OtherP, Allocator>& other) {
+        return this->add_child<true>(
+            position,
+            !other.empty()
+                ? allocate(this->allocator, *other.get_root(), this->allocator)
+                : nullptr,
+            1u,
+            0u);
+    }
+
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert_child_front(
+        const tree_iterator<super, P, C>& position,
+        tree<T, Node, OtherP, Allocator>&& other) {
+        if constexpr (std::is_same_v<policy_type, OtherP>) {
+            if (this == &other) {
+                throw std::logic_error("Cannot move from yourself and create a recursive tree.");
+            }
+        }
+        iterator<P> result = this->add_child<true>(
+            position,
+            other.replace_node(other.root, nullptr, 0u, 0u),
+            1u,
+            0u);
+        other.nullify();
+        return result;
+    }
+
     template <typename P, bool C>
     iterator<P> insert_child_back(
         const tree_iterator<super, P, C>& position,
@@ -552,6 +622,37 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             allocate(this->allocator, value, this->allocator),
             value.get_subtree_size(),
             value.get_subtree_arity());
+    }
+
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert_child_back(
+        const tree_iterator<super, P, C>& position,
+        const basic_tree<T, Node, OtherP, Allocator>& other) {
+        return this->add_child<false>(
+            position,
+            !other.empty()
+                ? allocate(this->allocator, *other.get_root())
+                : nullptr,
+            1u,
+            0u);
+    }
+
+    template <typename P, bool C, typename OtherP>
+    iterator<P> insert_child_back(
+        const tree_iterator<super, P, C>& position,
+        tree<T, Node, OtherP, Allocator>&& other) {
+        if constexpr (std::is_same_v<policy_type, OtherP>) {
+            if (this == &other) {
+                throw std::logic_error("Cannot move from yourself and create a recursive tree.");
+            }
+        }
+        iterator<P> result = this->add_child<false>(
+            position,
+            other.replace_node(other.root, nullptr, 0u, 0u),
+            1u,
+            0u);
+        other.nullify();
+        return result;
     }
 
     template <
@@ -630,6 +731,19 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             this->erase_subtree(first++);
         }
         return last.craft_non_constant_iterator();
+    }
+
+    template <typename P, bool C>
+    tree<T, Node, Policy, Allocator>
+    detach_subtree(const tree_iterator<super, P, C>& position) {
+        if (position.pointed_tree != this) {
+            throw std::logic_error("Tried to modify the tree (detach subtree) with an iterator not belonging to it.");
+        }
+        node_type* target = const_cast<node_type*>(position.get_node());
+        if (target == nullptr) {
+            throw std::logic_error("The iterator points to a non valid position (end).");
+        }
+        return {this->replace_node(target, nullptr, 0, 0).release()};
     }
 
     //  ---   COMPARISON   ---

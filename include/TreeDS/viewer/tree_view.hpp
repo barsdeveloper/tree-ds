@@ -46,14 +46,24 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
             basic_tree<T, Node, TreePolicy, Allocator>, // tree_iterator always uses basic_tree, no subclasses
             IteratorPolicy,
             Constant>& position) :
-            super(position.get_node(), 0u, 0u) {
+            super(
+                position.get_node(),
+                position.get_node()
+                    ? position.get_node()->is_root()
+                        ? tree.size()
+                        : 0u
+                    : 0u,
+                position.get_node()
+                    ? position.get_node()->is_root()
+                        ? tree.arity()
+                        : 0u
+                    : 0u) {
         if (!tree.is_own_iterator(position)) {
             throw std::logic_error("Tried to create an nary_tree_biew with an iterator not belonging to the tree.");
         }
-        if (position.get_node()) {
-            const Node& node  = *position.get_node();
-            this->size_value  = calculate_size(node);
-            this->arity_value = calculate_arity(node, tree.arity());
+        if (position.get_node() && position.get_node()->is_root_limit(*tree.get_root())) {
+            this->size_value  = tree.size();
+            this->arity_value = tree.arity();
         }
     }
 
@@ -67,14 +77,14 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
             basic_tree<T, const Node, ViewPolicy, Allocator>, // tree_iterator always uses basic_tree, no subclasses
             IteratorPolicy,
             Constant>& position) :
-            super(position.get_node(), 0u, 0u) {
+            super(
+                position.get_node(), 0u, 0u) {
         if (!tree.is_own_iterator(position)) {
             throw std::logic_error("Tried to create an nary_tree_biew with an iterator not belonging to the tree.");
         }
-        if (position.get_node()) {
-            const Node& node  = *position.get_node();
-            this->size_value  = calculate_size(node);
-            this->arity_value = calculate_arity(node, tree.arity());
+        if (position.get_node() && position.get_node()->is_root_limit(*tree.get_root())) {
+            this->size_value  = tree.size();
+            this->arity_value = tree.arity();
         }
     }
 };

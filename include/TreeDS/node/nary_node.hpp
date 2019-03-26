@@ -86,7 +86,7 @@ class nary_node : public node<T, nary_node<T>> {
                     ? allocate(allocator, *other.get_next_sibling(), this->parent, allocator).release()
                     : nullptr),
             first_child(
-                other.get_first_child() != nullptr
+                other.has_children()
                     ? allocate(allocator, *other.get_first_child(), this, allocator).release()
                     : nullptr) {
         this->manage_parent_last_child();
@@ -226,31 +226,33 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     void prepend_child(nary_node* node) {
-        assert(node != nullptr);
-        assert(node->parent == nullptr);
-        assert(node->next_sibling == nullptr);
-        node->parent       = this;
-        node->next_sibling = this->first_child;
-        this->first_child  = node;
-        if (this->last_child == nullptr) {
-            this->last_child = node;
+        if (node != nullptr) {
+            assert(node->parent == nullptr);
+            assert(node->next_sibling == nullptr);
+            node->parent       = this;
+            node->next_sibling = this->first_child;
+            this->first_child  = node;
+            if (this->last_child == nullptr) {
+                this->last_child = node;
+            }
         }
     }
 
     void append_child(nary_node* node) {
-        assert(node != nullptr);
-        assert(node->parent == nullptr);
-        assert(node->next_sibling == nullptr);
-        node->parent = this;
-        if (this->last_child != nullptr) {
-            this->last_child->next_sibling = node;
+        if (node != nullptr) {
+            assert(node->parent == nullptr);
+            assert(node->next_sibling == nullptr);
+            node->parent = this;
+            if (this->last_child != nullptr) {
+                this->last_child->next_sibling = node;
+            }
+            this->last_child   = node;
+            nary_node* current = this->first_child;
+            do {
+                current->following_siblings += 1u;
+                current = current->next_sibling;
+            } while (current != nullptr);
         }
-        this->last_child   = node;
-        nary_node* current = this->first_child;
-        do {
-            current->following_siblings += 1u;
-            current = current->next_sibling;
-        } while (current != nullptr);
     }
 
     template <typename Node>
@@ -378,7 +380,7 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Compare egains binary_node   ---   */
     bool operator==(const binary_node<T>& other) const {
         // Trivial case exclusion.
-        if ((this->get_first_child() == nullptr) != (other.get_first_child() == nullptr)) {
+        if (this->has_children() != other.has_children()) {
             return false;
         }
         // Test value for inequality.
@@ -386,7 +388,7 @@ class nary_node : public node<T, nary_node<T>> {
             return false;
         }
         // Deep comparison (at this point both are either null or something).
-        if (this->first_child && !this->first_child->operator==(*other.get_first_child())) {
+        if (this->has_children() && !this->first_child->operator==(*other.get_first_child())) {
             return false;
         }
         // Deep comparison (at this point both are either null or something).

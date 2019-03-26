@@ -15,12 +15,11 @@ class pre_order_impl final : public basic_policy<pre_order_impl<Node, Allocator>
     using basic_policy<pre_order_impl, Node, Allocator>::basic_policy;
 
     const Node* increment_impl() {
-        const Node* result = this->current->get_first_child();
-        if (result != nullptr) {
-            return result;
+        if (this->current->has_children()) {
+            return this->current->get_first_child();
         }
         // cross to another branch (on the right)
-        result = keep_calling(
+        const Node* result = keep_calling(
             // from
             *this->current,
             // keep calling

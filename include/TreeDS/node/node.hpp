@@ -71,6 +71,10 @@ class node {
         return parent == nullptr;
     }
 
+    bool has_children() const {
+        return static_cast<const Node*>(this)->get_first_child() != nullptr;
+    }
+
     bool is_unique_child() const {
         return static_cast<const Node*>(this)->is_first_child()
             && static_cast<const Node*>(this)->is_last_child();

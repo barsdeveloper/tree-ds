@@ -36,7 +36,7 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
         }
         const Node* node;
         auto process_child = [&]() {
-            if (node->get_first_child() != nullptr) {
+            if (node->has_children()) {
                 this->open_nodes.push_back(node->get_first_child());
             }
         };
@@ -85,7 +85,7 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
 
     const Node* decrement_impl() {
         // delete the child of current node from open_nodes
-        if (this->current->get_first_child() != nullptr) {
+        if (this->current->has_children()) {
             assert(this->open_nodes.back()->get_parent() == this->current);
             // delete child of the previous node from open_nodes (invariants garantee that it is the last element)
             this->open_nodes.pop_back();
@@ -118,7 +118,7 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
 
     void update(const Node& current, const Node* replacement) {
         // delete child of the previous nodes from open_nodes
-        if (current.get_first_child()) {
+        if (current.has_children()) {
             assert(this->open_nodes.back()->get_parent() == &current);
             this->open_nodes.pop_back();
         }
