@@ -76,9 +76,9 @@ class basic_tree {
     /// @brief Owning pointer to the root node.
     node_type* root = nullptr;
     /// @brief The number of nodes in the tree.
-    size_type size_value = 0u;
+    mutable size_type size_value = 0u;
     /// @brief Maximum number of children a node can have.
-    size_type arity_value = 0u;
+    mutable size_type arity_value = 0u;
 
     protected:
     basic_tree() {
@@ -177,7 +177,7 @@ class basic_tree {
      * @return true if the tree is empty
      */
     bool empty() const {
-        return this->size_value == 0;
+        return this->root == nullptr;
     }
 
     /**
@@ -185,10 +185,16 @@ class basic_tree {
      * @return the number of nodes
      */
     size_type size() const {
+        if (!this->empty() && this->size_value == 0u) {
+            this->size_value = calculate_size(*this->root);
+        }
         return this->size_value;
     }
 
     size_type arity() const {
+        if (!this->empty() && this->arity_value == 0u && this->root->has_children()) {
+            this->arity_value = calculate_arity(*this->root);
+        }
         return this->arity_value;
     }
 
