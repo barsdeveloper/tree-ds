@@ -46,7 +46,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
 
     public:
     //   ---   TYPES   ---
-    DECLARE_TYPES(T, Node, Policy, Allocator)
+    DECLARE_TREEDS_TYPES(T, Node, Policy, Allocator)
 
     static_assert(
         is_tag_of_policy<Policy, Node, allocator_type>,
@@ -225,6 +225,11 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return *this;
     }
 
+    tree& operator=(std::unique_ptr<Node, deleter<allocator_type>> root) {
+        this->assign(root.release(), 0u, 0u);
+        return *this;
+    }
+
     //   ---   ITERATORS   ---
     using super::begin;
     using super::end;
@@ -310,7 +315,14 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
         }
         node_type* replacement = node.release();
-        node_type* target      = const_cast<node_type*>(position.get_node());
+        /*
+         * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
+         * iterator refers to this tree, which is however mutable, just like the node that iterator is pointing to,
+         * making it safe to cast away the const-ness. I personally hate to see const_cast in the code but there is no
+         * efficient work around except crazy approaches like traversing the whole tree starting from the root to
+         * retrieve a non constant version of the value we already have.
+         */
+        node_type* target = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
             assert(this->root != nullptr);
             position.update(*target, replacement);
@@ -340,6 +352,13 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         if (!this->is_own_iterator(position)) {
             throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
         }
+        /*
+         * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
+         * iterator refers to this tree, which is however mutable, just like the node that iterator is pointing to,
+         * making it safe to cast away the const-ness. I personally hate to see const_cast in the code but there is no
+         * efficient work around except crazy approaches like traversing the whole tree starting from the root to
+         * retrieve a non constant version of the value we already have.
+         */
         node_type* target = const_cast<node_type*>(position.get_node());
         if (target == nullptr) {
             throw std::logic_error("The iterator points to a non valid position (end).");
@@ -356,15 +375,22 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         }
         this->size_value += replacement_size;
         // +1 because get_following_siblings() counts just the node that follow next
-        std::size_t local_arity = 1 + target->get_first_child()
-            ? target->get_first_child()->get_following_siblings()
-            : 0u;
+        std::size_t local_arity = target->get_first_child()
+            ? target->get_first_child()->get_following_siblings() + 1
+            : 1u;
         this->arity_value = std::max(replacement_arity, std::max(this->arity_value, local_arity));
         return iterator<P>(this, target);
     }
 
     template <typename P, bool Constant>
     void erase_subtree(tree_iterator<super, P, Constant> position) {
+        /*
+         * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
+         * iterator refers to this tree, which is however mutable, just like the node that iterator is pointing to,
+         * making it safe to cast away the const-ness. I personally hate to see const_cast in the code but there is no
+         * efficient work around except crazy approaches like traversing the whole tree starting from the root to
+         * retrieve a non constant version of the value we already have.
+         */
         node_type* target = const_cast<node_type*>(position.get_node());
         if (target != nullptr) { // if iterator points to valid node
             assert(this->root != nullptr);
@@ -435,10 +461,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     /**
-     * Insert an element at the specified position by replacing the existent node. This will use the move semantics.
-     * @param position where to insert the element
-     * @param value to insert in the tree, that will be copied
-     * @return an iterator that points to the inserted element
+     * @overload
      */
     template <typename P, bool C>
     iterator<P> insert(

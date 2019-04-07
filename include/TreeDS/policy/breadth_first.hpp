@@ -13,13 +13,13 @@ namespace md::detail {
  * to right, and from top to bottom.  Please note that this iterator is intended to be usedforward only (incremented
  * only). Reverse order iteration is possible (and tested) though it will imply severe performance drop.
  */
-template <typename Node, typename Allocator = std::allocator<Node>>
+template <typename Node, typename Allocator>
 class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Allocator>, Node, Allocator> {
 
-    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<Node>;
+    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<Node>>;
 
     private:
-    std::deque<const Node*, Allocator> open_nodes {};
+    std::deque<Node*, Allocator> open_nodes {};
     allocator_type allocator;
 
     public:
@@ -29,12 +29,12 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
          * Create a policy that does not point at the beginning of the iteration but somewhere into the range. This
          * means that we must reconstruct open_nodes deque like if we started at the beginning and arrived at current.
          */
-    breadth_first_impl(const Node* root, const Node* current, const Allocator& allocator) :
+    breadth_first_impl(Node* root, Node* current, const Allocator& allocator) :
             basic_policy<breadth_first_impl, Node, Allocator>(root, current, allocator) {
         if (current == nullptr) {
             return;
         }
-        const Node* node;
+        Node* node;
         auto process_child = [&]() {
             if (node->has_children()) {
                 this->open_nodes.push_back(node->get_first_child());
@@ -62,28 +62,28 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
     }
 
     // formward puhes into open back and pops front
-    const Node* increment_impl() {
+    Node* increment_impl() {
         if (this->open_nodes.empty()) {
             return nullptr;
         }
         // get element to be returned
-        const Node* result = this->open_nodes.front();
+        Node* result = this->open_nodes.front();
         // manage next sibling replacement in queue
-        const Node* sibling = result->get_next_sibling_limit(*this->root);
+        Node* sibling = result->get_next_sibling_limit(*this->root);
         if (sibling) {
             this->open_nodes.front() = sibling;
         } else {
             this->open_nodes.pop_front();
         }
         // push back its first child
-        const Node* first = result->get_first_child();
+        Node* first = result->get_first_child();
         if (first != nullptr) {
             this->open_nodes.push_back(first);
         }
         return result;
     }
 
-    const Node* decrement_impl() {
+    Node* decrement_impl() {
         // delete the child of current node from open_nodes
         if (this->current->has_children()) {
             assert(this->open_nodes.back()->get_parent() == this->current);
@@ -96,7 +96,7 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
             this->open_nodes.pop_front();
         }
         // calculate the previous element
-        const Node* result = left_branch_node(*this->current, *this->root);
+        Node* result = left_branch_node(*this->current, *this->root);
         if (result == nullptr && !this->current->is_root_limit(*this->root)) {
             result = same_row_rightmost(*this->current->get_parent(), *this->root);
         }
@@ -105,25 +105,25 @@ class breadth_first_impl final : public basic_policy<breadth_first_impl<Node, Al
         return result;
     }
 
-    const Node* go_first_impl() {
+    Node* go_first_impl() {
         this->open_nodes.clear();
         this->open_nodes.push_back(this->root);
         return this->increment_impl();
     }
 
-    const Node* go_last_impl() {
+    Node* go_last_impl() {
         this->open_nodes.clear();
         return deepest_rightmost_child(*this->root);
     }
 
-    void update(const Node& current, const Node* replacement) {
+    void update(Node& current, Node* replacement) {
         // delete child of the previous nodes from open_nodes
         if (current.has_children()) {
             assert(this->open_nodes.back()->get_parent() == &current);
             this->open_nodes.pop_back();
         }
         // push from back the children of the replacement node
-        const Node* child = replacement != nullptr
+        Node* child = replacement != nullptr
             ? replacement->get_first_child()
             : nullptr;
         if (child != nullptr) {

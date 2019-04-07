@@ -22,6 +22,12 @@ class binary_node : public node<T, binary_node<T>> {
     template <typename, typename, typename, typename>
     friend class tree;
 
+    template <template <typename, typename...> class, typename, typename...>
+    friend class matcher;
+
+    template <typename, typename...>
+    friend class any_matcher;
+
     template <typename A>
     friend void deallocate(A&, typename A::value_type*);
 
@@ -144,28 +150,30 @@ class binary_node : public node<T, binary_node<T>> {
         }
     }
 
-    void prepend_child(binary_node* node) {
+    binary_node* prepend_child(binary_node* node) {
         if (node != nullptr) {
             if (this->right == nullptr) {
                 this->right = this->left;
                 this->left  = nullptr;
             }
             if (this->left == nullptr) {
-                this->left = this->attach_children(node);
+                return this->left = this->attach_children(node);
             }
         }
+        return nullptr;
     }
 
-    void append_child(binary_node* node) {
+    binary_node* append_child(binary_node* node) {
         if (node != nullptr) {
             if (this->left == nullptr) {
                 this->left  = this->right;
                 this->right = nullptr;
             }
             if (this->right == nullptr) {
-                this->right = this->attach_children(node);
+                return this->right = this->attach_children(node);
             }
         }
+        return nullptr;
     }
 
     binary_node* attach_children(binary_node* node) {
@@ -180,6 +188,21 @@ class binary_node : public node<T, binary_node<T>> {
         }
         if (right != nullptr) {
             right->parent = this;
+        }
+    }
+
+    template <typename Allocator>
+    binary_node* shallow_copy_assign_child(const binary_node& child, Allocator&& allocator) {
+        assert(!child.is_root());
+        auto copy = allocate(allocator, child->get_value());
+        if (child.is_left_child()) {
+            assert(!this->has_left_child());
+            this->left = copy.release();
+            return this->attach_children(this->left);
+        } else {
+            assert(!this->has_right_child());
+            this->right = copy.release();
+            return this->attach_children(this->right);
         }
     }
 
@@ -220,11 +243,25 @@ class binary_node : public node<T, binary_node<T>> {
         return this->left;
     }
 
+    binary_node* get_left_child() {
+        return this->left;
+    }
+
     const binary_node* get_right_child() const {
         return this->right;
     }
 
+    binary_node* get_right_child() {
+        return this->right;
+    }
+
     const binary_node* get_first_child() const {
+        return this->left
+            ? this->left
+            : this->right;
+    }
+
+    binary_node* get_first_child() {
         return this->left
             ? this->left
             : this->right;
@@ -236,28 +273,58 @@ class binary_node : public node<T, binary_node<T>> {
             : this->left;
     }
 
+    binary_node* get_last_child() {
+        return this->right
+            ? this->right
+            : this->left;
+    }
+
     const binary_node* get_prev_sibling() const {
-        auto parent = this->parent;
-        if (parent) {
-            if (this == parent->right) return parent->left;
-        }
-        return nullptr;
+        return this->is_right_child()
+            ? this->parent->left
+            : nullptr;
+    }
+
+    binary_node* get_prev_sibling() {
+        return this->is_right_child()
+            ? this->parent->left
+            : nullptr;
     }
 
     const binary_node* get_next_sibling() const {
-        auto parent = this->parent;
-        if (parent) {
-            if (this == parent->left) return parent->right;
-        }
-        return nullptr;
+        return this->is_left_child()
+            ? this->parent->right
+            : nullptr;
+    }
+
+    binary_node* get_next_sibling() {
+        return this->is_left_child()
+            ? this->parent->right
+            : nullptr;
     }
 
     const binary_node* get_prev_sibling_limit(const binary_node& root) const {
-        return this->is_root_limit(root) ? nullptr : this->get_prev_sibling();
+        return this->is_root_limit(root)
+            ? nullptr
+            : this->get_prev_sibling();
+    }
+
+    binary_node* get_prev_sibling_limit(const binary_node& root) {
+        return this->is_root_limit(root)
+            ? nullptr
+            : this->get_prev_sibling();
     }
 
     const binary_node* get_next_sibling_limit(const binary_node& root) const {
-        return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
+        return this->is_root_limit(root)
+            ? nullptr
+            : this->get_next_sibling();
+    }
+
+    binary_node* get_next_sibling_limit(const binary_node& root) {
+        return this->is_root_limit(root)
+            ? nullptr
+            : this->get_next_sibling();
     }
 
     std::size_t children() const {

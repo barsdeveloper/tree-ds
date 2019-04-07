@@ -8,8 +8,8 @@ template <typename ActualPolicy, typename Node, typename Allocator>
 class basic_policy {
 
     protected:
-    const Node* root    = nullptr;
-    const Node* current = nullptr;
+    Node* root    = nullptr;
+    Node* current = nullptr;
     Allocator allocator {};
 
     public:
@@ -21,22 +21,23 @@ class basic_policy {
      * that we must reconstruct the state like if we started at the beginning and arrived at current. Current can also
      * be nullptr, this means the policy pointes at the beginning of the sequence.
      */
-    basic_policy(const Node* root, const Node* current, const Allocator& allocator) :
+    basic_policy(Node* root, Node* current, const Allocator& allocator) :
             root(root),
             current(current),
             allocator(allocator) {
     }
 
     public:
-    const Node* get_root() const {
+    Node* get_root() const {
         return this->root;
     }
 
-    const Node* get_current_node() const {
+    Node* get_current_node() const {
         return this->current;
     }
 
     const Allocator& get_allocator() const {
+        return this->allocator;
     }
 
     void increment() {
@@ -55,7 +56,7 @@ class basic_policy {
         this->current = static_cast<ActualPolicy*>(this)->go_last_impl();
     }
 
-    void update(const Node& current, const Node* replacement) {
+    void update(Node& current, Node* replacement) {
         if (&current == this->current) {
             this->current = replacement;
         }
@@ -66,12 +67,12 @@ class basic_policy {
  * Tag classes are expected to provide two "get_instance" methods. A simple one that creates a policy which points at
  * at the beginning of a sequence and one that creates a policy that points somewhere in the range.
  */
-template <template <typename, typename> class ActualPolicyType>
+template <template <typename...> class PolicyTemplate>
 struct tag {
     template <typename Node, typename Allocator>
-    ActualPolicyType<Node, Allocator> get_instance(
-        const Node* root,
-        const Node* current,
+    PolicyTemplate<Node, Allocator> get_instance(
+        Node* root,
+        Node* current,
         const Allocator& allocator) const {
         return {root, current, allocator};
     }

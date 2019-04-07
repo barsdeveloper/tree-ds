@@ -55,12 +55,20 @@ class node {
         return value;
     }
 
-    const Node* get_parent_limit(const Node& root) const {
+    const Node* get_parent() const {
+        return parent;
+    }
+
+    Node* get_parent() {
+        return parent;
+    }
+
+    Node* get_parent_limit(const Node& root) {
         return this->is_root_limit(root) ? nullptr : this->get_parent();
     }
 
-    const Node* get_parent() const {
-        return parent;
+    const Node* get_parent_limit(const Node& root) const {
+        return this->is_root_limit(root) ? nullptr : this->get_parent();
     }
 
     bool is_root_limit(const Node& root) const {

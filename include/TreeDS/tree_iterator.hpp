@@ -58,7 +58,7 @@ class tree_iterator {
     tree_iterator(tree_type& tree) :
             policy(
                 Policy().get_instance(
-                    tree.get_root(), static_cast<node_type*>(nullptr), tree.get_allocator())),
+                    const_cast<node_type*>(tree.get_root()), static_cast<node_type*>(nullptr), tree.get_allocator())),
             pointed_tree(&tree) {
     }
 
@@ -71,16 +71,13 @@ class tree_iterator {
                           static_cast<node_type*>(nullptr),
                           typename tree_type::allocator_type())),
             pointed_tree(tree) {
-        assert((tree == nullptr) == (current == nullptr));
-        assert(!tree || (tree->get_root() == nullptr) == (current == nullptr));
     }
 
     template <bool C = Constant, typename = std::enable_if_t<C>>
     tree_iterator<Tree, Policy, !C> craft_non_constant_iterator() const {
-        tree_iterator<Tree, Policy, !C> result;
-        result.policy       = this->policy;
-        result.pointed_tree = const_cast<Tree*>(this->pointed_tree);
-        return result;
+        return {
+            const_cast<std::decay_t<Tree>*>(this->pointed_tree),
+            const_cast<std::decay_t<typename Tree::node_type>*>(this->policy.get_current_node())};
     }
 
     public:
@@ -100,7 +97,7 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
-            policy(other.policy),
+            policy(other.policy.get_root(), other.policy.get_current_node(), other.policy.get_allocator()),
             pointed_tree(other.pointed_tree) {
     }
 
@@ -109,7 +106,10 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, Policy, OtherConstant>& other) {
-        this->policy       = other.policy;
+        this->policy = actual_policy_type(
+            other.policy.get_root(),
+            other.policy.get_current_node(),
+            other.policy.get_allocator());
         this->pointed_tree = other.pointed_tree;
         return *this;
     }
@@ -121,16 +121,16 @@ class tree_iterator {
             : tree_iterator<Tree, OtherPolicy, Constant>();
     }
 
-    node_type* get_node() {
-        return const_cast<node_type*>(this->policy.get_current_node());
-    }
-
     const node_type* get_node() const {
         return this->policy.get_current_node();
     }
 
+    node_type* get_node() {
+        return this->policy.get_current_node();
+    }
+
     value_type& operator*() {
-        return this->get_node()->value;
+        return this->policy.get_current_node()->value;
     }
 
     const value_type& operator*() const {
@@ -166,7 +166,6 @@ class tree_iterator {
              *     reverse iterator	=> decremented from end() => go to its last element (before end())
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
-            // const_cast needed in case node_type is non const
             this->policy.go_first();
         }
         return *this;
@@ -180,7 +179,6 @@ class tree_iterator {
 
     tree_iterator& operator--() {
         if (this->policy.get_current_node() != nullptr) {
-            // const_cast needed in case node_type is non constant
             this->policy.decrement();
         } else if (this->pointed_tree != nullptr && this->pointed_tree->get_root() != nullptr) {
             /*
@@ -189,7 +187,6 @@ class tree_iterator {
              *     reverse iterator => incremented from end() => go to its first element (rewind)
              * REMEMBER: ++ operator on a reverse_iterator delegates to -- operator of tree_iterator and vice versa
              */
-            // const_cast needed in case node_type is non const
             this->policy.go_last();
         }
         return *this;
@@ -205,5 +202,34 @@ class tree_iterator {
         this->policy.update(current, replacement);
     }
 };
+
+namespace detail {
+    template <
+        typename Tree,
+        typename Policy,
+        bool Constant = false>
+    class tree_iterator_node_return : public tree_iterator<Tree, Policy, Constant> {
+
+        using tree_iterator<Tree, Policy, Constant>::tree_iterator;
+        using node_type = typename tree_iterator<Tree, Policy, Constant>::node_type;
+
+        node_type& operator*() {
+            return this->get_node()->value;
+        }
+
+        const node_type& operator*() const {
+            return this->get_node();
+        }
+
+        node_type* operator->() {
+            return &(this->get_node());
+        }
+
+        const node_type* operator->() const {
+            return &(this->get_node());
+        }
+    };
+
+} // namespace detail
 
 } // namespace md

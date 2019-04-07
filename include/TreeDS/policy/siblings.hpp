@@ -8,32 +8,32 @@
 
 namespace md::detail {
 
-template <typename Node, typename Allocator = std::allocator<Node>>
+template <typename Node, typename Allocator>
 class siblings_impl final : public basic_policy<siblings_impl<Node, Allocator>, Node, Allocator> {
 
     public:
     using basic_policy<siblings_impl, Node, Allocator>::basic_policy;
 
-    siblings_impl(const Node* root, const Node* current, const Allocator& allocator) :
+    siblings_impl(Node* root, Node* current, const Allocator& allocator) :
             basic_policy<siblings_impl, Node, Allocator>(root, current, allocator) {
         this->root = this->current && this->current->get_parent()
             ? this->current->get_parent()
             : nullptr;
     }
 
-    const Node* increment_impl() {
+    Node* increment_impl() {
         return this->current->get_next_sibling();
     }
 
-    const Node* decrement_impl() {
+    Node* decrement_impl() {
         return this->current->get_prev_sibling();
     }
 
-    const Node* go_first_impl() {
+    Node* go_first_impl() {
         return this->root->get_first_child();
     }
 
-    const Node* go_last_impl() {
+    Node* go_last_impl() {
         return this->root->get_last_child();
     }
 };

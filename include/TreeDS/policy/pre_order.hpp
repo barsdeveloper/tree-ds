@@ -8,30 +8,30 @@
 
 namespace md::detail {
 
-template <typename Node, typename Allocator = std::allocator<Node>>
+template <typename Node, typename Allocator>
 class pre_order_impl final : public basic_policy<pre_order_impl<Node, Allocator>, Node, Allocator> {
 
     public:
     using basic_policy<pre_order_impl, Node, Allocator>::basic_policy;
 
-    const Node* increment_impl() {
+    Node* increment_impl() {
         if (this->current->has_children()) {
             return this->current->get_first_child();
         }
         // cross to another branch (on the right)
-        const Node* result = keep_calling(
+        Node* result = keep_calling(
             // from
             *this->current,
             // keep calling
-            [&](const Node& node) {
+            [&](Node& node) {
                 return node.get_parent_limit(*this->root);
             },
             // until
-            [&](const Node& child, const Node&) {
+            [&](Node& child, Node&) {
                 return child.get_next_sibling() != nullptr;
             },
             // then return
-            [](const Node& child, const Node&) {
+            [](Node& child, Node&) {
                 return child.get_next_sibling();
             });
         if (result->is_root_limit(*this->root)) {
@@ -41,9 +41,9 @@ class pre_order_impl final : public basic_policy<pre_order_impl<Node, Allocator>
         }
     }
 
-    const Node* decrement_impl() {
-        const Node* next = this->current->get_parent_limit(*this->root);
-        const Node* prev = this->current;
+    Node* decrement_impl() {
+        Node* next = this->current->get_parent_limit(*this->root);
+        Node* prev = this->current;
         /*
              * The parent is the next node if (REMEMBER: we traverse tree in pre-order and decrement the iterator):
              *   1) The passed node is root (its parent is nullptr so the previous value is the end of the reverse iterator)
@@ -52,18 +52,26 @@ class pre_order_impl final : public basic_policy<pre_order_impl<Node, Allocator>
         if (!next || prev == next->get_first_child()) {
             return next;
         }
-        const Node* prev_sibling = prev->get_prev_sibling();
+        Node* prev_sibling = prev->get_prev_sibling();
         return prev_sibling
-            ? keep_calling(*prev_sibling, std::mem_fn(&Node::get_last_child))
+            ? keep_calling(
+                  *prev_sibling,
+                  [](Node& node) {
+                      return node.get_last_child();
+                  })
             : nullptr;
     }
 
-    const Node* go_first_impl() {
+    Node* go_first_impl() {
         return this->root;
     }
 
-    const Node* go_last_impl() {
-        return keep_calling(*this->root, std::mem_fn(&Node::get_last_child));
+    Node* go_last_impl() {
+        return keep_calling(
+            *this->root,
+            [](Node& node) {
+                return node.get_last_child();
+            });
     }
 };
 

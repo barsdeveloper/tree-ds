@@ -65,7 +65,8 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     template <typename OtherPolicy>
     bool operator==(const binary_tree<T, OtherPolicy, Allocator>& other) const {
         // Test if different size_value
-        if (this->size() != other.size()
+        if (this->empty() != other.empty()
+            || this->size() != other.size()
             || this->arity() != other.arity()) {
             return false;
         }
