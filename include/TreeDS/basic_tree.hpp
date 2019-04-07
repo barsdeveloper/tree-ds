@@ -1,6 +1,6 @@
 #pragma once
 
-#define DECLARE_TYPES(VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T)                                                           \
+#define DECLARE_TREEDS_TYPES(VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T)                                                    \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::value_type;                                      \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::reference;                                       \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::const_reference;                                 \
@@ -22,7 +22,7 @@
 
 #include <cstddef>
 #include <iterator> // std::make_reverse_iterator
-#include <limits>   // std::numeric_limits()
+#include <limits>   // std::numeric_limits
 #include <memory>   // std::unique_ptr, std::allocator_traits
 
 #include <TreeDS/policy/breadth_first.hpp>
@@ -43,6 +43,9 @@ class basic_tree {
 
     template <typename, typename, typename, typename>
     friend class tree;
+
+    template <typename, typename, bool>
+    friend class tree_iterator;
 
     //   ---   TYPES   ---
     public:
@@ -193,7 +196,11 @@ class basic_tree {
 
     size_type arity() const {
         if (!this->empty() && this->arity_value == 0u && this->root->has_children()) {
-            this->arity_value = calculate_arity(*this->root);
+            this->arity_value = calculate_arity(
+                *this->root,
+                std::is_same_v<std::decay_t<Node>, binary_node<T>>
+                    ? 2u
+                    : std::numeric_limits<std::size_t>::max());
         }
         return this->arity_value;
     }
@@ -218,13 +225,18 @@ class basic_tree {
         return this->root;
     }
 
+    Node* get_root() {
+        return this->root;
+    }
+
     //  ---   COMPARISON   ---
     public:
     template <typename OtherPolicy>
     bool operator==(const basic_tree<T, Node, OtherPolicy, Allocator>& other) const {
-        // Test if different size or arity
-        if (this->size_value != other.size_value
-            || this->arity_value != other.arity_value) {
+        // Trivial test
+        if (this->empty() != other.empty()
+            || this->size() != other.size()
+            || this->arity() != other.arity()) {
             return false;
         }
         // At the end is either null (both) or same as the other.
@@ -237,8 +249,8 @@ class basic_tree {
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
     bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
         // Test if different size or arity
-        if (this->size_value != other.get_subtree_size()
-            || this->arity_value != other.get_subtree_arity()) {
+        if (this->size() != other.get_subtree_size()
+            || this->arity() != other.get_subtree_arity()) {
             return false;
         }
         // Deep test for equality
