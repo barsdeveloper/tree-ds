@@ -41,7 +41,7 @@ void AllocationTest::test1() {
     QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 0);
 
     // Replacing 1 node with 1 node
-    tree.emplace(
+    tree.emplace_over(
         std::find(tree.begin(policy::pre_order()), tree.end(policy::pre_order()), Foo(3, 4)),
         6, 7);
 
@@ -50,7 +50,7 @@ void AllocationTest::test1() {
     QCOMPARE(CustomAllocator<binary_node<Foo>>::total_deallocated, 1);
 
     // Replacing 3 nodes with 5
-    tree.insert(
+    tree.insert_over(
         std::find(tree.begin(policy::in_order()), tree.end(policy::in_order()), Foo(2, 3)),
         n(Foo(7, 8))(
             n(),
@@ -144,7 +144,7 @@ void AllocationTest::test1() {
 
     // Creating a copy tree
     binary_tree<Foo, policy::breadth_first, CustomAllocator<Foo>> tree2;
-    tree2.insert(tree2.begin(), tree);
+    tree2.insert_over(tree2.begin(), tree);
 
     QCOMPARE(CustomAllocator<binary_node<Foo>>::allocated.size(), 32);
     QCOMPARE(CustomAllocator<binary_node<Foo>>::total_allocated, 38);
@@ -179,7 +179,7 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 0);
 
     // Adding 5 nodes to bin
-    bin.emplace(
+    bin.emplace_over(
         bin.begin(),
         n(1, 2)(
             n(2, 3)(
@@ -208,7 +208,7 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 2);
 
     // Replacing 1 node in bin2
-    bin2.emplace(std::find(bin2.begin(), bin2.end(), Bar(5, 6)), 100, 101);
+    bin2.emplace_over(std::find(bin2.begin(), bin2.end(), Bar(5, 6)), 100, 101);
     QCOMPARE(bin2.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 3);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 6);
@@ -243,13 +243,13 @@ void AllocationTest::test2() {
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 6);
 
     // Adding 1 node to bin
-    bin.insert(bin.begin(), Bar(200, 201));
+    bin.insert_over(bin.begin(), Bar(200, 201));
     QCOMPARE(CustomAllocator<binary_node<Bar>>::allocated.size(), 1);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_allocated, 7);
     QCOMPARE(CustomAllocator<binary_node<Bar>>::total_deallocated, 6);
 
     // Replacing 1 node with 7 nodes
-    bin.insert(
+    bin.insert_over(
         bin.begin(policy::pre_order()),
         binary_tree<Bar, policy::post_order, CustomAllocator<Bar>>(
             n(Bar(200, 201))(

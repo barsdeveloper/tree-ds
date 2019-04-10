@@ -20,7 +20,7 @@ class ReadmeTest : public QObject {
         QCOMPARE(t.size(), 0);
 
         {
-            t.insert(t.begin(), "hello");
+            t.insert_over(t.begin(), "hello");
             std::stringstream result;
             result << "size: " << t.size() << " (" << *t.begin() << ")";
             QCOMPARE(result.str(), "size: 1 (hello)");
@@ -35,7 +35,7 @@ class ReadmeTest : public QObject {
                         n(600)), // right child of 300
                     n(400))));   // right child of 200
 
-        myTree.insert(
+        myTree.insert_over(
             find(myTree.begin(), myTree.end(), 300), // iterator to the (first) position of node 300
             n(-10)(
                 n(-20),
@@ -43,7 +43,7 @@ class ReadmeTest : public QObject {
                     n(-40))));
 
         md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
-        //            ^^^^^^^^^^^^ default algorithm used to iterate the tree
+        //                   ^^^^^^^^^^^^^^^^^^^^ default policy
 
         {
             std::stringstream cout;

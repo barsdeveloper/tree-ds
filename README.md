@@ -54,7 +54,7 @@ We just created an empty ```nary_tree```: a type of tree where each node can hav
 Add elements to the tree in the usual way:
 
 ```c++
-t.insert(t.begin(), "hello");
+t.insert_over(t.begin(), "hello");
 // size: 1 (hello)
 cout << "size: " << t.size_value() << " (" << *t.begin() << ")" << endl;
 ```
@@ -85,7 +85,7 @@ md::binary_tree<int> myTree(
  */
 ```
 
-Use the same approach also for the insert method, let's substitute the node 300 (the whole subtree) with another subtree:
+Use the same approach also for the insert/emplace methods, let's substitute the node 300 (the whole subtree) with another subtree:
 
 ```c++
 myTree.insert(
@@ -117,7 +117,7 @@ Let's now iterate the tree. You can create a tree with a specified traversal pol
 
 ```c++
 md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
-//                   ^^^^^^^^^^^^ default policy used to iterate the tree
+//                   ^^^^^^^^^^^^^^^^^^^^ default policy
 ```
 
 We just moved the content from `myTree` (which now is empty) to `inOrderTree`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
@@ -143,7 +143,7 @@ while (it != inOrderTree.end(md::policy::post_order()) {
 cout << endl;
 ```
 
-Or create a view of the tree and specify the policy of it.
+Or create a view of the tree and specify the policy.
 
 ```c++
 // Breadth-first: 100, 200, -10, 400, -20, -30, -40,
@@ -156,6 +156,6 @@ cout << endl;
 }// end of main
 ```
 
-`nary_tree_view<T>` and `binary_tree_view<T>` are coneptually similar to STL's `string_view`: they create a "view" (read only) that is a part of some bigger data structure.
+`nary_tree_view<T>` and `binary_tree_view<T>` are coneptually similar to STL's `string_view`: they create a "view" (read only) that is a part of a bigger data structure.
 Views can also refer to a subtree (take as root a node which is not the root of the original tree) and iterated coherently.
-Views are cheap to copy so please use them whenever deep copying a tree is something that must be avoided.
+Views are cheap to copy so please use them whenever deep copy is something that must be avoided.

@@ -454,7 +454,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      * @return an iterator that points to the inserted element
      */
     template <typename P, bool C>
-    iterator<P> insert(
+    iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
         const T& value) {
         return this->modify_subtree(position, allocate(this->allocator, value), 1u, 0u);
@@ -464,7 +464,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      * @overload
      */
     template <typename P, bool C>
-    iterator<P> insert(
+    iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
         T&& value) {
         return this->modify_subtree(position, allocate(this->allocator, std::move(value)), 1u, 0u);
@@ -483,7 +483,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         typename ConvertibleT,
         typename... Children,
         CHECK_CONVERTIBLE(ConvertibleT, value_type)>
-    iterator<P> insert(
+    iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
         const struct_node<ConvertibleT, Children...>& node) {
         return this->modify_subtree(
@@ -495,7 +495,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     template <typename P, bool C, typename OtherP>
-    iterator<P> insert(
+    iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
         const basic_tree<T, Node, OtherP, Allocator>& other) {
         return this->modify_subtree(
@@ -509,7 +509,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     template <typename P, bool C, typename OtherP>
-    iterator<P> insert(
+    iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
         tree<T, Node, OtherP, Allocator>&& other) {
         if constexpr (std::is_same_v<policy_type, OtherP>) {
@@ -531,7 +531,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename... Args,
         CHECK_CONSTRUCTIBLE(T, Args...)>
-    iterator<P> emplace(
+    iterator<P> emplace_over(
         const tree_iterator<super, P, C>& position,
         Args&&... args) {
         return this->modify_subtree(
@@ -547,7 +547,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         typename... EmplacingArgs,
         typename... Children,
         CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
-    iterator<P> emplace(
+    iterator<P> emplace_over(
         const tree_iterator<super, P, C>& position,
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(

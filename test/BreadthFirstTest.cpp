@@ -153,7 +153,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
     QCOMPARE(*it26, 26);
 
     // replace node 24 with another subtree
-    auto former24 = t.insert(
+    auto former24 = t.insert_over(
         it24,
         n(100)(
             n(101)(

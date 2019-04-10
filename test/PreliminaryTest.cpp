@@ -41,7 +41,7 @@ void PreliminaryTest::emptyBinary() {
     QVERIFY(cRef.begin() == t.begin());
 
     // construct an element
-    t.emplace(t.begin(), 67, 93);
+    t.emplace_over(t.begin(), 67, 93);
     QCOMPARE(t, n(Foo(67, 93)));
 
     // The tree has 1 element
@@ -94,7 +94,7 @@ void PreliminaryTest::emptyBinary() {
     QVERIFY(t.crbegin() == t.crend());
 
     // Create by insert
-    t.insert(t.begin(), Foo(45, 900));
+    t.insert_over(t.begin(), Foo(45, 900));
     QCOMPARE(*t.begin(), Foo(45, 900));
     QCOMPARE(t, n(Foo(45, 900)));
 
@@ -136,7 +136,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
     QCOMPARE(CustomAllocator<binary_node<std::string>>::total_deallocated, 0);
 
     // construct an element
-    t.emplace(t.begin(), "hello");
+    t.emplace_over(t.begin(), "hello");
     QCOMPARE(t, n(string("hello")));
     QCOMPARE(t, n("hello"));
 
@@ -194,7 +194,7 @@ void PreliminaryTest::emptyAllocatorBinary() {
     QVERIFY(t.crbegin() == t.crend());
 
     // Create by insert
-    t.insert(t.begin(), "new element");
+    t.insert_over(t.begin(), "new element");
     QCOMPARE(*t.begin(), "new element");
     QCOMPARE(t, n("new element"));
 

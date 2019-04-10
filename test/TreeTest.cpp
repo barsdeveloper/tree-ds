@@ -64,7 +64,7 @@ void TreeTest::naryTree() {
 
     // h -> #
     narytree_t diff(tree);
-    auto sharp_it = diff.insert(
+    auto sharp_it = diff.insert_over(
         find(begin(diff), end(diff), 'h'),
         '#');
     QCOMPARE(*sharp_it, '#');
@@ -130,7 +130,7 @@ void TreeTest::naryTree() {
     QVERIFY(copy2.get_root() == nullptr);
 
     // g -> !
-    auto bang_it = moved.insert(
+    auto bang_it = moved.insert_over(
         --find(moved.rbegin(), moved.rend(), 'g')
               .base(),
         '!');
@@ -161,7 +161,7 @@ void TreeTest::naryTree() {
     QCOMPARE(it.get_node()->get_following_siblings(), 1);
 
     // e -> t
-    auto t_it = moved.insert(
+    auto t_it = moved.insert_over(
         find(moved.begin(), moved.end(), 'e'),
         't');
     // parent of t is now ?
@@ -288,7 +288,7 @@ void TreeTest::nonCopyable() {
     QVERIFY(tree != movedTree);
 
     // (c, 3) -> (z, 100)
-    auto z_it = movedTree.emplace(
+    auto z_it = movedTree.emplace_over(
         find(movedTree.begin(), movedTree.end(), NonCopyable('c', 3)),
         'z', 100);
     QCOMPARE(*z_it, NonCopyable('z', 100));
@@ -322,17 +322,17 @@ void TreeTest::forbiddenOperations() {
 
     // iterator belonging to another tree
     QVERIFY_EXCEPTION_THROWN(
-        binEmpty.emplace(bin.begin(), "x"),
+        binEmpty.emplace_over(bin.begin(), "x"),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
-        bin.insert(binEmpty.begin(), std::string("x")),
+        bin.insert_over(binEmpty.begin(), std::string("x")),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
         bin.erase(binEmpty.begin(policy::post_order())),
         std::logic_error);
     // iterator pointing to end
     QVERIFY_EXCEPTION_THROWN(
-        bin.emplace(bin.end(), "x"),
+        bin.emplace_over(bin.end(), "x"),
         std::logic_error);
     QVERIFY_EXCEPTION_THROWN(
         bin.erase(bin.end(policy::post_order())),
