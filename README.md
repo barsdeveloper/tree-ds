@@ -88,7 +88,7 @@ md::binary_tree<int> myTree(
 Use the same approach also for the insert/emplace methods, let's substitute the node 300 (the whole subtree) with another subtree:
 
 ```c++
-myTree.insert(
+myTree.insert_over(
     // find returns iterator to the (first) position of node 300
     find(myTree.begin(), myTree.end(), 300),
     n(-10)(
