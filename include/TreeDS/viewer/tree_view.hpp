@@ -20,7 +20,7 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
     using super = basic_tree<T, const Node, Policy, Allocator>;
 
     public:
-    DECLARE_TYPES(T, const Node, Policy, Allocator)
+    DECLARE_TREEDS_TYPES(T, const Node, Policy, Allocator)
 
     tree_view() :
             super(nullptr, 0, 0) {

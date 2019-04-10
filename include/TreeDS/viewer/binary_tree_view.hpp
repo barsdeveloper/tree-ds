@@ -15,7 +15,7 @@ class binary_tree_view : public tree_view<T, binary_node<T>, Policy, Allocator> 
     using tree_view<T, binary_node<T>, Policy, Allocator>::tree_view;
 
     public:
-    DECLARE_TYPES(T, const binary_node<T>, Policy, Allocator)
+    DECLARE_TREEDS_TYPES(T, const binary_node<T>, Policy, Allocator)
 };
 
 } // namespace md

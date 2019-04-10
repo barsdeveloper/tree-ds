@@ -18,7 +18,7 @@ class nary_tree_view : public tree_view<T, nary_node<T>, Policy, Allocator> {
     using tree_view<T, nary_node<T>, Policy, Allocator>::tree_view;
 
     public:
-    DECLARE_TYPES(T, const nary_node<T>, Policy, Allocator)
+    DECLARE_TREEDS_TYPES(T, const nary_node<T>, Policy, Allocator)
 
     // Import the overloads of the operator== into the current class (would be shadowed otherwise)
     using tree_view<T, nary_node<T>, Policy, Allocator>::operator==;
