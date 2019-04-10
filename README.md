@@ -30,6 +30,8 @@ then `#include` it in your .cpp file:
 
 ```c++
 #include <TreeDS/tree>
+#include <TreeDS/view>  // needed only when using tree views
+#include <TreeDS/match> // needed only when using pattern matching
 ```
 
 ## Example
@@ -40,7 +42,7 @@ Here's a small example of utilization (you can merge and compile the code snippe
 #include <iostream>
 #include <algorithm>
 #include <TreeDS/tree>
-#include <TreeDS/view> // needed only to use views
+#include <TreeDS/view>
 using namespace std;
 using md::n;
 
