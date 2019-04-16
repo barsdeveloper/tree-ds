@@ -122,9 +122,9 @@ class basic_tree {
     }
 
     template <typename P = Policy>
-    const_iterator<P> cbegin(P = P()) const {
+    const_iterator<P> cbegin(P policy = P()) const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++const_iterator<P>(*this);
+        return ++const_iterator<P>(policy, *this);
     }
 
     template <typename P = Policy>
@@ -133,8 +133,8 @@ class basic_tree {
     }
 
     template <typename P = Policy>
-    const_iterator<P> cend(P = P()) const {
-        return const_iterator<P>(*this);
+    const_iterator<P> cend(P policy = P()) const {
+        return const_iterator<P>(policy, *this);
     }
 
     template <typename P = Policy>

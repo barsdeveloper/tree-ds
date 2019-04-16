@@ -303,30 +303,6 @@ class binary_node : public node<T, binary_node<T>> {
             : nullptr;
     }
 
-    const binary_node* get_prev_sibling_limit(const binary_node& root) const {
-        return this->is_root_limit(root)
-            ? nullptr
-            : this->get_prev_sibling();
-    }
-
-    binary_node* get_prev_sibling_limit(const binary_node& root) {
-        return this->is_root_limit(root)
-            ? nullptr
-            : this->get_prev_sibling();
-    }
-
-    const binary_node* get_next_sibling_limit(const binary_node& root) const {
-        return this->is_root_limit(root)
-            ? nullptr
-            : this->get_next_sibling();
-    }
-
-    binary_node* get_next_sibling_limit(const binary_node& root) {
-        return this->is_root_limit(root)
-            ? nullptr
-            : this->get_next_sibling();
-    }
-
     std::size_t children() const {
         std::size_t result = 0u;
         if (this->left) {

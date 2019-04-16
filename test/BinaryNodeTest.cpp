@@ -103,7 +103,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(right.children(), 0u);
     QCOMPARE(right.get_following_siblings(), 0u);
 
-    // move test
+    // Move test
     binary_node<Target> newNode(move(node));
 
     QVERIFY(newNode != node);
@@ -176,7 +176,7 @@ void BinaryNodeTest::argumentImplicitConvertion() {
     QCOMPARE(regular, constructedFrom);
     QCOMPARE(regular, constructedTo);
 
-    // various operator== test
+    // Various operator== test
     QVERIFY(regular != different);
     QVERIFY(regular == constructedFrom);
     QVERIFY(!(regular != constructedFrom));

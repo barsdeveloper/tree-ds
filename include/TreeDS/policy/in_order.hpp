@@ -24,37 +24,36 @@ namespace detail {
         Allocator,
         std::enable_if_t<is_same_template<std::decay_t<Node>, binary_node<std::nullptr_t>>>>
         final
-            : public basic_policy<
-                  in_order_impl<Node, Allocator>,
-                  Node,
-                  Allocator> {
+            : public basic_policy<in_order_impl<Node, Allocator>, Node, Allocator> {
+
+        using super = basic_policy<in_order_impl, Node, Allocator>;
 
         public:
         using basic_policy<in_order_impl, Node, Allocator>::basic_policy;
 
         Node* increment_impl() {
-            if (this->current->get_right_child()) {
+            if (this->current->has_right_child()) {
                 return keep_calling(
-                    // from
+                    // From
                     *this->current->get_right_child(),
-                    // keep calling
+                    // Keep calling
                     [](Node& node) {
                         return node.get_left_child();
                     });
             } else {
                 bool found   = false;
                 Node* result = keep_calling(
-                    // from
+                    // From
                     *this->current,
-                    // keep calling
-                    [&](Node& node) {
-                        return node.get_parent_limit(*this->root);
+                    // Keep calling
+                    [this](Node& node) {
+                        return &node != this->root ? node.get_parent() : nullptr;
                     },
-                    // until
-                    [](Node& child, Node& parent) {
-                        return &child == parent.get_left_child();
+                    // Until
+                    [](Node& child, Node&) {
+                        return child.is_left_child();
                     },
-                    // then return
+                    // Then return
                     [&](Node&, Node& parent) {
                         found = true;
                         return &parent;
@@ -64,7 +63,7 @@ namespace detail {
         }
 
         Node* decrement_impl() {
-            if (this->current->get_left_child()) {
+            if (this->current->has_left_child()) {
                 return keep_calling(
                     *this->current->get_left_child(),
                     [](Node& node) {
@@ -72,17 +71,17 @@ namespace detail {
                     });
             }
             return keep_calling(
-                // from
+                // From
                 *this->current,
-                // keep calling
-                [&](Node& node) {
-                    return node.get_parent_limit(*this->root);
+                // Keep calling
+                [this](Node& node) {
+                    return &node != this->root ? node.get_parent() : nullptr;
                 },
-                // until
-                [](Node& child, Node& parent) {
-                    return &child == parent.get_right_child();
+                // Until
+                [](Node& child, Node&) {
+                    return child.is_right_child();
                 },
-                // then return
+                // Then return
                 [](Node&, Node& parent) {
                     return &parent;
                 });
@@ -108,8 +107,8 @@ namespace detail {
 } // namespace detail
 
 namespace policy {
-    struct in_order : detail::tag<detail::in_order_impl> {
-        // what needed is inherited
+    struct in_order : detail::policy_tag<detail::in_order_impl> {
+        // What needed is inherited.
     };
 } // namespace policy
 

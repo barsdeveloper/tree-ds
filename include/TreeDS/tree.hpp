@@ -50,7 +50,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
 
     static_assert(
         is_tag_of_policy<Policy, Node, allocator_type>,
-        "Policy template parameter is expected to be an actual policy tag");
+        "\"Policy\" template parameter is expected to be an actual policy tag.");
 
     protected:
     tree(node_type* root) :
@@ -243,9 +243,9 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      * @return iterator to the first element
      */
     template <typename P = Policy>
-    iterator<P> begin(P = Policy()) {
+    iterator<P> begin(P policy = P()) {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++iterator<P>(*this);
+        return ++iterator<P>(policy, *this);
     }
 
     /**
@@ -257,18 +257,18 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      * @return iterator the element following the last element
      */
     template <typename P = Policy>
-    iterator<P> end(P = Policy()) {
-        return iterator<P>(*this);
+    iterator<P> end(P policy = P()) {
+        return iterator<P>(policy, *this);
     }
 
     template <typename P = Policy>
-    reverse_iterator<P> rbegin(P policy = Policy()) {
+    reverse_iterator<P> rbegin(P policy = P()) {
         return std::make_reverse_iterator(this->end(policy));
     }
 
     // reverse end
     template <typename P = Policy>
-    reverse_iterator<P> rend(P policy = Policy()) {
+    reverse_iterator<P> rend(P policy = P()) {
         // Incremented to shift it to the first element (initially it's end-equivalent)
         return std::make_reverse_iterator(this->begin(policy));
     }
@@ -296,7 +296,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
                 this->arity_value = replacement_arity;
             } else if (!replaced->has_children()) {
                 this->size_value += replacement_size - 1;
-                this->arity_value = 0u; // we don't have useful information
+                this->arity_value = 0u; // We don't have useful information.
             } else {
                 this->size_value  = 0u;
                 this->arity_value = 0u;
@@ -323,7 +323,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * retrieve a non constant version of the value we already have.
          */
         node_type* target = const_cast<node_type*>(position.get_node());
-        if (target != nullptr) { // if iterator points to valid node
+        if (target != nullptr) { // If iterator points to valid node.
             assert(this->root != nullptr);
             position.update(*target, replacement);
             if (target == this->root) {
@@ -379,7 +379,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             ? target->get_first_child()->get_following_siblings() + 1
             : 1u;
         this->arity_value = std::max(replacement_arity, std::max(this->arity_value, local_arity));
-        return iterator<P>(this, target);
+        return iterator<P>(position, this, target);
     }
 
     template <typename P, bool Constant>
@@ -392,7 +392,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * retrieve a non constant version of the value we already have.
          */
         node_type* target = const_cast<node_type*>(position.get_node());
-        if (target != nullptr) { // if iterator points to valid node
+        if (target != nullptr) { // If iterator points to valid node.
             assert(this->root != nullptr);
             position.update(*target, nullptr);
             if (target == this->root) {
@@ -415,7 +415,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     void nullify() {
-        this->root        = nullptr; // deallocation was already node somewhere else
+        this->root        = nullptr; // Weallocation was already node somewhere else.
         this->size_value  = 0u;
         this->arity_value = 0u;
     }
@@ -488,7 +488,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<ConvertibleT, Children...>& node) {
         return this->modify_subtree(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -500,7 +500,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const basic_tree<T, Node, OtherP, Allocator>& other) {
         return this->modify_subtree(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             !other.empty()
                 ? allocate(this->allocator, *other.get_root(), this->allocator)
                 : nullptr,
@@ -552,7 +552,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -581,7 +581,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     iterator<P> insert_child_front(
         const tree_iterator<super, P, C>& position,
         struct_node<ConvertibleT, Children...> value) {
-        // last allocator is forwarded to Node constructor to allocate its children
+        // Last allocator is forwarded to Node constructor to allocate its children.
         return this->add_child<true>(position, allocate(this->allocator, value, this->allocator), 1u, 0u);
     }
 
@@ -641,7 +641,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         struct_node<ConvertibleT, Children...> value) {
         return this->add_child<false>(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             allocate(this->allocator, value, this->allocator),
             value.get_subtree_size(),
             value.get_subtree_arity());
@@ -700,7 +700,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->add_child<true>(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -728,7 +728,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->add_child<false>(
             position,
-            // last allocator is forwarded to Node constructor to allocate its children
+            // Last allocator is forwarded to Node constructor to allocate its children.
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());

@@ -16,7 +16,7 @@ class ReadmeTest : public QObject {
 
     private slots:
     void test() {
-        md::nary_tree<string> t; // empty tree created
+        md::nary_tree<string> t; // Empty tree created
         QCOMPARE(t.size(), 0);
 
         {
@@ -27,23 +27,23 @@ class ReadmeTest : public QObject {
         }
 
         md::binary_tree<int> myTree(
-            n(100)(              // root node
-                n(),             // left child of root (it is empty: no child)
-                n(200)(          // right child of root
-                    n(300)(      // left child of 200
-                        n(500),  // left child of 300
-                        n(600)), // right child of 300
-                    n(400))));   // right child of 200
+            n(100)(              // Root node
+                n(),             // Left child of root (it is empty: no child)
+                n(200)(          // Right child of root
+                    n(300)(      // Left child of 200
+                        n(500),  // Left child of 300
+                        n(600)), // Right child of 300
+                    n(400))));   // Right child of 200
 
         myTree.insert_over(
-            find(myTree.begin(), myTree.end(), 300), // iterator to the (first) position of node 300
+            find(myTree.begin(), myTree.end(), 300), // Iterator to the (first) position of node 300
             n(-10)(
                 n(-20),
                 n(-30)(
                     n(-40))));
 
         md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
-        //                   ^^^^^^^^^^^^^^^^^^^^ default policy
+        //                   ^^^^^^^^^^^^^^^^^^^^ Default policy
 
         {
             std::stringstream cout;

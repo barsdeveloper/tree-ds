@@ -397,7 +397,7 @@ void UtilityTest::isTagOfPolicyTest() {
              std::allocator<int>>));
 
     QVERIFY((!is_tag_of_policy<
-             in_order_impl<nary_node<int>, std::allocator<nary_node<int>>>,
+             std::vector<float>,
              binary_node<int>,
              std::allocator<int>>));
 
@@ -407,17 +407,12 @@ void UtilityTest::isTagOfPolicyTest() {
              std::allocator<int>>));
 
     QVERIFY((!is_tag_of_policy<
-             post_order_impl<nary_node<int>, std::allocator<nary_node<int>>>,
+             void,
              nary_node<int>,
              std::allocator<int>>));
 
     QVERIFY((is_tag_of_policy<
              policy::breadth_first,
-             nary_node<int>,
-             std::allocator<int>>));
-
-    QVERIFY((!is_tag_of_policy<
-             breadth_first_impl<nary_node<int>, std::allocator<nary_node<int>>>,
              nary_node<int>,
              std::allocator<int>>));
 }

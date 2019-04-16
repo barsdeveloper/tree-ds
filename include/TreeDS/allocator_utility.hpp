@@ -25,7 +25,7 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
         return;
     }
     if constexpr (holds_resources<decltype(*ptr)>) {
-        // first deallocate nodes that this node is responsible for
+        // First deallocate nodes that this node is responsible for
         auto resources_to_deallocate = ptr->get_resources();
         std::apply(
             [&](auto&... pointers) {
@@ -33,10 +33,10 @@ void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
             },
             resources_to_deallocate);
     }
-    // then the node itself
-    // call destructor
+    // Then the node itself
+    // Call destructor
     std::allocator_traits<Allocator>::destroy(allocator, ptr);
-    // free memory
+    // Free memory
     std::allocator_traits<Allocator>::deallocate(allocator, ptr, 1);
 }
 
@@ -76,14 +76,14 @@ template <
     typename... Args>
 std::unique_ptr<typename Allocator::value_type, deleter<Allocator>>
 allocate(Allocator& allocator, Args&&... args) {
-    // allocate
+    // Allocate
     auto* ptr = std::allocator_traits<Allocator>::allocate(allocator, 1);
-    // construct
+    // Construct
     std::allocator_traits<Allocator>::construct(allocator, ptr, std::forward<Args>(args)...);
-    // return result
-    return std::unique_ptr<
-        typename Allocator::value_type,
-        deleter<Allocator>>(ptr, {allocator});
+    // Return result
+    return std::unique_ptr<typename Allocator::value_type, deleter<Allocator>>(
+        ptr,
+        {allocator});
 }
 
 } // namespace md

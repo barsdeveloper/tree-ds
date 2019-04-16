@@ -8,7 +8,7 @@
 #include <TreeDS/node/binary_node.hpp>
 #include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
-#include <TreeDS/utility.hpp> // keep_calling()
+#include <TreeDS/utility.hpp>
 
 namespace md {
 
@@ -31,7 +31,7 @@ class nary_node : public node<T, nary_node<T>> {
     std::size_t following_siblings = 0u;
     nary_node* next_sibling        = nullptr;
     nary_node* first_child         = nullptr;
-    nary_node* last_child; // it will be set by manage_parent_last_child() <- every constructor must call this method
+    nary_node* last_child; // It will be set by manage_parent_last_child() <- every constructor must call this method
 
     public:
     using node<T, nary_node<T>>::node;
@@ -133,7 +133,7 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     protected:
-    // every constructor must call this in order to initialize last_child for itself or parent
+    // Every constructor must call this in order to initialize last_child for itself or parent
     void manage_parent_last_child() {
         if (this->parent && !this->next_sibling) {
             this->parent->last_child = this;
@@ -146,20 +146,20 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename Allocator, typename... Nodes>
     void manage_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
         std::size_t children_count = sizeof...(Nodes);
-        // pointer to the considered child (which is itself a pointer to nary_node)
+        // Pointer to the considered child (which is itself a pointer to nary_node).
         nary_node* result         = nullptr;
         nary_node** current_child = &result;
-        // lambda that assigns one child at time
+        // Lambda that assigns one child at time.
         auto assign_child = [&](auto node) {
-            *current_child                       = node;             // assign child
-            (*current_child)->following_siblings = --children_count; // assign siblings count
-            (*current_child)->parent             = this;             // set the parent of that child
+            *current_child                       = node;             // Assign child.
+            (*current_child)->following_siblings = --children_count; // Assign siblings count.
+            (*current_child)->parent             = this;             // Set the parent of that child.
             if (children_count == 0) {
                 this->last_child = *current_child;
             }
-            current_child = &(*current_child)->next_sibling; // go to next child
+            current_child = &(*current_child)->next_sibling; // Go to next child.
         };
-        // lambda that constructs (by calling allocate) a nary_node from a struct_node
+        // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
         auto process_child = [&](auto& structure_node) {
             static_assert(
                 !std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>,
@@ -167,7 +167,7 @@ class nary_node : public node<T, nary_node<T>> {
             assign_child(allocate(allocator, structure_node, allocator).release());
         };
         std::apply(
-            // call allocate_child for each element in the tuple other.get_children()
+            // Call allocate_child for each element in the tuple other.get_children()
             [&](auto&... nodes) {
                 (..., process_child(nodes));
             },
@@ -214,14 +214,14 @@ class nary_node : public node<T, nary_node<T>> {
                 }
                 link_target = this->next_sibling;
             }
-            // set parent't first_child or prev_siblings's next_sibling
+            // Set parent't first_child or prev_siblings's next_sibling
             if (back_link == nullptr) {
                 back_link = this->is_first_child()
                     ? &this->parent->first_child
                     : &calculate_prev_sibling(this)->next_sibling;
             }
             *back_link = link_target;
-            // set parent's last_child
+            // Set parent's last_child
             if (this->next_sibling == nullptr) {
                 this->parent->last_child = link_target;
             }
@@ -273,17 +273,17 @@ class nary_node : public node<T, nary_node<T>> {
                 return nullptr;
             }
             return keep_calling(
-                // starting from
+                // From
                 *first,
-                // keep calling
+                // Keep calling
                 [](nary_node& node) {
                     return node.next_sibling;
                 },
-                // until
+                // Until
                 [&](nary_node&, nary_node& next) {
                     return &next == ptr;
                 },
-                // then return
+                // Then return
                 [](nary_node& prev, nary_node&) {
                     return &prev;
                 });
@@ -341,22 +341,6 @@ class nary_node : public node<T, nary_node<T>> {
 
     nary_node* get_next_sibling() {
         return this->next_sibling;
-    }
-
-    const nary_node* get_prev_sibling_limit(const nary_node& root) const {
-        return this->is_root_limit(root) ? nullptr : this->get_prev_sibling();
-    }
-
-    nary_node* get_prev_sibling_limit(const nary_node& root) {
-        return this->is_root_limit(root) ? nullptr : this->get_prev_sibling();
-    }
-
-    const nary_node* get_next_sibling_limit(const nary_node& root) const {
-        return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
-    }
-
-    nary_node* get_next_sibling_limit(const nary_node& root) {
-        return this->is_root_limit(root) ? nullptr : this->get_next_sibling();
     }
 
     std::size_t children() const {
@@ -443,14 +427,14 @@ class nary_node : public node<T, nary_node<T>> {
         if (this->value != other.get_value()) {
             return false;
         }
-        // pointer to the considered child (which is itself a pointer to const nary_node)
+        // Pointer to the considered child (which is itself a pointer to const nary_node).
         const nary_node* const* current_child = &this->first_child;
-        // lambda that constructs (by calling allocate) a nary_node from a struct_node
+        // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
         auto compare_child = [&](auto& structure_node) -> bool {
             bool result;
             if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>) {
                 result = *current_child == nullptr;
-            } else { // not empty node
+            } else { // Not empty node.
                 result = *current_child && **current_child == structure_node;
             }
             current_child = &(*current_child)->next_sibling;
@@ -458,7 +442,7 @@ class nary_node : public node<T, nary_node<T>> {
         };
         return std::apply(
                    [&](auto&... nodes) {
-                       // call compare_child for each element in the tuple other.get_children() and check all are true
+                       // Call compare_child for each element in the tuple other.get_children() and check all are true.
                        return (compare_child(nodes) && ...);
                    },
                    other.get_children())

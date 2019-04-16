@@ -63,18 +63,6 @@ class node {
         return parent;
     }
 
-    Node* get_parent_limit(const Node& root) {
-        return this->is_root_limit(root) ? nullptr : this->get_parent();
-    }
-
-    const Node* get_parent_limit(const Node& root) const {
-        return this->is_root_limit(root) ? nullptr : this->get_parent();
-    }
-
-    bool is_root_limit(const Node& root) const {
-        return this == &root;
-    }
-
     bool is_root() const {
         return parent == nullptr;
     }

@@ -55,29 +55,27 @@ class tree_iterator {
 
     protected:
     // Constructor used by tree to create an iterator
-    tree_iterator(tree_type& tree) :
+    tree_iterator(Policy policy, tree_type& tree, node_type* current_node = nullptr) :
             policy(
-                Policy().get_instance(
-                    const_cast<node_type*>(tree.get_root()), static_cast<node_type*>(nullptr), tree.get_allocator())),
+                policy.get_instance(
+                    const_cast<node_type*>(tree.get_root()), current_node, tree.get_allocator())),
             pointed_tree(&tree) {
     }
 
-    tree_iterator(tree_type* tree, node_type* current) :
-            policy(
-                tree != nullptr
-                    ? Policy().get_instance(tree->get_root(), current, tree->get_allocator())
-                    : Policy().get_instance(
-                          static_cast<node_type*>(nullptr),
-                          static_cast<node_type*>(nullptr),
-                          typename tree_type::allocator_type())),
+    template <bool OtherConstant>
+    tree_iterator(
+        const tree_iterator<Tree, Policy, OtherConstant>& other,
+        tree_type* tree,
+        node_type* current = nullptr) :
+            policy(other.policy, current),
             pointed_tree(tree) {
     }
 
     template <bool C = Constant, typename = std::enable_if_t<C>>
     tree_iterator<Tree, Policy, !C> craft_non_constant_iterator() const {
-        return {
-            const_cast<std::decay_t<Tree>*>(this->pointed_tree),
-            const_cast<std::decay_t<typename Tree::node_type>*>(this->policy.get_current_node())};
+        return tree_iterator<Tree, Policy, !C>(
+            *this,
+            const_cast<std::decay_t<Tree>*>(this->pointed_tree));
     }
 
     public:
@@ -90,14 +88,18 @@ class tree_iterator {
     ~tree_iterator() = default;
 
     // Iterators must be CopyAssignable
-    tree_iterator& operator=(const tree_iterator&) = default;
+    tree_iterator& operator=(const tree_iterator& other) {
+        this->policy       = other.policy;
+        this->pointed_tree = other.pointed_tree;
+        return *this;
+    }
 
     // Conversion constructor from iterator to const_iterator
     template <
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator(const tree_iterator<Tree, Policy, OtherConstant>& other) :
-            policy(other.policy.get_root(), other.policy.get_current_node(), other.policy.get_allocator()),
+            policy(other.policy),
             pointed_tree(other.pointed_tree) {
     }
 
@@ -115,9 +117,9 @@ class tree_iterator {
     }
 
     template <typename OtherPolicy>
-    tree_iterator<Tree, OtherPolicy, Constant> other_policy(OtherPolicy) {
+    tree_iterator<Tree, OtherPolicy, Constant> other_policy(OtherPolicy policy) {
         return this->pointed_tree != nullptr
-            ? tree_iterator<Tree, OtherPolicy, Constant>(this->pointed_tree, this->get_node())
+            ? tree_iterator<Tree, OtherPolicy, Constant>(policy, *this->pointed_tree, this->policy.get_current_node())
             : tree_iterator<Tree, OtherPolicy, Constant>();
     }
 

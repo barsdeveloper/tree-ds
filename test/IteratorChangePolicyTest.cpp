@@ -57,13 +57,13 @@ class IteratorChangePolicyTest : public QObject {
 };
 
 void IteratorChangePolicyTest::test1() {
-    // start in_order
+    // Start in_order
     auto it_a = this->binary.begin(policy::in_order());
     QCOMPARE(*it_a, 1);
     QCOMPARE(*++it_a, 7);
     QCOMPARE(*++it_a, 5);
 
-    // continue forward breadth_first
+    // Continue forward breadth_first
     auto it_b = it_a.other_policy(policy::breadth_first());
     QCOMPARE(*it_b, 5);
     QCOMPARE(*++it_b, 6);
@@ -143,10 +143,12 @@ void IteratorChangePolicyTest::test2() {
     QCOMPARE(*--it_d, 20);
 
     auto it_e = it_d.other_policy(policy::post_order());
+    QCOMPARE(*it_e, 20);
     std::advance(it_e, -12);
     QCOMPARE(*it_e, 3);
 
     it_d = it_e.other_policy(policy::breadth_first());
+    QCOMPARE(*it_d, 3);
     std::advance(it_d, 13);
     QCOMPARE(*it_d, 16);
     std::advance(it_d, -15);

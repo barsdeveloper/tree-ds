@@ -320,7 +320,7 @@ void AllocationTest::testAllocatorUsedForTests() {
         QCOMPARE(allocator_t::allocated.size(), 2);
         QCOMPARE(allocator_t::total_allocated, 2);
         QCOMPARE(allocator_t::total_deallocated, 0);
-    } // here allocated stuff will be deleted
+    } // Here allocated stuff will be deleted.
 
     QCOMPARE(allocator_t::allocated.size(), 0);
     QCOMPARE(allocator_t::total_allocated, 2);

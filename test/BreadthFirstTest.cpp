@@ -77,9 +77,9 @@ const nary_tree<int> BreadthFirstTest::tree(
 void BreadthFirstTest::backAndForth() {
     vector<int> result;
     vector<int> expected(50);
-    // populate result with the actual result of tree traverse
+    // Populate result with the actual result of tree traverse.
     result.assign(tree.cbegin(policy::breadth_first()), tree.cend(policy::breadth_first()));
-    // the expected traversal is 1...50
+    // The expected traversal is 1...50.
     iota(expected.begin(), expected.end(), 1);
 
     QCOMPARE(result, expected);
@@ -89,16 +89,16 @@ void BreadthFirstTest::backAndForth() {
     auto expectedEnd   = expected.end();
     auto expectedIt    = expectedStart;
 
-    // Iterators of the actual tree
+    // Iterators of the actual tree.
     auto actualStart = tree.cbegin(policy::breadth_first());
     auto actualEnd   = tree.cend(policy::breadth_first());
     auto actualIt    = actualStart;
 
-    // start jumping forward and backward
+    // Start jumping forward and backward.
     int index = 0;
-    while (expectedIt != expectedEnd) { // until the end
+    while (expectedIt != expectedEnd) { // Until the end
         int offset = 0;
-        // take care it will reaches the end (totally must add more than subtract)
+        // Take care it will reaches the end (totally must add more than subtract).
         switch (index++ % 4) {
         case 0:
             offset = 3;
@@ -116,16 +116,16 @@ void BreadthFirstTest::backAndForth() {
         // 3 - 5 + 7 - 4 = 1 ok, it will reach the end
         while (offset != 0 && expectedIt != expectedEnd && actualIt != actualEnd) {
             QVERIFY(*expectedIt == *actualIt);
-            if (offset > 0) { // positive offset increments
+            if (offset > 0) { // Positive offset increments.
                 if (expectedIt == expectedEnd || actualIt == actualEnd) {
-                    break; // if it reached the end, simply end the loop
+                    break; // If it reached the end, simply end the loop.
                 }
                 --offset;
                 ++expectedIt;
                 ++actualIt;
-            } else { // negative offset decrements
+            } else { // Negative offset decrements.
                 if (expectedIt == expectedStart || expectedIt == expectedEnd) {
-                    break; // if it reached the start, simply end the loop
+                    break; // If it reached the start, simply end the loop.
                 }
                 ++offset;
                 --expectedIt;
@@ -152,7 +152,7 @@ void BreadthFirstTest::checkUpdateConsistency() {
     QCOMPARE(*it25, 25);
     QCOMPARE(*it26, 26);
 
-    // replace node 24 with another subtree
+    // Replace node 24 with another subtree.
     auto former24 = t.insert_over(
         it24,
         n(100)(

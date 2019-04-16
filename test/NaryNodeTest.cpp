@@ -97,7 +97,7 @@ void NaryNodeTest::constructFromStructNode() {
     QVERIFY(first != last);
     QVERIFY(last != first);
 
-    // move test
+    // Move test
     nary_node<Target> newNode(move(node));
 
     QCOMPARE(*newNode.get_first_child(), first);
@@ -321,7 +321,7 @@ void NaryNodeTest::argumentImplicitConvertion() {
     QCOMPARE(regular, constructedFrom);
     QCOMPARE(regular, constructedTo);
 
-    // various operator== test
+    // Various operator== test
     QVERIFY(regular != different);
     QVERIFY(regular == constructedFrom);
     QVERIFY(!(regular != constructedFrom));

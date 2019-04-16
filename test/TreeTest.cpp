@@ -54,7 +54,7 @@ void TreeTest::naryTree() {
                    n('g')(
                        n('i')(
                            n('l')),
-                       n('j')))))); // no 'k'
+                       n('j')))))); // No 'k'
 
     vector<char> expected {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
     vector<char> actual(tree.begin(), tree.end());
@@ -274,7 +274,7 @@ void TreeTest::nonCopyable() {
             n('c', 3)(
                 n('d', 4),
                 n('e', 5))));
-    // nary_tree<NonCopyable> anotherTree(tree); // this shouldn't compile
+    // nary_tree<NonCopyable> anotherTree(tree); // This shouldn't compile.
     binary_tree<NonCopyable> movedTree(move(tree));
 
     QVERIFY(tree.empty());
@@ -320,7 +320,7 @@ void TreeTest::forbiddenOperations() {
     QVERIFY(!(bin == binEmpty));
     QVERIFY(!(binEmpty == bin));
 
-    // iterator belonging to another tree
+    // Iterator belonging to another tree.
     QVERIFY_EXCEPTION_THROWN(
         binEmpty.emplace_over(bin.begin(), "x"),
         std::logic_error);
@@ -330,7 +330,7 @@ void TreeTest::forbiddenOperations() {
     QVERIFY_EXCEPTION_THROWN(
         bin.erase(binEmpty.begin(policy::post_order())),
         std::logic_error);
-    // iterator pointing to end
+    // Iterator pointing to end.
     QVERIFY_EXCEPTION_THROWN(
         bin.emplace_over(bin.end(), "x"),
         std::logic_error);

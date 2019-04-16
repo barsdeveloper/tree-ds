@@ -62,7 +62,7 @@ void StructNodeTest::smallTrees() {
     QCOMPARE(get_child<2>(fourChildren).get_value(), 15);
     QCOMPARE(get_child<3>(fourChildren).get_value(), 76);
 
-    // Remember that calling the operator() discard the previous children, that will be replaced by the arguments
+    // Remember that calling the operator() discard the previous children, that will be replaced by the arguments.
     auto composedTree = threeChildren(
         rightChild(
             twoChildren),
@@ -70,7 +70,7 @@ void StructNodeTest::smallTrees() {
         singleNode(
             leftChild,
             rightChild,
-            emptyNode, // remember that empty nodes not participate to size_value nor arity
+            emptyNode, // Remember that empty nodes not participate to size_value nor arity.
             fourChildren,
             threeChildren,
             fourChildren));
