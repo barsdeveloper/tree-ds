@@ -17,23 +17,17 @@ template <
     typename Allocator>
 class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
 
-    using super = basic_tree<T, const Node, Policy, Allocator>;
-
     public:
     DECLARE_TREEDS_TYPES(T, const Node, Policy, Allocator)
+    using super = basic_tree<T, const Node, Policy, Allocator>;
 
     tree_view() :
-            super(nullptr, 0, 0) {
-    }
-
-    template <typename TreePolicy>
-    tree_view(const tree<T, Node, TreePolicy, Allocator>& tree) :
-            super(tree.get_root(), tree.size(), tree.arity()) {
+            super(nullptr, 0, 0, node_navigator<Node>(nullptr, false)) {
     }
 
     template <typename ViewPolicy>
-    tree_view(const tree_view<T, Node, ViewPolicy, Allocator>& tree) :
-            super(tree.get_root(), tree.size(), tree.arity()) {
+    tree_view(const basic_tree<T, Node, ViewPolicy, Allocator>& tree) :
+            super(tree.get_root(), tree.size_value, tree.arity_value, tree.navigator) {
     }
 
     template <
@@ -41,7 +35,7 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
         typename IteratorPolicy,
         bool Constant>
     tree_view(
-        const tree<T, Node, TreePolicy, Allocator>& tree,
+        const basic_tree<T, Node, TreePolicy, Allocator>& tree,
         const tree_iterator<
             basic_tree<T, Node, TreePolicy, Allocator>, // Tree_iterator always refers to basic_tree, no subclasses.
             IteratorPolicy,
@@ -49,42 +43,18 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
             super(
                 position.get_node(),
                 position.get_node()
-                    ? position.get_node()->is_root()
-                        ? tree.size()
+                    ? tree.get_node_navigator().is_root(*position.get_node())
+                        ? tree.size_value
                         : 0u
                     : 0u,
                 position.get_node()
-                    ? position.get_node()->is_root()
-                        ? tree.arity()
+                    ? tree.get_node_navigator().is_root(*position.get_node())
+                        ? tree.arity_value
                         : 0u
-                    : 0u) {
+                    : 0u,
+                navigator_type(position.get_node(), true)) {
         if (!tree.is_own_iterator(position)) {
             throw std::logic_error("Tried to create an nary_tree_biew with an iterator not belonging to the tree.");
-        }
-        if (position.get_node() == tree.get_root()) {
-            this->size_value  = tree.size();
-            this->arity_value = tree.arity();
-        }
-    }
-
-    template <
-        typename ViewPolicy,
-        typename IteratorPolicy,
-        bool Constant>
-    tree_view(
-        const tree_view<T, Node, ViewPolicy, Allocator>& tree,
-        const tree_iterator<
-            basic_tree<T, const Node, ViewPolicy, Allocator>, // Tree_iterator always uses basic_tree, no subclasses.
-            IteratorPolicy,
-            Constant>& position) :
-            super(
-                position.get_node(), 0u, 0u) {
-        if (!tree.is_own_iterator(position)) {
-            throw std::logic_error("Tried to create an nary_tree_biew with an iterator not belonging to the tree.");
-        }
-        if (position.get_node() && position.get_node()->is_root_limit(*tree.get_root())) {
-            this->size_value  = tree.size();
-            this->arity_value = tree.arity();
         }
     }
 };

@@ -2,6 +2,7 @@
 
 #include <memory> // std::allocator
 
+#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md::detail {
@@ -9,44 +10,53 @@ namespace md::detail {
 template <
     typename ActualPolicy,
     typename Node,
+    typename NodeNavigator,
     typename Allocator>
 class basic_policy {
 
+    template <typename, typename, typename, typename>
+    friend class basic_policy;
+
     protected:
     using node_type      = Node;
+    using navigator_type = NodeNavigator;
     using allocator_type = Allocator;
 
     protected:
-    node_type* root    = nullptr;
     node_type* current = nullptr;
+    navigator_type navigator;
     allocator_type allocator {};
 
     public:
-    basic_policy() {
-    }
-
     /*
      * Create a policy that does not point at the beginning of the iteration but somewhere into the range. This means
      * that we must reconstruct the state like if we started at the beginning and arrived at current. Current can also
      * be nullptr, this means the policy pointes at the beginning of the sequence.
      */
-    basic_policy(Node* root, Node* current, const Allocator& allocator) :
-            root(root),
+    basic_policy(Node* current, const Allocator& allocator) :
             current(current),
+            allocator(allocator) {
+    }
+
+    basic_policy(Node* current, const navigator_type& navigator, const Allocator& allocator) :
+            current(current),
+            navigator(navigator),
             allocator(allocator) {
     }
 
     template <
         typename OtherActualPolicy,
         typename OtherNode,
+        typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>>
+        typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
+        CHECK_CONVERTIBLE(OtherNodeNavigator, NodeNavigator)>
     basic_policy(
-        const basic_policy<OtherActualPolicy, OtherNode, Allocator>& other,
-        const Node* current = nullptr) :
+        const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
+        const node_type* current = nullptr) :
             basic_policy(
-                const_cast<Node*>(other.get_root()),
                 const_cast<Node*>(current != nullptr ? current : other.get_current_node()),
+                other.navigator,
                 other.get_allocator()) {
     }
 
@@ -79,7 +89,7 @@ class basic_policy {
         this->current = static_cast<ActualPolicy*>(this)->go_last_impl();
     }
 
-    void update(Node& current, Node* replacement) {
+    void update(node_type& current, node_type* replacement) {
         // Subclasses can override this in roder to manage their status.
         if (&current == this->current) {
             this->current = replacement;
@@ -95,12 +105,13 @@ template <template <typename...> class PolicyTemplate>
 struct policy_tag {
     template <
         typename Node,
+        typename NodeNavigator,
         typename Allocator>
-    PolicyTemplate<Node, Allocator> get_instance(
-        Node* root,
+    PolicyTemplate<Node, NodeNavigator, Allocator> get_instance(
         Node* current,
+        const NodeNavigator& navigator,
         const Allocator& allocator) const {
-        return {root, current, allocator};
+        return {current, navigator, allocator};
     }
 };
 

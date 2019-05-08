@@ -7,6 +7,7 @@
 #include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/basic_tree.hpp>
+#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/policy/pre_order.hpp>
@@ -42,28 +43,27 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <typename, typename, typename, typename>
     friend class tree;
 
-    using super = basic_tree<T, Node, Policy, Allocator>;
-
     public:
     //   ---   TYPES   ---
     DECLARE_TREEDS_TYPES(T, Node, Policy, Allocator)
+    using super = basic_tree<T, Node, Policy, Allocator>;
 
     static_assert(
-        is_tag_of_policy<Policy, Node, allocator_type>,
+        is_tag_of_policy<Policy>,
         "\"Policy\" template parameter is expected to be an actual policy tag.");
 
     protected:
     tree(node_type* root) :
-            super(root, 0u, 0u) {
+            super(root, 0u, 0u, navigator_type(root, false)) {
     }
 
     tree(node_type* root, size_type size, size_type arity) :
-            super(root, size, arity) {
+            super(root, size, arity, navigator_type(root, false)) {
     }
 
     template <typename Alloc>
     tree(node_type* root, size_type size, size_type arity, Alloc&& allocator) :
-            super(root, size, arity, std::forward<Alloc>(allocator)) {
+            super(root, size, arity, navigator_type(root, false), std::forward<Alloc>(allocator)) {
     }
 
     public:
@@ -75,7 +75,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     explicit tree(const Allocator& allocator) :
-            super(allocator) {
+            super(navigator_type(), allocator) {
     }
 
     /**
@@ -412,12 +412,14 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         this->root        = root;
         this->size_value  = size;
         this->arity_value = arity;
+        this->navigator   = navigator_type(this->root, false);
     }
 
     void nullify() {
         this->root        = nullptr; // Weallocation was already node somewhere else.
         this->size_value  = 0u;
         this->arity_value = 0u;
+        this->navigator   = navigator_type(nullptr, false);
     }
 
     public:
@@ -444,6 +446,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         std::swap(this->root, other.root);
         std::swap(this->size_value, other.size_value);
         std::swap(this->arity_value, other.arity_value);
+        std::swap(this->navigator, other.navigator);
     }
 
     /**

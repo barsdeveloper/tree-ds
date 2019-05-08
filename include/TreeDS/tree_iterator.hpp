@@ -34,10 +34,11 @@ class tree_iterator {
         Constant,
         const typename tree_type::node_type,
         typename tree_type::node_type>;
+    using navigator_type     = decltype(std::declval<tree_type>().get_node_navigator());
     using actual_policy_type = decltype(
         std::declval<Policy>().get_instance(
             std::declval<node_type*>(),
-            std::declval<node_type*>(),
+            std::declval<navigator_type>(),
             std::declval<typename Tree::allocator_type>()));
     // Iterators mandatory type declarations
     using value_type = std::conditional_t<
@@ -56,9 +57,7 @@ class tree_iterator {
     protected:
     // Constructor used by tree to create an iterator
     tree_iterator(Policy policy, tree_type& tree, node_type* current_node = nullptr) :
-            policy(
-                policy.get_instance(
-                    const_cast<node_type*>(tree.get_root()), current_node, tree.get_allocator())),
+            policy(policy.get_instance(current_node, tree.get_node_navigator(), tree.get_allocator())),
             pointed_tree(&tree) {
     }
 
@@ -80,18 +79,11 @@ class tree_iterator {
 
     public:
     // Iterators must be default constructible
-    constexpr tree_iterator() = default;
-
-    // Iterators must be CopyConstructible
-    tree_iterator(const tree_iterator&) = default;
-
-    ~tree_iterator() = default;
-
-    // Iterators must be CopyAssignable
-    tree_iterator& operator=(const tree_iterator& other) {
-        this->policy       = other.policy;
-        this->pointed_tree = other.pointed_tree;
-        return *this;
+    constexpr tree_iterator() :
+            policy(Policy().get_instance(
+                static_cast<node_type*>(nullptr),
+                navigator_type(),
+                typename tree_type::allocator_type())) {
     }
 
     // Conversion constructor from iterator to const_iterator
@@ -108,10 +100,7 @@ class tree_iterator {
         bool OtherConstant,
         typename = std::enable_if_t<Constant && !OtherConstant>>
     tree_iterator& operator=(const tree_iterator<Tree, Policy, OtherConstant>& other) {
-        this->policy = actual_policy_type(
-            other.policy.get_root(),
-            other.policy.get_current_node(),
-            other.policy.get_allocator());
+        this->policy       = actual_policy_type(other.policy);
         this->pointed_tree = other.pointed_tree;
         return *this;
     }

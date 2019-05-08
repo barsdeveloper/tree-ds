@@ -8,18 +8,19 @@
 
 namespace md::detail {
 
-template <typename Node, typename Allocator>
+template <typename Node, typename NodeNavigator, typename Allocator>
 class pre_order_impl final
-        : public basic_policy<pre_order_impl<Node, Allocator>, Node, Allocator> {
+        : public basic_policy<pre_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
 
-    using super = basic_policy<pre_order_impl, Node, Allocator>;
+    using super = basic_policy<pre_order_impl, Node, NodeNavigator, Allocator>;
 
     public:
-    using basic_policy<pre_order_impl, Node, Allocator>::basic_policy;
+    using basic_policy<pre_order_impl, Node, NodeNavigator, Allocator>::basic_policy;
 
     Node* increment_impl() {
-        if (this->current->has_children()) {
-            return this->current->get_first_child();
+        Node* first_child = this->navigator.get_first_child(*this->current);
+        if (first_child) {
+            return first_child;
         }
         // Cross to another branch (on the right)
         Node* result = keep_calling(
@@ -27,51 +28,42 @@ class pre_order_impl final
             *this->current,
             // Keep calling
             [this](Node& node) {
-                return &node != this->root ? node.get_parent() : nullptr;
+                return this->navigator.get_parent(node);
             },
             // Until
-            [&](Node& child, Node&) {
-                return !child.is_last_child();
+            [this](Node& child, Node&) {
+                return !this->navigator.is_last_child(child);
             },
             // Then return
             [&](Node& child, Node&) {
-                return child.get_next_sibling();
+                return this->navigator.get_next_sibling(child);
             });
-        if (result == this->root) {
-            return nullptr;
-        } else {
-            return result;
-        }
+        return this->navigator.is_root(*result) ? nullptr : result;
     }
 
     Node* decrement_impl() {
-        if (this->current == this->root) {
+        if (this->navigator.is_root(*this->current)) {
             return nullptr;
         }
-        Node* prev_sibling = this->current->get_prev_sibling();
+        Node* prev_sibling = this->navigator.get_prev_sibling(*this->current);
         if (prev_sibling == nullptr) {
-            return this->current->get_parent();
+            return this->navigator.get_parent(*this->current);
         }
         return prev_sibling
             ? keep_calling(
                   *prev_sibling,
-                  [](Node& node) {
-                      return node.get_last_child();
+                  [this](Node& node) {
+                      return this->navigator.get_last_child(node);
                   })
             : nullptr;
     }
 
     Node* go_first_impl() {
-        return this->root;
+        return this->navigator.get_root();
     }
 
-    Node*
-    go_last_impl() {
-        return keep_calling(
-            *this->root,
-            [](Node& node) {
-                return node.get_last_child();
-            });
+    Node* go_last_impl() {
+        return this->navigator.get_highest_right_leaf();
     }
 };
 

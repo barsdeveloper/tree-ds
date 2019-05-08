@@ -273,6 +273,10 @@ class node_navigator {
         return node.get_last_child();
     }
 
+    Node* get_child(Node& node, std::size_t index) const {
+        return node.get_child(index);
+    }
+
     template <typename N = Node, typename = std::enable_if_t<is_same_template<std::decay_t<N>, binary_node<void>>>>
     Node* get_left_child(N& node) const {
         return node.get_left_child();

@@ -7,32 +7,32 @@
 
 namespace md::detail {
 
-template <typename Node, typename Allocator>
+template <typename Node, typename NodeNavigator, typename Allocator>
 class post_order_impl final
-        : public basic_policy<post_order_impl<Node, Allocator>, Node, Allocator> {
+        : public basic_policy<post_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
 
-    using super = basic_policy<post_order_impl, Node, Allocator>;
+    using super = basic_policy<post_order_impl, Node, NodeNavigator, Allocator>;
 
     public:
-    using basic_policy<post_order_impl, Node, Allocator>::basic_policy;
+    using basic_policy<post_order_impl, Node, NodeNavigator, Allocator>::basic_policy;
 
     Node* increment_impl() {
-        if (this->current == this->root) {
+        if (this->navigator.is_root(*this->current)) {
             return nullptr;
         }
-        Node* next_sibling = this->current->get_next_sibling();
+        Node* next_sibling = this->navigator.get_next_sibling(*this->current);
         if (next_sibling == nullptr) {
-            return this->current->get_parent();
+            return this->navigator.get_parent(*this->current);
         }
         return keep_calling(
             *next_sibling,
-            [](Node& node) {
-                return node.get_first_child();
+            [this](Node& node) {
+                return this->navigator.get_first_child(node);
             });
     }
 
     Node* decrement_impl() {
-        Node* result = this->current->get_last_child();
+        Node* result = this->navigator.get_last_child(*this->current);
         if (result) {
             return result;
         }
@@ -41,28 +41,24 @@ class post_order_impl final
             *this->current,
             // Keep calling
             [this](Node& node) {
-                return &node != this->root ? node.get_parent() : nullptr;
+                return this->navigator.get_parent(node);
             },
             // Until
             [this](Node& child, Node&) {
-                return !child.is_first_child();
+                return !this->navigator.is_first_child(child);
             },
             // Then return
-            [](Node& child, Node&) {
-                return child.get_prev_sibling();
+            [this](Node& child, Node&) {
+                return this->navigator.get_prev_sibling(child);
             });
     }
 
     Node* go_first_impl() {
-        return keep_calling(
-            *this->root,
-            [](Node& node) {
-                return node.get_first_child();
-            });
+        return this->navigator.get_highest_left_leaf();
     }
 
     Node* go_last_impl() {
-        return this->root;
+        return this->navigator.get_root();
     }
 };
 

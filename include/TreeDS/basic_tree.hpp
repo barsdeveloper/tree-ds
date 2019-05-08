@@ -10,6 +10,7 @@
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::pointer;                                         \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::const_pointer;                                   \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::policy_type;                                     \
+    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::navigator_type;                                  \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::allocator_type;                                  \
     template <typename P>                                                                                               \
     using iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template iterator<P>;                 \
@@ -25,6 +26,7 @@
 #include <limits>   // std::numeric_limits
 #include <memory>   // std::unique_ptr, std::allocator_traits
 
+#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/policy/breadth_first.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
@@ -44,6 +46,9 @@ class basic_tree {
     template <typename, typename, typename, typename>
     friend class tree;
 
+    template <typename, typename, typename, typename>
+    friend class tree_view;
+
     template <typename, typename, bool>
     friend class tree_iterator;
 
@@ -59,6 +64,7 @@ class basic_tree {
     using pointer         = T*;
     using const_pointer   = const T*;
     using policy_type     = Policy;
+    using navigator_type  = node_navigator<node_type>;
     using allocator_type  = typename std::allocator_traits<Allocator>::
         template rebind_alloc<std::decay_t<node_type>>;
 
@@ -74,34 +80,39 @@ class basic_tree {
 
     protected:
     //   ---   ATTRIBUTES   ---
-    /// @brief Allocator object used to allocate the nodes.
-    allocator_type allocator {};
     /// @brief Owning pointer to the root node.
     node_type* root = nullptr;
     /// @brief The number of nodes in the tree.
     mutable size_type size_value = 0u;
     /// @brief Maximum number of children a node can have.
     mutable size_type arity_value = 0u;
+    /// @brief An object used to navigate the nodes.
+    navigator_type navigator {};
+    /// @brief Allocator object used to allocate the nodes.
+    allocator_type allocator {};
 
     protected:
     basic_tree() {
     }
 
-    basic_tree(node_type* root, size_type size, size_type arity) :
+    basic_tree(node_type* root, size_type size, size_type arity, navigator_type navigator) :
             root(root),
             size_value(size),
-            arity_value(arity) {
+            arity_value(arity),
+            navigator(navigator) {
     }
 
     template <typename Alloc>
-    basic_tree(node_type* root, size_type size, size_type arity, Alloc&& allocator) :
-            allocator(allocator),
+    basic_tree(node_type* root, size_type size, size_type arity, navigator_type navigator, Alloc&& allocator) :
             root(root),
             size_value(size),
-            arity_value(arity) {
+            arity_value(arity),
+            navigator(navigator),
+            allocator(allocator) {
     }
 
-    basic_tree(const allocator_type& allocator) :
+    basic_tree(navigator_type navigator, const allocator_type& allocator) :
+            navigator(navigator),
             allocator(allocator) {
     }
 
@@ -217,16 +228,24 @@ class basic_tree {
     }
 
     //   ---   GETTER   ---
-    allocator_type get_allocator() const {
-        return this->allocator;
-    }
-
     const Node* get_root() const {
         return this->root;
     }
 
     Node* get_root() {
         return this->root;
+    }
+
+    node_navigator<const node_type> get_node_navigator() const {
+        return this->navigator;
+    }
+
+    node_navigator<node_type> get_node_navigator() {
+        return this->navigator;
+    }
+
+    allocator_type get_allocator() const {
+        return this->allocator;
     }
 
     //  ---   COMPARISON   ---
@@ -257,7 +276,7 @@ class basic_tree {
         return this->root != nullptr && this->root->operator==(other);
     }
 
-    bool operator==(const struct_node<detail::empty_node_t>&) const {
+    bool operator==(const struct_node<detail::empty_t>&) const {
         return this->empty();
     }
 };
@@ -315,7 +334,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator==(const struct_node<detail::empty_node_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator==(const struct_node<detail::empty_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 
@@ -324,7 +343,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<detail::empty_node_t>& rhs) {
+bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<detail::empty_t>& rhs) {
     return !lhs.operator==(rhs);
 }
 
@@ -333,7 +352,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const struct_node<detail::empty_node_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator!=(const struct_node<detail::empty_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }
 
