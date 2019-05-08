@@ -103,7 +103,8 @@ void IteratorChangePolicyTest::test1() {
     QCOMPARE(*it_f, 13);
     QCOMPARE(*++it_f, 14);
     QCOMPARE(*++it_f, 15);
-    std::advance(it_f, -2);
+    QCOMPARE(*--it_f, 14);
+    QCOMPARE(*--it_f, 13);
     QCOMPARE(*--it_f, 12);
     QCOMPARE(*--it_f, 11);
     QCOMPARE(*--it_f, 10);

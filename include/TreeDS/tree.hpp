@@ -6,6 +6,7 @@
 #include <type_traits> // std::enable_if
 #include <utility>     // std::move(), std::forward()
 
+#include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/basic_tree.hpp>
 #include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
@@ -126,7 +127,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         other.nullify();
     }
 
-    tree(std::unique_ptr<Node, deleter<Allocator>> root, size_type size = 0u, size_type arity = 0u) :
+    tree(unique_node_ptr<allocator_type> root, size_type size = 0u, size_type arity = 0u) :
             tree(root.release(), size, arity) {
     }
 
@@ -225,7 +226,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return *this;
     }
 
-    tree& operator=(std::unique_ptr<Node, deleter<allocator_type>> root) {
+    tree& operator=(unique_node_ptr<allocator_type> root) {
         this->assign(root.release(), 0u, 0u);
         return *this;
     }
@@ -283,7 +284,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
 
     //   ---   MODIFIERS   ---
     protected:
-    std::unique_ptr<node_type, deleter<allocator_type>> replace_node(
+    unique_node_ptr<allocator_type> replace_node(
         node_type* replaced,
         node_type* replacement,
         size_type replacement_size,
@@ -308,7 +309,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <typename P, bool Constant>
     iterator<P> modify_subtree(
         tree_iterator<super, P, Constant> position,
-        std::unique_ptr<node_type, deleter<allocator_type>> node,
+        unique_node_ptr<allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
         if (!this->is_own_iterator(position)) {
@@ -346,7 +347,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <bool First, typename P, bool C>
     iterator<P> add_child(
         tree_iterator<super, P, C> position,
-        std::unique_ptr<node_type, deleter<allocator_type>> node,
+        unique_node_ptr<allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
         if (!this->is_own_iterator(position)) {

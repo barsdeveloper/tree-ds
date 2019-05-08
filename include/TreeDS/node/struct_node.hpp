@@ -4,38 +4,36 @@
 #include <tuple>   // std::tuple
 #include <type_traits>
 
-namespace md {
+#include <TreeDS/utility.hpp>
 
-namespace detail {
-    struct empty_node_t {};
-}; // namespace detail
+namespace md {
 
 template <typename T, typename... Children>
 class struct_node {
 
-    //   ---   TYPES   ---
+    /*   ---   TYPES   ---   */
     public:
     using children_t = std::tuple<Children...>;
     using value_t    = T;
 
-    //   ---   ATTRIBUTES   ---
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     value_t value;                 // Value hold by this node
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
     children_t children {};        // Tuple containing actual children
 
-    //   ---   CONSTRUCTORS   ---
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     constexpr struct_node(const T& value, Children&&... children) :
             value(value),
             children(children...) {
-        std::size_t size           = std::is_same_v<T, detail::empty_node_t> ? 0 : 1;
+        std::size_t size           = std::is_same_v<T, detail::empty_t> ? 0 : 1;
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
             auto call = [&](auto&& node) {
-                if constexpr (std::is_same_v<decltype(node.get_value()), detail::empty_node_t>) {
+                if constexpr (std::is_same_v<decltype(node.get_value()), detail::empty_t>) {
                     return;
                 } else {
                     children_count += 1;
@@ -53,7 +51,7 @@ class struct_node {
 
     constexpr struct_node(const struct_node& other) = default;
 
-    //   ---   METHODS   ---
+    /*   ---   METHODS   ---   */
     constexpr std::size_t children_count() const {
         return std::tuple_size_v<children_t>;
     }
@@ -91,8 +89,8 @@ constexpr struct_node<std::tuple<Args...>> n(Args... args) {
     return {std::make_tuple(args...)};
 }
 
-constexpr struct_node<detail::empty_node_t> n() {
-    return {detail::empty_node_t {}};
+constexpr struct_node<detail::empty_t> n() {
+    return {detail::empty_t {}};
 }
 
 template <std::size_t index, typename T, typename... Children>

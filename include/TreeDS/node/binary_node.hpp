@@ -102,7 +102,7 @@ class binary_node : public node<T, binary_node<T>> {
     binary_node* extract_left(const std::tuple<Nodes...>& children, Allocator&& allocator) {
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = std::get<0>(children);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_node_t>) {
+            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
                 return allocate(allocator, left, std::forward<Allocator>(allocator)).release();
             }
         }
@@ -113,7 +113,7 @@ class binary_node : public node<T, binary_node<T>> {
     binary_node* extract_right(const std::tuple<Nodes...>& children, Allocator&& allocator) {
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = std::get<1>(children);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_node_t>) {
+            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
                 return allocate(allocator, right, std::forward<Allocator>(allocator)).release();
             }
         }
@@ -365,7 +365,7 @@ class binary_node : public node<T, binary_node<T>> {
         }
         if constexpr (sizeof...(Nodes) >= 1) {
             const auto& left = get_child<0>(other);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_node_t>) {
+            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
                     "The struct_node passed has a LEFT child with a value that is not compatible with T.");
@@ -380,7 +380,7 @@ class binary_node : public node<T, binary_node<T>> {
         }
         if constexpr (sizeof...(Nodes) >= 2) {
             const auto& right = get_child<1>(other);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_node_t>) {
+            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
                     "The struct_node passed has a RIGHT child with a value that is not compatible with T.");

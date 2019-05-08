@@ -61,6 +61,9 @@ struct deleter {
     }
 };
 
+template <typename NodeAllocactor>
+using unique_node_ptr = std::unique_ptr<typename NodeAllocactor::value_type, deleter<NodeAllocactor>>;
+
 /**
  * @private
  * @brief Allocates a new value using the allocator provided.

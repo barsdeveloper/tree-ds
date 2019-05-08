@@ -162,7 +162,7 @@ class nary_node : public node<T, nary_node<T>> {
         // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
         auto process_child = [&](auto& structure_node) {
             static_assert(
-                !std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>,
+                !std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>,
                 "ds::nary_node does not accept empty nodes");
             assign_child(allocate(allocator, structure_node, allocator).release());
         };
@@ -432,7 +432,7 @@ class nary_node : public node<T, nary_node<T>> {
         // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
         auto compare_child = [&](auto& structure_node) -> bool {
             bool result;
-            if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_node_t>) {
+            if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>) {
                 result = *current_child == nullptr;
             } else { // Not empty node.
                 result = *current_child && **current_child == structure_node;

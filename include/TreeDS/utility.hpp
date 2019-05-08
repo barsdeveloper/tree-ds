@@ -14,16 +14,16 @@ class binary_node;
 template <typename>
 class nary_node;
 
+template <typename>
+class node_navigator;
+
 #define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
 #define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
 #define CHECK_COPIABLE(TYPE) typename = std::enable_if_t<std::is_copy_constructible_v<TYPE>>
 
 namespace detail {
-    template <typename Node>
-    constexpr auto true_node_filter = [](const Node&) -> bool {
-        return true;
-    };
-}
+    struct empty_t {};
+} // namespace detail
 
 template <typename Node, typename Call, typename Test, typename Result>
 Node* keep_calling(Node& from, Call call, Test test, Result result) {
@@ -55,215 +55,6 @@ Node* keep_calling(Node& from, Callable call) {
         next = call(*prev);
     }
     return prev;
-}
-
-/*
- * Confused by the purpose of std::decay_t as a wrapper for the second parameter? It is worth spending a few words to
- * clarify this awesome trick. To start with, let's understand what we wanted to achieve here:
- *   - Arguments and return type are variations of some basic template Node.
- *   - Returned type must preserve the constness of the first argument.
- *   - The second argument must accept any Node (costant/non-costant).
- *
- * This means that we can have (node_t is an arbitrary concrete type):
- *     `node_t m;`
- *     `const node_t c;`
- *
- * Then all the following calls must be valid:
- *     `calculate_other_branch_node(m, m); // (1) returns a pointer to mutable`
- *     `calculate_other_branch_node(m, c); // (2) returns a pointer to mutable`
- *     `calculate_other_branch_node(c, m); // (3) returns a pointer to const`
- *     `calculate_other_branch_node(c, c); // (4) returns a pointer to const`
- *
- * Why this, more intuitive, implementation fails?
- *     template <typename Node, bool Left>
- *     Node* calculate_other_branch_node(Node& from, const Node& root);
- *
- * Among all the 4 possibilities above, just (1) and (2) compile: Node is deduced node_t:
- *     calculate_other_branch_node(node_t&, const node_t&);
- * In the other cases the argument cannot be deduced because the const-ness is not coherent.
- *
- * The solution is to "mark" somehow the arguments that do no partecipate in the template parameter deduction. In
- * C++ standardese parlance this translates into "Non-deduced context":
- * https://en.cppreference.com/w/cpp/language/template_argument_deduction#Non-deduced_contexts
- * The case we are reproducing is the first: nested-name-specifier, here `std::decay_t` comes into play. This type trait
- * just removes qualifications from a type: reference, const, volative... Intuitively it will give a "basic" version of
- * a type. This way, `std::decay_t<const int>` and `std::decay_t<int&&>` give `int`, while `std::decay_t<int[]>` will
- * give `int*`. `std::decay_t<T>` is actually the typedef `std::decay<T>::type`
- *                                                           ^^^^ dependand type
- * With this trick, we just took out of the picture the last parameter in the determination of the template parameter
- * type. In fact C++20 has a new trait used to exploit this mechanism: `std::type_identity` but in this specific case,
- * decay works as well.
- */
-template <typename Node, bool Left>
-Node* calculate_other_branch_node(Node& from, const std::decay_t<Node>& root) {
-    int relative_level  = 0;
-    Node* deepest_child = &from;
-    Node* crossed;
-    do {
-        // Climb up the tree until a node with a sibling is found, then return that sibling
-        crossed = keep_calling(
-            // From
-            *deepest_child,
-            // Keep calling
-            [&](Node& node) {
-                return &node != &root ? node.get_parent() : nullptr;
-            },
-            // Until
-            [&](Node& child, Node&) {
-                --relative_level;
-                return Left
-                    ? !child.is_first_child()
-                    : !child.is_last_child();
-            },
-            // Then return
-            [&](Node& child, Node&) {
-                // Increment level because it considers the previous value (first argument)
-                ++relative_level;
-                return Left
-                    // Always present because it is not the first child
-                    ? child.get_prev_sibling()
-                    // Aways present because it is not the last child
-                    : child.get_next_sibling();
-            });
-        if (crossed == &root) {
-            return nullptr;
-        } else if (relative_level == 0) {
-            return crossed;
-        }
-        // Descend the tree following the last children until level is reached or no more children
-        deepest_child = keep_calling(
-            // From
-            *crossed,
-            // Keep calling
-            [](Node& node) {
-                return Left
-                    ? node.get_last_child()
-                    : node.get_first_child();
-            },
-            // Until
-            [&](Node&, Node&) {
-                ++relative_level;
-                return relative_level >= 0;
-            },
-            // The return
-            [](Node&, Node& child) {
-                return &child;
-            });
-    } while (relative_level < 0);
-    return deepest_child;
-} // namespace md
-
-template <typename Node>
-Node* left_branch_node(
-    Node& from,
-    const std::decay_t<Node>& root) {
-    return calculate_other_branch_node<Node, true>(from, root);
-}
-
-template <typename Node>
-Node* right_branch_node(
-    Node& from,
-    const std::decay_t<Node>& root) {
-    return calculate_other_branch_node<Node, false>(from, root);
-}
-
-template <typename Node, bool Left>
-Node* calculate_row_extremum(Node& from, const std::decay_t<Node>& root) {
-    if (&from == &root) {
-        return &from;
-    }
-    int relative_level = 0;
-    Node* deepest_extremum_child;
-    // Climb the tree up to the root
-    Node* breanch_crossed = keep_calling(
-        // From
-        from,
-        // Keep calling
-        [](Node& node) {
-            return node.get_parent();
-        },
-        // Until
-        [&](Node&, Node& parent) {
-            --relative_level;
-            return &parent == &root;
-        },
-        // Then return
-        [](Node&, Node& root) {
-            return &root;
-        });
-    do {
-        // Descend the tree traversing extremum children
-        deepest_extremum_child = keep_calling(
-            // From
-            *breanch_crossed,
-            // Keep calling
-            [](Node& node) {
-                return Left
-                    ? node.get_first_child()
-                    : node.get_last_child();
-            },
-            // Until
-            [&](Node&, Node&) {
-                ++relative_level;
-                return relative_level >= 0;
-            },
-            // Then return
-            [](Node&, Node& child) {
-                return &child;
-            });
-        if (relative_level == 0) {
-            break;
-        }
-        // Go to the node that is on the other direction branch and at the same level.
-        breanch_crossed = calculate_other_branch_node<Node, !Left>(*deepest_extremum_child, root);
-    } while (relative_level < 0);
-    return deepest_extremum_child;
-}
-
-template <typename Node>
-Node* same_row_leftmost(
-    Node& from,
-    const std::decay_t<Node>& root) {
-    return calculate_row_extremum<Node, true>(from, root);
-}
-
-template <typename Node>
-Node* same_row_rightmost(
-    Node& from,
-    const std::decay_t<Node>& root) {
-    return calculate_row_extremum<Node, false>(from, root);
-}
-
-template <typename Node>
-Node* deepest_rightmost_child(Node& root) {
-    int current_level  = 0;
-    int deepest_level  = 0;
-    Node* current_node = &root;
-    Node* deepest_node = &root;
-    do {
-        // Descend the tree keeping right (last child)
-        current_node = keep_calling(
-            // From
-            *current_node,
-            // Keep calling
-            [](Node& node) {
-                return node.get_last_child();
-            },
-            // Until
-            [&](Node&, Node&) {
-                ++current_level;
-                return false;
-            },
-            // Then return
-            std::function<Node*(Node&, Node&)>()); // Never called ("until" lambda retuns always false).
-        if (current_level > deepest_level) {
-            deepest_level = current_level;
-            deepest_node  = current_node;
-        }
-        // Go to the node that is on the left and at the same level
-        current_node = left_branch_node(*current_node, root);
-    } while (current_node != nullptr);
-    return deepest_node;
 }
 
 template <typename T>
@@ -321,20 +112,22 @@ constexpr bool is_constructible_from_tuple<
             std::make_from_tuple<T>,
             const Tuple&>>> = true;
 
-template <typename Policy, typename Node, typename Allocator, typename = void>
+template <typename Policy, typename = void>
 constexpr bool is_tag_of_policy = false;
 
-template <typename Policy, typename Node, typename Allocator>
+template <typename Policy>
 constexpr bool is_tag_of_policy<
     Policy,
-    Node,
-    Allocator,
     std::void_t<
         decltype(
-            std::declval<Policy>().template get_instance<Node, Allocator>(
-                std::declval<Node*>(),
-                std::declval<Node*>(),
-                std::declval<Allocator>())),
+            std::declval<Policy>()
+                .template get_instance<
+                    binary_node<int>,
+                    node_navigator<binary_node<int>>,
+                    std::allocator<binary_node<int>>>(
+                    std::declval<binary_node<int>*>(),
+                    std::declval<node_navigator<binary_node<int>>>(),
+                    std::declval<std::allocator<int>>())),
         Policy>> = true;
 
 // Check method Type::get_resources() exists
