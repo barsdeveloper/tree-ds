@@ -1,3 +1,6 @@
 #pragma once
 
+#include <TreeDS/matcher/node/any_matcher.hpp>
+#include <TreeDS/matcher/node/capture.hpp>
+#include <TreeDS/matcher/node/one_matcher.hpp>
 #include <TreeDS/matcher/pattern.hpp>

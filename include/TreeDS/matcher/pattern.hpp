@@ -1,4 +1,28 @@
-#ifndef PATTERN_HPP
-#define PATTERN_HPP
+#pragma once
 
-#endif // PATTERN_HPP
+#include <TreeDS/basic_tree.hpp>
+
+namespace md {
+
+template <typename PatternTree>
+class pattern {
+
+    protected:
+    PatternTree pattern_tree;
+
+    public:
+    pattern(PatternTree&& tree) :
+            pattern_tree(tree) {
+    }
+
+    template <typename T, typename Node, typename Policy, typename Allocator>
+    bool match(basic_tree<T, Node, Policy, Allocator>& tree) {
+        return this->pattern_tree.match_node(tree.get_root());
+    }
+
+    std::size_t size() const {
+        return this->pattern_tree.capture_size();
+    }
+};
+
+} // namespace md

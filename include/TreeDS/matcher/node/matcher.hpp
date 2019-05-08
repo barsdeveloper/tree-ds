@@ -9,60 +9,113 @@
 
 namespace md {
 
+namespace detail {
+    struct capture_tag_t {};
+}; // namespace detail
+
+struct matcher_info_t {
+    bool matches_null;
+    bool reluctant;
+    constexpr matcher_info_t(bool matches_null, bool reluctant) :
+            matches_null(matches_null),
+            reluctant(reluctant) {
+    }
+};
+
 template <
-    typename Derived,
-    typename Node,
+    template <typename, typename...> class Derived,
     typename ValueMatcher,
     typename... Children>
 class matcher : public struct_node<ValueMatcher, Children...> {
 
+    /*   ---   TYPES   ---   */
     protected:
-    std::reference_wrapper<Node*> target_node = nullptr;
+    using derived_t  = Derived<ValueMatcher, Children...>;
+    using captures_t = decltype(std::tuple_cat(
+        std::declval<
+            std::conditional_t<
+                std::is_same_v<ValueMatcher, detail::capture_tag_t>,
+                std::tuple<matcher&>,
+                std::tuple<>>>(),
+        std::declval<typename Children::captures_t>()...));
 
+    /*   ---   ATTRIBUTES   ---   */
+    protected:
+    void* target_node   = nullptr;
+    captures_t captures = std::tuple_cat(
+        [&]() {
+            if constexpr (std::is_same_v<ValueMatcher, detail::capture_tag_t>) {
+                return std::tie(*this);
+            } else {
+                return std::make_tuple();
+            }
+        }(),
+        std::apply(
+            [](auto&&... children) {
+                return std::tuple_cat(children.captures...);
+            },
+            this->children));
+
+    /*   ---   CONSTRUCTORS   ---   */
     public:
-    matcher(const matcher&) = default;
+    using struct_node<ValueMatcher, Children...>::struct_node;
 
-    matcher(Node*& target_node, const ValueMatcher& value_matcher, Children&&... children) :
-            struct_node<ValueMatcher, Children...>(value_matcher, std::forward<Children>(children)...),
-            target_node(target_node) {
+    /*   ---   METHODS   ---   */
+    protected:
+    template <typename Node>
+    static auto get_children_supplier(Node& target) {
+        return [node = target.get_first_child()]() mutable {
+            Node* result = node;
+            node         = node->get_next_sibling();
+            return result;
+        };
     }
 
-    protected:
+    template <typename Value>
+    bool match_value(const Value& value) {
+        return this->value == value;
+    }
+
+    template <typename NodeSupplier>
+    bool match_children(NodeSupplier supplier) {
+        if constexpr (matcher::children_count() == 0) {
+            return true;
+        } else {
+            auto call = [&](auto&& node) {
+                node.match_node(supplier());
+            };
+            return std::apply(
+                [&](auto&&... nodes) {
+                    (call(nodes), ...);
+                },
+                this->children);
+        }
+    }
+
+    public:
+    template <typename Node>
     bool match_node(Node* node) {
-        this->target_node = nullptr;
-        Node* current     = node;
-        /*
-         * Derived class is expected to have a bool match_impl(Node*) method. It is responsible to:
-         *   1) implement the actual logic to match a node,
-         *   2) call bool match_node(Node*) for each one of its children,
-         *   3) return true if itself and children matched correctly, false otherwise.
-         * Please note that node* passed to match_impl can also be a nullptr. Some matcher correctly accept it,
-         * for example any(..., true_matcher)
-         */
-        if (static_cast<Derived*>(this)->match_impl(node)) {
+        if (derived_t::info.matches_null && node == nullptr) {
+            return true;
+        }
+        if (static_cast<derived_t*>(this)->match_node_impl(*node)) {
             this->target_node = node;
             return true;
         }
         return false;
     }
-
-    template <typename Value>
-    bool match_value(const Value& value) {
-        return this->value.match_value(value);
+    template <typename NodeAllocator>
+    unique_node_ptr<NodeAllocator> get_matched_node(NodeAllocator&& allocator) {
+        return static_cast<derived_t*>(this)->get_matched_node(allocator);
     }
 
-    public:
-    template <typename Tree>
-    bool match_tree(Tree& tree) {
-        if (tree.empty()) {
-            return false;
-        }
-        return this->match_node(tree.get_root());
+    std::size_t capture_size() const {
+        return std::tuple_size_v<captures_t>;
     }
 
     template <typename... Nodes>
-    constexpr Derived operator()(Nodes&&... nodes) const {
-        return {this->target_node, this->value, std::forward<Nodes>(nodes)...};
+    constexpr Derived<ValueMatcher, Nodes...> operator()(Nodes&&... nodes) const {
+        return {this->value, std::move(nodes)...};
     }
 };
 

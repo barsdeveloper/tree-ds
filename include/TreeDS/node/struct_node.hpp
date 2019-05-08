@@ -52,7 +52,7 @@ class struct_node {
     constexpr struct_node(const struct_node& other) = default;
 
     /*   ---   METHODS   ---   */
-    constexpr std::size_t children_count() const {
+    static constexpr std::size_t children_count() {
         return std::tuple_size_v<children_t>;
     }
 
