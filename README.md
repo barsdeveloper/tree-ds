@@ -1,14 +1,10 @@
-![Security](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=security_rating)
-![Readability](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=reliability_rating)
-![Mantainability](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=sqale_rating)
-![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)
-![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)
-![Duplication](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=duplicated_lines_density)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=coverage)](https://sonarcloud.io/dashboard?id=barsan-md_tree-ds)
+[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=barsan-md_tree-ds&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=barsan-md_tree-ds)
 
 # TreeDS
-TreeDS (tree data structure) is an STL-like tree container library for C++17 that provides two types of trees: nary and binary.
+TreeDS (tree data structure) is an STL-like tree container and pattern matching library for C++17 that provides two types of trees: nary and binary.
 
-Please feel free to open issues for any question and contribute to the code if you want.
+Please hit a star and open issues for any question you might have.
 
 ## Features
 * Standard C++17 (except ```#pragma once```, hopefully will be replaced with modules).
@@ -65,13 +61,13 @@ The simplest way to use this library is to create anonymous nodes. Use the funct
 
 ```c++
 md::binary_tree<int> myTree(
-    n(100)(              // root node
-        n(),             // left child of root (it is empty: no child)
-        n(200)(          // right child of root
-            n(300)(      // left child of 200
-                n(500),  // left child of 300
-                n(600)), // right child of 300
-            n(400))));   // right child of 200
+    n(100)(              // Root node
+        n(),             // Left child of root (it is empty: no child)
+        n(200)(          // Right child of root
+            n(300)(      // Left child of 200
+                n(500),  // Left child of 300
+                n(600)), // Right child of 300
+            n(400))));   // Right child of 200
 /* Result:
  *
  *     100
@@ -91,7 +87,7 @@ Use the same approach also for the insert/emplace methods, let's substitute the 
 
 ```c++
 myTree.insert_over(
-    // find returns iterator to the (first) position of node 300
+    // Find returns iterator to the (first) position of node 300.
     find(myTree.begin(), myTree.end(), 300),
     n(-10)(
         n(-20),
@@ -119,7 +115,7 @@ Let's now iterate the tree. You can create a tree with a specified traversal pol
 
 ```c++
 md::binary_tree<int, md::policy::in_order> inOrderTree(move(myTree));
-//                   ^^^^^^^^^^^^^^^^^^^^ default policy
+//                   ^^^^^^^^^^^^^^^^^^^^ Default policy
 ```
 
 We just moved the content from `myTree` (which now is empty) to `inOrderTree`, we could also copy the tree using copy constructor. That makes a deep copy (**slow**, avoid whenever you can).
@@ -155,7 +151,7 @@ for (auto& value : view) {
     cout << value;
 }
 cout << endl;
-}// end of main
+}// End of main.
 ```
 
 `nary_tree_view<T>` and `binary_tree_view<T>` are coneptually similar to STL's `string_view`: they create a "view" (read only) that is a part of a bigger data structure.
