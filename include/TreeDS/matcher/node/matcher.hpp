@@ -73,7 +73,11 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename Value>
     bool match_value(const Value& value) {
-        return this->value == value;
+        if constexpr (std::is_same_v<ValueMatcher, true_matcher>) {
+            return true;
+        } else {
+            return this->value == value;
+        }
     }
 
     template <typename NodeSupplier>
@@ -82,11 +86,11 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             return true;
         } else {
             auto call = [&](auto&& node) {
-                node.match_node(supplier());
+                return node.match_node(supplier());
             };
             return std::apply(
                 [&](auto&&... nodes) {
-                    (call(nodes), ...);
+                    return (... && call(nodes));
                 },
                 this->children);
         }
@@ -106,7 +110,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node(NodeAllocator&& allocator) {
-        return static_cast<derived_t*>(this)->get_matched_node(allocator);
+        return static_cast<derived_t*>(this)->get_matched_node_impl(allocator);
     }
 
     std::size_t capture_size() const {

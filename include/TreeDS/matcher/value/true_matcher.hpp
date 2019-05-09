@@ -12,4 +12,6 @@ class true_matcher {
     }
 };
 
+constexpr true_matcher true_match = true_matcher();
+
 } // namespace md

@@ -20,6 +20,11 @@ class pattern {
         return this->pattern_tree.match_node(tree.get_root());
     }
 
+    template <typename T, typename Node, typename Policy, typename Allocator>
+    void get_result(tree<T, Node, Policy, Allocator>& tree) {
+        tree = pattern_tree.get_matched_node(tree.get_node_allocator());
+    }
+
     std::size_t size() const {
         return this->pattern_tree.capture_size();
     }

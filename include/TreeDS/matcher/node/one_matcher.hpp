@@ -3,6 +3,7 @@
 #include <functional> // std::reference_wrapper
 #include <optional>
 
+#include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/matcher/pattern.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
@@ -18,7 +19,6 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
     friend class pattern<one_matcher>;
     template <typename VM>
     friend one_matcher<VM> one(const VM&);
-    friend one_matcher<true_matcher> one();
 
     /*   ---   TYPES   ---   */
     public:
@@ -51,20 +51,16 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator&& allocator) {
+    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
         return allocate(
             allocator,
-            static_cast<typename NodeAllocator::value_type*>(this->matched_node)->get_value());
+            static_cast<allocator_value_type<NodeAllocator>*>(this->target_node)->get_value());
     }
 };
 
 template <typename ValueMatcher>
 one_matcher<ValueMatcher> one(const ValueMatcher& value_matcher) {
     return {value_matcher};
-}
-
-one_matcher<true_matcher> one() {
-    return {true_matcher()};
 }
 
 } // namespace md
