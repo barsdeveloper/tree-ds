@@ -12,6 +12,7 @@
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::policy_type;                                     \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::navigator_type;                                  \
     using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::allocator_type;                                  \
+    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::node_allocator_type;                             \
     template <typename P>                                                                                               \
     using iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template iterator<P>;                 \
     template <typename P>                                                                                               \
@@ -40,6 +41,12 @@ class tree;
 template <typename T, typename Node, typename Policy, typename Allocator>
 class basic_tree {
 
+    static_assert(is_tag_of_policy<Policy>, "Invalid Policy template parameter, pick one from namespace md::policy");
+    static_assert(
+        std::is_same_v<T, allocator_value_type<Allocator>>,
+        "Invalid allocator::value_type");
+
+    /*  ---   FRIENDS   ---   */
     template <typename, typename, typename, typename>
     friend class basic_tree;
 
@@ -52,21 +59,21 @@ class basic_tree {
     template <typename, typename, bool>
     friend class tree_iterator;
 
-    //   ---   TYPES   ---
+    /*   ---   TYPES   ---   */
     public:
     // General
-    using value_type      = T;
-    using reference       = value_type&;
-    using const_reference = const value_type&;
-    using node_type       = Node;
-    using size_type       = std::size_t;
-    using difference_type = std::ptrdiff_t;
-    using pointer         = T*;
-    using const_pointer   = const T*;
-    using policy_type     = Policy;
-    using navigator_type  = node_navigator<node_type>;
-    using allocator_type  = typename std::allocator_traits<Allocator>::
-        template rebind_alloc<std::decay_t<node_type>>;
+    using value_type          = T;
+    using reference           = value_type&;
+    using const_reference     = const value_type&;
+    using node_type           = Node;
+    using size_type           = std::size_t;
+    using difference_type     = std::ptrdiff_t;
+    using pointer             = T*;
+    using const_pointer       = const T*;
+    using policy_type         = Policy;
+    using navigator_type      = node_navigator<node_type>;
+    using allocator_type      = Allocator;
+    using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<node_type>>;
 
     // Iterators
     template <typename P>
@@ -78,8 +85,8 @@ class basic_tree {
     template <typename P>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<P>>;
 
+    /*   ---   ATTRIBUTES   ---   */
     protected:
-    //   ---   ATTRIBUTES   ---
     /// @brief Owning pointer to the root node.
     node_type* root = nullptr;
     /// @brief The number of nodes in the tree.
@@ -89,8 +96,11 @@ class basic_tree {
     /// @brief An object used to navigate the nodes.
     navigator_type navigator {};
     /// @brief Allocator object used to allocate the nodes.
-    allocator_type allocator {};
+    node_allocator_type allocator {};
+    /// @brief Allocator object used by the method get_allocator to return the allocator supplied.
+    allocator_type useless_allocator {};
 
+    /*   ---   CONSTRUCTORS   ---   */
     protected:
     basic_tree() {
     }
@@ -111,7 +121,7 @@ class basic_tree {
             allocator(allocator) {
     }
 
-    basic_tree(navigator_type navigator, const allocator_type& allocator) :
+    basic_tree(navigator_type navigator, const node_allocator_type& allocator) :
             navigator(navigator),
             allocator(allocator) {
     }
@@ -119,7 +129,7 @@ class basic_tree {
     ~basic_tree() {
     }
 
-    //   ---   ITERATORS   ---
+    /*   ---   ITERATOR METHODS   ---   */
     public:
     /**
      * @brief Returns a constant iterator to the beginning.
@@ -178,7 +188,7 @@ class basic_tree {
         return it.pointed_tree == this;
     }
 
-    //   ---   CAPACITY   ---
+    /*   ---   CAPACITY METHODS   ---   */
     public:
     /**
      * @brief Checks whether the container is empty.
@@ -227,7 +237,7 @@ class basic_tree {
         return std::numeric_limits<size_type>::max();
     }
 
-    //   ---   GETTER   ---
+    /*   ---   GETTER METHODS   ---   */
     const Node* get_root() const {
         return this->root;
     }
@@ -244,11 +254,17 @@ class basic_tree {
         return this->navigator;
     }
 
+    /// @brief Returns a copy of a useless allocator. (It is an allocator that allocates tree::value_type)
     allocator_type get_allocator() const {
+        return this->useless_allocator;
+    }
+
+    /// @brief Returns a copy of the object used to allocate/deallocate nodes for this tree.
+    node_allocator_type get_node_allocator() const {
         return this->allocator;
     }
 
-    //  ---   COMPARISON   ---
+    /*  ---   COMPARISON   ---   */
     public:
     template <typename OtherPolicy>
     bool operator==(const basic_tree<T, Node, OtherPolicy, Allocator>& other) const {

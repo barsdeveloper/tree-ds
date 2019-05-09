@@ -8,6 +8,19 @@
 
 namespace md {
 
+template <typename Allocator>
+using allocator_value_type = typename std::allocator_traits<std::remove_reference_t<Allocator>>::value_type;
+
+template <typename TargetType, typename Allocator, typename = void>
+constexpr bool is_allocator_correct_type = false;
+
+template <typename TargetType, typename Allocator>
+constexpr bool is_allocator_correct_type<
+    TargetType,
+    Allocator,
+    std::enable_if_t<
+        std::is_same_v<allocator_value_type<Allocator>, TargetType>>> = true;
+
 /**
  * @brief Deallocates a previously allocated value using the given allocator.
  *

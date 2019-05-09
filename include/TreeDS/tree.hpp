@@ -127,7 +127,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         other.nullify();
     }
 
-    tree(unique_node_ptr<allocator_type> root, size_type size = 0u, size_type arity = 0u) :
+    tree(unique_node_ptr<node_allocator_type> root, size_type size = 0u, size_type arity = 0u) :
             tree(root.release(), size, arity) {
     }
 
@@ -226,7 +226,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return *this;
     }
 
-    tree& operator=(unique_node_ptr<allocator_type> root) {
+    tree& operator=(unique_node_ptr<node_allocator_type> root) {
         this->assign(root.release(), 0u, 0u);
         return *this;
     }
@@ -284,7 +284,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
 
     //   ---   MODIFIERS   ---
     protected:
-    unique_node_ptr<allocator_type> replace_node(
+    unique_node_ptr<node_allocator_type> replace_node(
         node_type* replaced,
         node_type* replacement,
         size_type replacement_size,
@@ -309,7 +309,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <typename P, bool Constant>
     iterator<P> modify_subtree(
         tree_iterator<super, P, Constant> position,
-        unique_node_ptr<allocator_type> node,
+        unique_node_ptr<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
         if (!this->is_own_iterator(position)) {
@@ -347,7 +347,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <bool First, typename P, bool C>
     iterator<P> add_child(
         tree_iterator<super, P, C> position,
-        unique_node_ptr<allocator_type> node,
+        unique_node_ptr<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
         if (!this->is_own_iterator(position)) {
