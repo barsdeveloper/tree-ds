@@ -191,21 +191,6 @@ class binary_node : public node<T, binary_node<T>> {
         }
     }
 
-    template <typename Allocator>
-    binary_node* shallow_copy_assign_child(const binary_node& child, Allocator&& allocator) {
-        assert(!child.is_root());
-        auto copy = allocate(allocator, child->get_value());
-        if (child.is_left_child()) {
-            assert(!this->has_left_child());
-            this->left = copy.release();
-            return this->attach_children(this->left);
-        } else {
-            assert(!this->has_right_child());
-            this->right = copy.release();
-            return this->attach_children(this->right);
-        }
-    }
-
     public:
     bool is_last_child() const {
         return this->parent
@@ -327,6 +312,21 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     long hash_code() const;
+
+    template <typename Allocator>
+    binary_node* shallow_copy_assign_child(const binary_node& child, Allocator&& allocator) {
+        assert(!child.is_root());
+        auto copy = allocate(allocator, child.get_value());
+        if (child.is_left_child()) {
+            assert(!this->has_left_child());
+            this->left = copy.release();
+            return this->attach_children(this->left);
+        } else {
+            assert(!this->has_right_child());
+            this->right = copy.release();
+            return this->attach_children(this->right);
+        }
+    }
 
     bool operator==(const binary_node& other) const {
         // Trivial case exclusion.

@@ -21,8 +21,13 @@ class pattern {
     }
 
     template <typename T, typename Node, typename Policy, typename Allocator>
-    void get_result(tree<T, Node, Policy, Allocator>& tree) {
-        tree = pattern_tree.get_matched_node(tree.get_node_allocator());
+    void assign_result(tree<T, Node, Policy, Allocator>& tree) {
+        tree = pattern_tree.get_matched_node(tree.allocator);
+    }
+
+    template <std::size_t index, typename T, typename Node, typename Policy, typename Allocator>
+    void assign_capture(tree<T, Node, Policy, Allocator>& tree) {
+        tree = pattern_tree.template get_captured_node<index>(tree.allocator);
     }
 
     std::size_t size() const {

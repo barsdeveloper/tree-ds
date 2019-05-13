@@ -25,7 +25,7 @@ class struct_node {
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
-    constexpr struct_node(const T& value, Children&&... children) :
+    constexpr struct_node(const T& value, const Children&... children) :
             value(value),
             children(children...) {
         std::size_t size           = std::is_same_v<T, detail::empty_t> ? 0 : 1;
@@ -70,7 +70,7 @@ class struct_node {
 
     template <typename... Nodes>
     constexpr struct_node<T, Nodes...> operator()(Nodes&&... nodes) const {
-        return {this->value, std::forward<Nodes>(nodes)...};
+        return {this->value, nodes...};
     }
 
     constexpr const children_t& get_children() const {

@@ -44,17 +44,23 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
     }
 
     template <typename NodeAllocator>
-    void copy_matched_subtree_impl(typename NodeAllocator::value_type& target, NodeAllocator&& allocator) {
-        target.shallow_copy_assign_child(
-            *static_cast<typename NodeAllocator::value_type*>(this->matched_node),
-            std::forward<NodeAllocator>(allocator));
+    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
+        unique_node_ptr<NodeAllocator> result = allocate(
+            allocator,
+            static_cast<allocator_value_type<NodeAllocator>*>(this->target_node)->get_value());
+        this->attach_matched_children(
+            [&]() {
+                return result.get();
+            },
+            allocator);
+        return std::move(result);
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
-        return allocate(
-            allocator,
-            static_cast<allocator_value_type<NodeAllocator>*>(this->target_node)->get_value());
+    void attach_matched_impl(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
+        target.shallow_copy_assign_child(
+            *static_cast<allocator_value_type<NodeAllocator>*>(this->target_node),
+            std::forward<NodeAllocator>(allocator));
     }
 };
 

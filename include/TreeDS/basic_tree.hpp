@@ -59,6 +59,9 @@ class basic_tree {
     template <typename, typename, bool>
     friend class tree_iterator;
 
+    template <typename>
+    friend class pattern;
+
     /*   ---   TYPES   ---   */
     public:
     // General

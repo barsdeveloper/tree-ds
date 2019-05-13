@@ -90,16 +90,16 @@ using unique_node_ptr = std::unique_ptr<typename NodeAllocactor::value_type, del
 template <
     typename Allocator,
     typename... Args>
-std::unique_ptr<typename Allocator::value_type, deleter<Allocator>>
+std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>>
 allocate(Allocator& allocator, Args&&... args) {
     // Allocate
     auto* ptr = std::allocator_traits<Allocator>::allocate(allocator, 1);
     // Construct
     std::allocator_traits<Allocator>::construct(allocator, ptr, std::forward<Args>(args)...);
     // Return result
-    return std::unique_ptr<typename Allocator::value_type, deleter<Allocator>>(
+    return std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>>(
         ptr,
-        {allocator});
+        deleter(allocator));
 }
 
 } // namespace md
