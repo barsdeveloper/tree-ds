@@ -58,7 +58,7 @@ void PatternTest::construction() {
         cpt(cpt(cpt(
             capture_name<'a'>(),
             star(string("string"))(
-                cpt(capture_name<'a'>(), cpt(one(true_match))),
+                cpt(capture_name<'t'>(), cpt(one(true_match))),
                 cpt(one(string("b"))))))));
     QCOMPARE(p7.size(), 6);
 }
@@ -68,10 +68,19 @@ void PatternTest::simpleMatch() {
         n(1)(
             n(2),
             n(3))};
+    binary_tree<int> tree2 {
+        n(1)(
+            n(2),
+            n(1)(
+                n(2),
+                n(3)))};
     binary_tree<int> result;
 
     pattern simple(one(1));
     QVERIFY(simple.match(tree));
+    simple.assign_result(result);
+    QCOMPARE(result, n(1));
+    QVERIFY(simple.match(tree2));
     simple.assign_result(result);
     QCOMPARE(result, n(1));
 
@@ -81,6 +90,9 @@ void PatternTest::simpleMatch() {
     QVERIFY(simple2.match(tree));
     simple2.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
+    QVERIFY(simple2.match(tree2));
+    simple2.assign_result(result);
+    QCOMPARE(result, n(1)(n(2)));
 
     pattern simple3 {
         cpt(one(1)(
@@ -88,10 +100,12 @@ void PatternTest::simpleMatch() {
     QVERIFY(simple3.match(tree));
     simple3.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
-    simple3.assign_capture<1>(result);
+    simple3.assign_capture(capture_index<1>(), result);
     QCOMPARE(result, n(2));
-    simple3.assign_capture<0>(result);
+    simple3.assign_capture(capture_index<0>(), result);
     QCOMPARE(result, n(1)(n(2)));
+    simple3.assign_capture(capture_name<'b'>(), result);
+    QCOMPARE(result, n(2));
 
     pattern simple4 {
         one(true_match)(
@@ -100,6 +114,9 @@ void PatternTest::simpleMatch() {
     QVERIFY(simple4.match(tree));
     simple4.assign_result(result);
     QCOMPARE(result, n(1)(n(2), n(3)));
+    QVERIFY(!simple4.match(tree2));
+    simple4.assign_result(result);
+    QCOMPARE(result, n());
 }
 
 QTEST_MAIN(PatternTest);

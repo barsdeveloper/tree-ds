@@ -19,7 +19,10 @@ class matcher;
 template <typename, typename>
 class capture_node;
 
-template <char... name>
+template <std::size_t Index>
+struct capture_index {};
+
+template <char... Name>
 struct capture_name {};
 
 struct matcher_info_t {
@@ -35,20 +38,55 @@ namespace detail {
     template <typename T>
     constexpr bool is_capture_name = is_same_template<T, capture_name<>> && !std::is_same_v<T, capture_name<>>;
 
-    template <typename, typename>
-    constexpr std::size_t index_of_capture_name = 1;
+    /*
+     * This following variables are used to get the index of the matcher having a specific capture_name<> from captures
+     * tuple. The correct way to use it is to always refer to index_of_capture<capture_name<...>, captures_t>. Let's see
+     * it in action using an example.
+     *
+     * Examples (types are unrelated, just to keep notation simple and explain the logic behind):
+     * Exists:
+     * Name = int,
+     * Tuple = std::tuple<std::vector<char>, std::list<int>, std::set<int>, std::deque<bool>>
+     * We want to get the type set<int>
+     * index_of_capture<int, std::tuple<std::vector<char>, std::list<int>, std::set<int>, std::deque<bool>>>
+     *     = 1 + index_of_capture<int, std::tuple<std::list<int>, std::set<int>, std::deque<bool>>> // #3
+     *     = 1 + 1 + index_of_capture<int, std::tuple<std::set<int>, std::deque<bool>>>             // #2
+     *                                                ^^^^^^^^^^^^^ // Remember we are looking for this guy.
+     *     = 1 + 1 + 0
+     *     = 2 <- std::set<int> is Tuple's element 2.
+     *
+     * Doesn't exist:
+     * Name = int,
+     * index_of_capture<int, std::tuple<std::vector<char>, std::list<int>, std::set<int>, std::deque<bool>>>
+     * We want to get the type deque<int>
+     * index_of_capture<int, std::tuple<std::vector<char>, std::list<int>, std::set<int>, std::deque<bool>>>
+     *     = 1 + index_of_capture<int, std::tuple<std::list<int>, std::set<int>, std::deque<bool>>> // #3
+     *     = 1 + 1 + index_of_capture<int, std::tuple<std::set<int>, std::deque<bool>>>             // #3
+     *     = 1 + 1 + 1 + index_of_capture<int, std::tuple<std::deque<bool>>>                        // #3
+     *     = 1 + 1 + 1 + 1 + index_of_capture<int, std::tuple<>>                                    // #1
+     *     = 1 + 1 + 1 + 1 + 0
+     *     = 4 <- Larger than the maximum allowed index.
+     */
+    // 1
+    template <
+        typename Name,  // Name to look for.
+        typename Tuple> // Tuple with the rest of the elements.
+    constexpr std::size_t index_of_capture = 1;
 
-    template <char... Name, typename Captured, typename... Types>
-    constexpr std::size_t index_of_capture_name<
-        matcher<capture_node, capture_name<Name...>, Captured>&,
-        std::tuple<Types...>> = 0;
+    // 2
+    template <typename CaptureName, typename Child, typename... Types>
+    constexpr std::size_t index_of_capture<
+        CaptureName,
+        std::tuple<matcher<capture_node, CaptureName, Child>&, Types...>> = 0;
+    //             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ We are looking for this guy
 
+    // 3
     template <class T, class U, typename... Types>
-    constexpr std::size_t index_of_capture_name<T, std::tuple<U, Types...>> = 1 + index_of_capture_name<T, std::tuple<Types...>>;
+    // Unpacking happens here: we discard the first element of the tuple (U) and recur using the remaining elements.
+    constexpr std::size_t index_of_capture<
+        T,
+        std::tuple<U, Types...>> = 1 + index_of_capture<T, std::tuple<Types...>>;
 }; // namespace detail
-
-template <typename T>
-T decl() noexcept;
 
 template <
     template <typename, typename...> class Derived,
@@ -59,24 +97,24 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   TYPES   ---   */
     protected:
     using derived_t           = Derived<ValueMatcher, Children...>;
-    using children_captures_t = decltype(std::tuple_cat(decl<typename Children::captures_t>()...));
+    using children_captures_t = decltype(std::tuple_cat(std::declval<typename Children::captures_t>()...));
     using captures_t          = decltype(std::tuple_cat(
-        decl<
+        std::declval<
             std::conditional_t<
                 // if this is a capture node
                 is_same_template<ValueMatcher, capture_name<>>,
                 std::tuple<matcher&>,
                 std::tuple<>>>(),
-        decl<children_captures_t>()));
+        std::declval<children_captures_t>()));
 
     static_assert(
         // It must not happen that:
         !(
             detail::is_capture_name<ValueMatcher>
-            // There exists another node...
-            && detail::index_of_capture_name<
+            // There exists another node (index within range)...
+            && detail::index_of_capture<
                    // ...with the same ValueMatcher...
-                   matcher,
+                   ValueMatcher,
                    // ...in the captures of the children.
                    children_captures_t>
                 // The maximum value is what index_of_capture_name retuns when no such element was found.
@@ -87,7 +125,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     protected:
     void* target_node   = nullptr;
     captures_t captures = std::tuple_cat(
-        [this]() {
+        [&]() {
             if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
                 return std::tie(*this);
             } else {
@@ -175,6 +213,15 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     public:
+    void reset() {
+        this->target_node = nullptr;
+        std::apply(
+            [](auto&... child) {
+                (..., child.reset());
+            },
+            this->children);
+    }
+
     template <typename Node>
     bool match_node(Node* node) {
         if (derived_t::info.matches_null && node == nullptr) {
@@ -189,20 +236,35 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node(NodeAllocator& allocator) {
+        if (this->target_node == nullptr) {
+            return nullptr;
+        }
         return static_cast<derived_t*>(this)->get_matched_node_impl(allocator);
     }
 
-    template <std::size_t index, typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_captured_node(NodeAllocator& allocator) {
+    template <std::size_t Index, typename NodeAllocator>
+    unique_node_ptr<NodeAllocator> get_captured_node(capture_index<Index>, NodeAllocator& allocator) {
+        static_assert(Index < std::tuple_size_v<captures_t>, "There is no capture with the index requested.");
+        return std::get<Index>(this->captures).get_matched_node(allocator);
+    }
+
+    template <char... Name, typename NodeAllocator>
+    unique_node_ptr<NodeAllocator> get_captured_node(capture_name<Name...>, NodeAllocator& allocator) {
+        static_assert(sizeof...(Name) > 0, "Capture's name must be not empty. For example capture_name<'a'> is OK, while capture_name<> is not.");
+        constexpr std::size_t index = detail::index_of_capture<capture_name<Name...>, captures_t>;
+        static_assert(index < std::tuple_size_v<captures_t>, "There is no capture with the name requested.");
         return std::get<index>(this->captures).get_matched_node(allocator);
     }
 
     template <typename NodeAllocator>
     void attach_matched(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
+        if (this->target_node == nullptr) {
+            return;
+        }
         return static_cast<derived_t*>(this)->attach_matched_impl(target, allocator);
     }
 
-    std::size_t capture_size() const {
+    constexpr std::size_t capture_size() const {
         return std::tuple_size_v<captures_t>;
     }
 
