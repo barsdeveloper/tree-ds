@@ -160,5 +160,5 @@ Views are cheap to copy so please use them whenever deep copy is something that 
 
 ## Related work
 * [`tree.hh`](http://tree.phi-sci.com/) - simple GPL C++ library providing general n-ary tree data structure implementation.
-* [`Tregex`](https://nlp.stanford.edu/software/tregex.shtml) - GPL Java utility that can be used as a command line program and java library to match node expressions on trees.
-* ['TGrep2'](https://tedlab.mit.edu/~dr/Tgrep2/) - GPL C library that can match node expressions on tree.
+* [`Tregex`](https://nlp.stanford.edu/software/tregex.shtml) - GPL Java utility that can be used as a command line program and java library to match node expressions on trees presented as string.
+* [`TGrep2`](https://tedlab.mit.edu/~dr/Tgrep2/) - GPL C utility (to be used via command line) that can match node expressions on tree.
