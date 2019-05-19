@@ -21,12 +21,6 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename, typename, typename, typename>
     friend class tree;
 
-    template <template <typename, typename...> class, typename, typename...>
-    friend class matcher;
-
-    template <typename, typename...>
-    friend class any_matcher;
-
     protected:
     std::size_t following_siblings = 0u;
     nary_node* next_sibling        = nullptr;

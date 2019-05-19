@@ -10,17 +10,12 @@
 namespace md {
 
 template <typename Name, typename Captured>
-class capture_node : public matcher<capture_node, Name, Captured> {
+class capture_node : public matcher<capture_node<Name, Captured>, Name, Captured> {
 
     /*   ---   FRIENDS   ---   */
-    template <template <typename, typename...> class, typename, typename...>
+    template <typename, typename, typename...>
     friend class matcher;
     friend class pattern<capture_node>;
-
-    /*   ---   TYPES   ---   */
-    public:
-    using super = matcher<capture_node, Name, Captured>;
-    using typename super::captures_t;
 
     /*   ---   ATTRIBUTES   ---   */
     public:
@@ -29,7 +24,7 @@ class capture_node : public matcher<capture_node, Name, Captured> {
     /*   ---   CONSTRUCTORS   ---   */
     public:
     capture_node(Captured&& captured_pattern) :
-            super(
+            matcher<capture_node, Name, Captured>(
                 Name(),
                 std::move(captured_pattern)) {
     }
@@ -54,11 +49,11 @@ class capture_node : public matcher<capture_node, Name, Captured> {
 
     public:
     template <typename... Nodes>
-    constexpr capture_node operator()(Nodes&&...) const {
+    constexpr capture_node<Name, Nodes...> with_children(Nodes&... nodes) const {
         static_assert(
             sizeof...(Nodes) == 0,
             "Just a single node can be captured and must be provided as argument: cpt(one(1)), not as children: cpt(...)(one(1))");
-        return {};
+        return {this->value, nodes...};
     }
 };
 

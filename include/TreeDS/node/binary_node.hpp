@@ -22,12 +22,6 @@ class binary_node : public node<T, binary_node<T>> {
     template <typename, typename, typename, typename>
     friend class tree;
 
-    template <template <typename, typename...> class, typename, typename...>
-    friend class matcher;
-
-    template <typename, typename...>
-    friend class any_matcher;
-
     template <typename A>
     friend void deallocate(A&, typename A::value_type*);
 

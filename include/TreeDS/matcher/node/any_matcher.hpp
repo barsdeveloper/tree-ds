@@ -15,21 +15,20 @@
 
 namespace md {
 
-template <typename ValueMatcher, typename... Children>
-class any_matcher : public matcher<any_matcher, ValueMatcher, Children...> {
+template <typename Policy, typename ValueMatcher, typename... Children>
+class any_matcher : public matcher<any_matcher<Policy, ValueMatcher, Children...>, ValueMatcher, Children...> {
 
     /*   ---   FRIENDS   ---   */
-    template <template <typename, typename...> class, typename, typename...>
+    template <typename, typename, typename...>
     friend class matcher;
     friend class pattern<any_matcher>;
     template <typename VM>
-    friend any_matcher<VM> star(const VM&);
-    friend any_matcher<true_matcher> star();
+    friend any_matcher<Policy, VM> star(const VM&);
 
     /*   ---   TYPES   ---   */
     public:
-    using super = matcher<any_matcher, ValueMatcher, Children...>;
-    using typename super::captures_t;
+    template <typename... OtherChildren>
+    using rebin_children = any_matcher<Policy, ValueMatcher, OtherChildren...>;
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
@@ -72,10 +71,15 @@ class any_matcher : public matcher<any_matcher, ValueMatcher, Children...> {
         NodeAllocator& allocator) {
         return nullptr;
     }
+
+    template <typename... Nodes>
+    constexpr any_matcher<Policy, ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
+        return {this->value, nodes...};
+    }
 };
 
 template <typename ValueMatcher>
-any_matcher<ValueMatcher> star(const ValueMatcher& value_matcher) {
+any_matcher<policy::pre_order, ValueMatcher> star(const ValueMatcher& value_matcher) {
     return {value_matcher};
 }
 

@@ -11,10 +11,10 @@
 namespace md {
 
 template <typename ValueMatcher, typename... Children>
-class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
+class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, ValueMatcher, Children...> {
 
     /*   ---   FRIENDS   ---   */
-    template <template <typename, typename...> class, typename, typename...>
+    template <typename, typename, typename...>
     friend class matcher;
 
     /*   ---   ATTRIBUTES   ---   */
@@ -53,6 +53,11 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
         target.shallow_copy_assign_child(
             *static_cast<allocator_value_type<NodeAllocator>*>(this->target_node),
             std::forward<NodeAllocator>(allocator));
+    }
+
+    template <typename... Nodes>
+    constexpr one_matcher<ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
+        return {this->value, nodes...};
     }
 };
 

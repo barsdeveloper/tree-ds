@@ -10,10 +10,7 @@
 
 namespace md {
 
-template <
-    template <typename, typename...> class,
-    typename,
-    typename...>
+template <typename, typename, typename...>
 class matcher;
 
 template <typename, typename>
@@ -77,8 +74,8 @@ namespace detail {
     template <typename CaptureName, typename Child, typename... Types>
     constexpr std::size_t index_of_capture<
         CaptureName,
-        std::tuple<matcher<capture_node, CaptureName, Child>&, Types...>> = 0;
-    //             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ We are looking for this
+        std::tuple<matcher<capture_node<CaptureName, Child>, CaptureName, Child>&, Types...>> = 0;
+    //                                  ^^^^^^^^^^^          ^^^^^^^^^^^ We are looking for this
 
     // 3
     template <class T, class U, typename... Types>
@@ -91,15 +88,11 @@ namespace detail {
     constexpr bool is_valid_name = index_of_capture<Name, Tuple> < std::tuple_size_v<Tuple>;
 } // namespace detail
 
-template <
-    template <typename, typename...> class Derived,
-    typename ValueMatcher,
-    typename... Children>
+template <typename Derived, typename ValueMatcher, typename... Children>
 class matcher : public struct_node<ValueMatcher, Children...> {
 
     /*   ---   TYPES   ---   */
     protected:
-    using derived_t           = Derived<ValueMatcher, Children...>;
     using children_captures_t = decltype(std::tuple_cat(std::declval<typename Children::captures_t>()...));
     using captures_t          = decltype(std::tuple_cat(
         std::declval<
@@ -223,10 +216,10 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     bool match_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
-        if (derived_t::info.matches_null && node == nullptr) {
+        if (Derived::info.matches_null && node == nullptr) {
             return true;
         }
-        if (static_cast<derived_t*>(this)->match_node_impl(*node, allocator)) {
+        if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
             this->target_node = node;
             return true;
         }
@@ -244,7 +237,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         if (this->target_node == nullptr) {
             return nullptr;
         }
-        return static_cast<derived_t*>(this)->get_matched_node_impl(allocator);
+        return static_cast<Derived*>(this)->get_matched_node_impl(allocator);
     }
 
     template <std::size_t Index, typename NodeAllocator>
@@ -270,7 +263,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         if (this->target_node == nullptr) {
             return;
         }
-        return static_cast<derived_t*>(this)->attach_matched_impl(target, allocator);
+        return static_cast<Derived*>(this)->attach_matched_impl(target, allocator);
     }
 
     constexpr std::size_t capture_size() const {
@@ -278,8 +271,8 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename... Nodes>
-    constexpr Derived<ValueMatcher, Nodes...> operator()(Nodes&&... nodes) const {
-        return {this->value, std::move(nodes)...};
+    auto operator()(Nodes&&... nodes) const {
+        return static_cast<const Derived*>(this)->with_children(nodes...);
     }
 };
 
