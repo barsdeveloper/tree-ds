@@ -36,9 +36,9 @@ class capture_node : public matcher<capture_node, Name, Captured> {
 
     /*   ---   METHODS   ---   */
     protected:
-    template <typename Node>
-    bool match_node_impl(Node& node) {
-        return std::get<0>(this->children).match_node(&node);
+    template <typename NodeAllocator>
+    bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+        return std::get<0>(this->children).match_node(&node, allocator);
     }
 
     template <typename NodeAllocator>

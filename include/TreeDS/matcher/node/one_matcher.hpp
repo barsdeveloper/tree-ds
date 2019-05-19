@@ -16,14 +16,6 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
     /*   ---   FRIENDS   ---   */
     template <template <typename, typename...> class, typename, typename...>
     friend class matcher;
-    friend class pattern<one_matcher>;
-    template <typename VM>
-    friend one_matcher<VM> one(const VM&);
-
-    /*   ---   TYPES   ---   */
-    public:
-    using super = matcher<one_matcher, ValueMatcher, Children...>;
-    using typename super::captures_t;
 
     /*   ---   ATTRIBUTES   ---   */
     public:
@@ -33,14 +25,14 @@ class one_matcher : public matcher<one_matcher, ValueMatcher, Children...> {
     using matcher<one_matcher, ValueMatcher, Children...>::matcher;
 
     /*   ---   METHODS   ---   */
-    template <typename Node>
-    bool match_node_impl(Node& node) {
+    template <typename NodeAllocator>
+    bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if (!this->match_value(node.get_value())) {
             return false;
         }
         // Match children of the pattern
         auto node_supplier = one_matcher::get_children_supplier(node);
-        return this->match_children(node_supplier);
+        return this->match_children(node_supplier, allocator);
     }
 
     template <typename NodeAllocator>

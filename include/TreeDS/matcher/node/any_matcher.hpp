@@ -9,7 +9,9 @@
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/matcher/pattern.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
+#include <TreeDS/node/node_pred_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
+#include <TreeDS/policy/pre_order.hpp>
 
 namespace md {
 
@@ -32,27 +34,28 @@ class any_matcher : public matcher<any_matcher, ValueMatcher, Children...> {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     static constexpr matcher_info_t info {true, false};
-    /// @brief Horizontal cut of the tree where the non matched region starts. Children will start matching from there.
-    std::vector<void*> frontier {};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
 
     /*   ---   METHODS   ---   */
-    template <typename Node>
-    bool match_node_impl(Node& node) {
-        if (this->children_count() == 1u) {
-            if (std::get<0>(this->children).match_node(node)) {
-                return true;
-            }
-        }
-        match_subnode(node.get_first_child());
+    template <typename NodeAllocator>
+    bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+        using node_t = allocator_value_type<NodeAllocator>;
+        node_pred_navigator navigator(
+            &node,              // Navigate the subtree represented by node.
+            [this](node_t& n) { // Stop when finding a non-matching node.
+                return this->match_value(n);
+            });
+        detail::pre_order_impl<node_t, decltype(navigator), NodeAllocator> it(&node, navigator, allocator);
+        // TODO get nodes and shallow match agains children...
+        // Then deep match the children.
         return false;
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator&& allocator) {
-        using node_t     = typename NodeAllocator::value_type;
+    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
+        using node_t     = allocator_value_type<NodeAllocator>;
         auto frontier_it = this->frontier.cbegin();
         unique_node_ptr<NodeAllocator> root;
         if (this->matched_node != nullptr) {
@@ -66,32 +69,14 @@ class any_matcher : public matcher<any_matcher, ValueMatcher, Children...> {
     unique_node_ptr<NodeAllocator> allocate_subtree(
         typename NodeAllocator::value_type& target,
         typename NodeAllocator::value_type* node,
-        NodeAllocator& allocator,
-        typename decltype(any_matcher::frontier)::const_iterator& frontier_it) {
-        if (node == nullptr) {
-            return {};
-        }
-        using node_t          = typename NodeAllocator::value_type;
-        node_t* current_child = &node;
-        do {
-            if (*frontier_it == current_child) {
-                ++frontier_it;
-                continue;
-            }
-            node_t* target_child = target->shallow_copy_assign_child(current_child, allocator);
-            this->allocate_subtree(target_child, current_child->get_first_child(), allocator, frontier_it);
-            current_child = current_child->get_next_sibling();
-        } while (current_child != nullptr);
+        NodeAllocator& allocator) {
+        return nullptr;
     }
-}; // namespace md
+};
 
 template <typename ValueMatcher>
 any_matcher<ValueMatcher> star(const ValueMatcher& value_matcher) {
     return {value_matcher};
-}
-
-any_matcher<true_matcher> star() {
-    return {true_matcher()};
 }
 
 } // namespace md

@@ -19,7 +19,7 @@ class pattern {
     template <typename T, typename Node, typename Policy, typename Allocator>
     bool match(basic_tree<T, Node, Policy, Allocator>& tree) {
         pattern_tree.reset();
-        return this->pattern_tree.match_node(tree.get_root());
+        return this->pattern_tree.match_node(tree.get_root(), tree.get_node_allocator());
     }
 
     template <typename T, typename Node, typename Policy, typename Allocator>

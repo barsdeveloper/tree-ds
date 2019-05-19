@@ -17,7 +17,7 @@ class PatternTest : public QObject {
 };
 
 void PatternTest::construction() {
-    pattern p1(one(true_match));
+    pattern p1(one(true_matcher()));
     QCOMPARE(p1.size(), 0);
 
     pattern p2(
@@ -37,28 +37,28 @@ void PatternTest::construction() {
             one(string("alpha"))(
                 cpt(one(string("beta"))),
                 one(string("gamma")),
-                cpt(one(true_match)))));
+                cpt(one(true_matcher())))));
     QCOMPARE(p4.size(), 3);
 
     pattern p5(
         cpt(cpt(
-            star())));
+            star(true_matcher()))));
     QCOMPARE(p5.size(), 2);
 
     pattern p6(
-        one(true_match)(
-            cpt(star()(
-                star()(
+        one(true_matcher())(
+            cpt(star(true_matcher())(
+                star(true_matcher())(
                     cpt(capture_name<'a', 'n', ' ', 'a'>(), one('a'))),
                 cpt(one('b')(
-                    cpt(star())))))));
+                    cpt(star(true_matcher()))))))));
     QCOMPARE(p6.size(), 4);
 
     pattern p7(
         cpt(cpt(cpt(
             capture_name<'a'>(),
             star(string("string"))(
-                cpt(capture_name<'t'>(), cpt(one(true_match))),
+                cpt(capture_name<'t'>(), cpt(one(true_matcher()))),
                 cpt(one(string("b"))))))));
     QCOMPARE(p7.size(), 6);
 }
@@ -85,7 +85,7 @@ void PatternTest::simpleMatch() {
     QCOMPARE(result, n(1));
 
     pattern simple2(
-        one(true_match)(
+        one(true_matcher())(
             one(2)));
     QVERIFY(simple2.match(tree));
     simple2.assign_result(result);
@@ -108,8 +108,8 @@ void PatternTest::simpleMatch() {
     QCOMPARE(result, n(2));
 
     pattern simple4 {
-        one(true_match)(
-            one(true_match),
+        one(true_matcher())(
+            one(true_matcher()),
             one(3))};
     QVERIFY(simple4.match(tree));
     simple4.assign_result(result);

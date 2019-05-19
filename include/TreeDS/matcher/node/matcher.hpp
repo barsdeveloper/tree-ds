@@ -78,7 +78,7 @@ namespace detail {
     constexpr std::size_t index_of_capture<
         CaptureName,
         std::tuple<matcher<capture_node, CaptureName, Child>&, Types...>> = 0;
-    //             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ We are looking for this guy
+    //             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ We are looking for this
 
     // 3
     template <class T, class U, typename... Types>
@@ -86,7 +86,10 @@ namespace detail {
     constexpr std::size_t index_of_capture<
         T,
         std::tuple<U, Types...>> = 1 + index_of_capture<T, std::tuple<Types...>>;
-}; // namespace detail
+
+    template <typename Name, typename Tuple>
+    constexpr bool is_valid_name = index_of_capture<Name, Tuple> < std::tuple_size_v<Tuple>;
+} // namespace detail
 
 template <
     template <typename, typename...> class Derived,
@@ -107,22 +110,18 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                 std::tuple<>>>(),
         std::declval<children_captures_t>()));
 
+    /*   ---   VALIDATION   ---   */
     static_assert(
-        // It must not happen that:
         !(
+            // This capture has a (non empty) name.
             detail::is_capture_name<ValueMatcher>
-            // There exists another node (index within range)...
-            && detail::index_of_capture<
-                   // ...with the same ValueMatcher...
-                   ValueMatcher,
-                   // ...in the captures of the children.
-                   children_captures_t>
-                // The maximum value is what index_of_capture_name retuns when no such element was found.
-                < std::tuple_size_v<children_captures_t>),
+            // There exists another capture among children with the same name.
+            && detail::is_valid_name<ValueMatcher, children_captures_t>),
         "Named captures must have unique names.");
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
+    std::size_t steps   = 1;
     void* target_node   = nullptr;
     captures_t captures = std::tuple_cat(
         [&]() {
@@ -172,13 +171,13 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         }
     }
 
-    template <typename NodeSupplier>
-    bool match_children(NodeSupplier supplier) {
+    template <typename NodeSupplier, typename NodeAllocator>
+    bool match_children(NodeSupplier supplier, NodeAllocator& allocator) {
         if constexpr (matcher::children_count() == 0) {
             return true;
         } else {
             auto call = [&](auto&& node) {
-                return node.match_node(supplier());
+                return node.match_node(supplier(), allocator);
             };
             return std::apply(
                 [&](auto&... nodes) {
@@ -222,16 +221,22 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             this->children);
     }
 
-    template <typename Node>
-    bool match_node(Node* node) {
+    template <typename NodeAllocator>
+    bool match_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
         if (derived_t::info.matches_null && node == nullptr) {
             return true;
         }
-        if (static_cast<derived_t*>(this)->match_node_impl(*node)) {
+        if (static_cast<derived_t*>(this)->match_node_impl(*node, allocator)) {
             this->target_node = node;
             return true;
         }
         return false;
+    }
+
+    template <typename NodeAllocator>
+    // Derived may want to rewrite this
+    bool match_node_shallow(allocator_value_type<NodeAllocator>* node, NodeAllocator& allocator) {
+        return this->match_node(node, allocator);
     }
 
     template <typename NodeAllocator>
@@ -250,9 +255,13 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <char... Name, typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_captured_node(capture_name<Name...>, NodeAllocator& allocator) {
-        static_assert(sizeof...(Name) > 0, "Capture's name must be not empty. For example capture_name<'a'> is OK, while capture_name<> is not.");
+        static_assert(
+            sizeof...(Name) > 0,
+            "Capture's name must be not empty. For example capture_name<'a'> is OK, while capture_name<> is not.");
+        static_assert(
+            detail::is_valid_name<capture_name<Name...>, captures_t>,
+            "There is no capture with the name requested.");
         constexpr std::size_t index = detail::index_of_capture<capture_name<Name...>, captures_t>;
-        static_assert(index < std::tuple_size_v<captures_t>, "There is no capture with the name requested.");
         return std::get<index>(this->captures).get_matched_node(allocator);
     }
 
