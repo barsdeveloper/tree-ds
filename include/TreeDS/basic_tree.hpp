@@ -284,7 +284,7 @@ class basic_tree {
     template <
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, value_type>>>
     bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
         // Test if different size or arity
         if (this->size() != other.get_subtree_size()
@@ -320,7 +320,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator==(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
@@ -331,7 +331,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<ConvertibleT, Children...>& rhs) {
     return !lhs.operator==(rhs);
 }
@@ -342,7 +342,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }

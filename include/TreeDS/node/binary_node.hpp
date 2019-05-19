@@ -62,7 +62,7 @@ class binary_node : public node<T, binary_node<T>> {
         typename ConvertibleT,
         typename... Nodes,
         typename Allocator = std::allocator<binary_node>,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename           = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     explicit binary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = Allocator()) :
@@ -78,7 +78,7 @@ class binary_node : public node<T, binary_node<T>> {
         typename... EmplaceArgs,
         typename... Nodes,
         typename Allocator = std::allocator<binary_node>,
-        CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit binary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = Allocator()) :
@@ -347,7 +347,7 @@ class binary_node : public node<T, binary_node<T>> {
     template <
         typename ConvertibleT = T,
         typename... Nodes,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     bool operator==(const struct_node<ConvertibleT, Nodes...>& other) const {
         // Too large tree
         if (other.children_count() > 2) {
@@ -405,7 +405,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator==(
     const struct_node<ConvertibleT, Children...>& lhs,
     const binary_node<T>& rhs) {
@@ -416,7 +416,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const binary_node<T>& lhs,
     const struct_node<ConvertibleT, Children...>& rhs) {
@@ -427,7 +427,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const struct_node<ConvertibleT, Children...>& lhs,
     const binary_node<T>& rhs) {

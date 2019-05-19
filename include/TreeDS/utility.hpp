@@ -7,7 +7,7 @@
 
 namespace md {
 
-// forward declarations
+/*   ---   FORWARD DECLARATIONS   ---   */
 template <typename>
 class binary_node;
 
@@ -16,10 +16,6 @@ class nary_node;
 
 template <typename>
 class node_navigator;
-
-#define CHECK_CONVERTIBLE(FROM, TO) typename = std::enable_if_t<std::is_convertible_v<FROM, TO>>
-#define CHECK_CONSTRUCTIBLE(TYPE, ARGS) typename = std::enable_if_t<std::is_constructible_v<TYPE, ARGS>>
-#define CHECK_COPIABLE(TYPE) typename = std::enable_if_t<std::is_copy_constructible_v<TYPE>>
 
 namespace detail {
     struct empty_t {};

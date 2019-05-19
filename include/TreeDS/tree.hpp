@@ -139,7 +139,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     tree(const struct_node<ConvertibleT, Children...>& root) :
             tree(
                 allocate(this->allocator, root, this->allocator).release(), // root
@@ -150,7 +150,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <
         typename... EmplacingArgs,
         typename... Children,
-        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     tree(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) :
             tree(
                 allocate(this->allocator, root, this->allocator).release(), // root
@@ -205,8 +205,9 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <
         typename ConvertibleT,
         typename... Nodes,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    tree& operator=(const struct_node<ConvertibleT, Nodes...>& root) {
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
+    tree&
+    operator=(const struct_node<ConvertibleT, Nodes...>& root) {
         this->assign(
             allocate(this->allocator, root, this->allocator).release(),
             root.get_subtree_size(),
@@ -217,7 +218,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     template <
         typename... EmplacingArgs,
         typename... Children,
-        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     tree& operator=(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) {
         this->assign(
             allocate(this->allocator, root, this->allocator).release(),
@@ -486,8 +487,9 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, value_type)>
-    iterator<P> insert_over(
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, value_type>>>
+    iterator<P>
+    insert_over(
         const tree_iterator<super, P, C>& position,
         const struct_node<ConvertibleT, Children...>& node) {
         return this->modify_subtree(
@@ -534,7 +536,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         typename P,
         bool C,
         typename... Args,
-        CHECK_CONSTRUCTIBLE(T, Args...)>
+        typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     iterator<P> emplace_over(
         const tree_iterator<super, P, C>& position,
         Args&&... args) {
@@ -550,7 +552,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename... EmplacingArgs,
         typename... Children,
-        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_over(
         const tree_iterator<super, P, C>& position,
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
@@ -581,8 +583,9 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    iterator<P> insert_child_front(
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
+    iterator<P>
+    insert_child_front(
         const tree_iterator<super, P, C>& position,
         struct_node<ConvertibleT, Children...> value) {
         // Last allocator is forwarded to Node constructor to allocate its children.
@@ -639,8 +642,9 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename ConvertibleT,
         typename... Children,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
-    iterator<P> insert_child_back(
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
+    iterator<P>
+    insert_child_back(
         const tree_iterator<super, P, C>& position,
         struct_node<ConvertibleT, Children...> value) {
         return this->add_child<false>(
@@ -686,7 +690,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         typename P,
         bool C,
         typename... Args,
-        CHECK_CONSTRUCTIBLE(T, Args&&...)>
+        typename = std::enable_if_t<std::is_constructible_v<T, Args&&...>>>
     iterator<P> emplace_child_front(
         const tree_iterator<super, P, C>& position,
         Args&&... args) {
@@ -698,7 +702,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename... EmplacingArgs,
         typename... Children,
-        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_child_front(
         const tree_iterator<super, P, C>& position,
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
@@ -714,7 +718,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         typename P,
         bool C,
         typename... Args,
-        CHECK_CONSTRUCTIBLE(T, Args&&...)>
+        typename = std::enable_if_t<std::is_constructible_v<T, Args&&...>>>
     iterator<P> emplace_child_back(
         const tree_iterator<super, P, C>& position,
         Args&&... args) {
@@ -726,7 +730,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         bool C,
         typename... EmplacingArgs,
         typename... Children,
-        CHECK_CONSTRUCTIBLE(value_type, EmplacingArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_child_back(
         const tree_iterator<super, P, C>& position,
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {

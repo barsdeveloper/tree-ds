@@ -32,14 +32,14 @@ class nary_node : public node<T, nary_node<T>> {
 
     public:
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
-    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
+    template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit nary_node(Args&&... args) :
             node<T, nary_node>(nullptr, std::forward<Args>(args)...) {
         this->manage_parent_last_child();
     }
 
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
-    template <typename... Args, CHECK_CONSTRUCTIBLE(T, Args...)>
+    template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit nary_node(const std::tuple<Args...>& args_tuple) :
             node<T, nary_node>(nullptr, args_tuple) {
         this->manage_parent_last_child();
@@ -103,7 +103,7 @@ class nary_node : public node<T, nary_node<T>> {
         typename ConvertibleT,
         typename... Nodes,
         typename Allocator = std::allocator<nary_node>,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename           = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     explicit nary_node(
         const struct_node<ConvertibleT, Nodes...>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
@@ -117,7 +117,7 @@ class nary_node : public node<T, nary_node<T>> {
         typename... EmplaceArgs,
         typename... Nodes,
         typename Allocator = std::allocator<nary_node>,
-        CHECK_CONSTRUCTIBLE(T, EmplaceArgs...)>
+        typename = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit nary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = Allocator()) :
@@ -411,7 +411,7 @@ class nary_node : public node<T, nary_node<T>> {
     template <
         typename ConvertibleT = T,
         typename... Nodes,
-        CHECK_CONVERTIBLE(ConvertibleT, T)>
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     bool operator==(const struct_node<ConvertibleT, Nodes...>& other) const {
         // One of the subtree has children while the other doesn't
         if ((this->first_child == nullptr) != (other.children_count() == 0)) {
@@ -480,7 +480,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator==(
     const struct_node<ConvertibleT, Children...>& lhs,
     const nary_node<T>& rhs) {
@@ -491,7 +491,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const nary_node<T>& lhs,
     const struct_node<ConvertibleT, Children...>& rhs) {
@@ -502,7 +502,7 @@ template <
     typename T,
     typename ConvertibleT,
     typename... Children,
-    CHECK_CONVERTIBLE(ConvertibleT, T)>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const struct_node<ConvertibleT, Children...>& lhs,
     const nary_node<T>& rhs) {

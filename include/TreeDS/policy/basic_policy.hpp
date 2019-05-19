@@ -50,7 +50,7 @@ class basic_policy {
         typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
-        CHECK_CONVERTIBLE(OtherNodeNavigator, NodeNavigator)>
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     basic_policy(
         const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
         const node_type* current = nullptr) :
