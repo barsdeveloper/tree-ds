@@ -158,6 +158,9 @@ cout << endl;
 Views can also refer to a subtree (take as root a node which is not the root of the original tree) and iterated coherently.
 Views are cheap to copy so please use them whenever deep copy is something that must be avoided.
 
+## Build tests
+Thi library is header only but in order to contribute to the development tests must be built and run. You will need a compiler (gcc or clang), Qt5, CMake and clang-format.
+
 ## Related work
 * [`tree.hh`](http://tree.phi-sci.com/) - simple GPL C++ library providing general n-ary tree data structure implementation.
 * [`Tregex`](https://nlp.stanford.edu/software/tregex.shtml) - GPL Java utility that can be used as a command line program and java library to match node expressions on trees presented as string.
