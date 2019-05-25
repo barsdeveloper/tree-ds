@@ -20,7 +20,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     using captures_t          = decltype(std::tuple_cat(
         std::declval<
             std::conditional_t<
-                // if this is a capture node
+                // If this is a capture node
                 is_same_template<ValueMatcher, capture_name<>>,
                 std::tuple<matcher&>,
                 std::tuple<>>>(),
@@ -29,9 +29,9 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   VALIDATION   ---   */
     static_assert(
         !(
-            // This capture has a (non empty) name.
+            // This capture has a (non empty) name
             detail::is_capture_name<ValueMatcher>
-            // There exists another capture among children with the same name.
+            // There exists another capture among children with the same name
             && detail::is_valid_name<ValueMatcher, children_captures_t>),
         "Named captures must have unique names.");
 
@@ -105,7 +105,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeTargetSupplier, typename NodeAllocator>
     void attach_matched_children(NodeTargetSupplier target_supplier, NodeAllocator& allocator) {
-        // Check that NodeTargetSupplier is some callable that returns a (not null) pointer to node.
+        // Check that NodeTargetSupplier is some callable that returns a (not null) pointer to node
         static_assert(
             std::is_convertible_v<
                 NodeTargetSupplier,
@@ -116,7 +116,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             auto call    = [&](auto&& node) {
                 if (node.target_node != nullptr) {
                     node.attach_matched(*target, allocator);
-                    target = target_supplier(); // Current target was managed, go to the next one.
+                    target = target_supplier(); // Current target was managed, go to the next one
                 }
             };
             std::apply(

@@ -90,7 +90,7 @@ class basic_policy {
     }
 
     void update(node_type& current, node_type* replacement) {
-        // Subclasses can override this in roder to manage their status.
+        // Subclasses can override this in roder to manage their status
         if (&current == this->current) {
             this->current = replacement;
         }

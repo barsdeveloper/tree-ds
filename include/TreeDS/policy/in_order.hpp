@@ -111,7 +111,7 @@ namespace detail {
 
 namespace policy {
     struct in_order : detail::policy_tag<detail::in_order_impl> {
-        // What needed is inherited.
+        // What needed is inherited
     };
 } // namespace policy
 

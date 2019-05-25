@@ -3,7 +3,7 @@
 #include <cstddef>     // std::ptr_diff_t
 #include <functional>  // std::mem_fn()
 #include <type_traits> // std::enable_if, std::is_convertible, std::is_constructible, std::void_t
-#include <utility>     // std::forward(), std::declval
+#include <utility>     // std::forward(), std::declval(), std::make_index_sequence
 
 namespace md {
 
@@ -32,7 +32,7 @@ Node* keep_calling(Node& from, Call call, Test test, Result result) {
         prev = next;
         next = call(*prev);
     }
-    return prev; // Returns something only if test() succeeds.
+    return prev; // Returns something only if test() succeeds
 }
 
 /**
@@ -89,6 +89,56 @@ std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
         child = child->get_next_sibling();
     }
     return arity;
+}
+
+namespace detail {
+    /***
+     * @brief Retrieve unsing a runtime index the element of a tuple.
+     */
+    template <std::size_t Target> // target is index + 1, Target = 0 is invalid
+    struct element_apply_construction {
+        template <typename F, typename Tuple>
+        static constexpr auto& single_apply(F& f, Tuple& tuple, std::size_t index) {
+            static_assert(Target > 0, "Requested index does not exist in the tuple.");
+            if (index == Target - 1) {
+                return f(std::get<Target - 1>(tuple));
+            } else {
+                return element_apply_construction<Target - 1>::single_apply(f, tuple, index);
+            }
+        }
+        template <typename F, typename Tuple>
+        static constexpr auto& back_apply(F& f, Tuple& tuple, std::size_t index) {
+            if (index == Target - 1) {
+                return apply_at_indexes(
+                    f,
+                    tuple,
+                    [=](std::size_t val) {
+                        return val + index;
+                    },
+                    std::make_index_sequence<std::tuple_size_v<Tuple> - Target + 1>());
+            } else {
+                return element_apply_construction<Target - 1>::back_apply(f, tuple, index);
+            }
+        }
+        template <typename F, typename Tuple, typename AlterIndexes, std::size_t... Indexes>
+        static constexpr auto& apply_at_indexes(
+            F& f,
+            Tuple& tuple,
+            const AlterIndexes& alter,
+            std::index_sequence<Indexes...>) {
+            return f(std::get<alter(Indexes)>(tuple)...);
+        }
+    };
+} // namespace detail
+
+template <typename F, typename... Args>
+void single_apply(const F& f, std::tuple<Args...>& tuple, std::size_t index) {
+    return detail::element_apply_construction<sizeof...(Args)>::single_apply(f, tuple, index);
+}
+
+template <typename F, typename... Args>
+void back_apply(const F& f, std::tuple<Args...>& tuple, std::size_t from) {
+    return detail::element_apply_construction<sizeof...(Args)>::apply(f, tuple, from);
 }
 
 template <

@@ -298,7 +298,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
                 this->arity_value = replacement_arity;
             } else if (!replaced->has_children()) {
                 this->size_value += replacement_size - 1;
-                this->arity_value = 0u; // We don't have useful information.
+                this->arity_value = 0u; // We don't have useful information
             } else {
                 this->size_value  = 0u;
                 this->arity_value = 0u;
@@ -325,7 +325,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * retrieve a non constant version of the value we already have.
          */
         node_type* target = const_cast<node_type*>(position.get_node());
-        if (target != nullptr) { // If iterator points to valid node.
+        if (target != nullptr) { // If iterator points to valid node
             assert(this->root != nullptr);
             position.update(*target, replacement);
             if (target == this->root) {
@@ -394,7 +394,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * retrieve a non constant version of the value we already have.
          */
         node_type* target = const_cast<node_type*>(position.get_node());
-        if (target != nullptr) { // If iterator points to valid node.
+        if (target != nullptr) { // If iterator points to valid node
             assert(this->root != nullptr);
             position.update(*target, nullptr);
             if (target == this->root) {
@@ -418,7 +418,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     void nullify() {
-        this->root        = nullptr; // Weallocation was already node somewhere else.
+        this->root        = nullptr; // Weallocation was already node somewhere else
         this->size_value  = 0u;
         this->arity_value = 0u;
         this->navigator   = navigator_type(nullptr, false);
@@ -443,7 +443,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
      */
     template <typename OtherPolicy>
     void swap(tree<T, Node, OtherPolicy, Allocator>& other) {
-        // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace.
+        // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace
         using namespace std;
         std::swap(this->root, other.root);
         std::swap(this->size_value, other.size_value);
@@ -494,7 +494,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<ConvertibleT, Children...>& node) {
         return this->modify_subtree(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -506,7 +506,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const basic_tree<T, Node, OtherP, Allocator>& other) {
         return this->modify_subtree(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             !other.empty()
                 ? allocate(this->allocator, *other.get_root(), this->allocator)
                 : nullptr,
@@ -558,7 +558,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -588,7 +588,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     insert_child_front(
         const tree_iterator<super, P, C>& position,
         struct_node<ConvertibleT, Children...> value) {
-        // Last allocator is forwarded to Node constructor to allocate its children.
+        // Last allocator is forwarded to Node constructor to allocate its children
         return this->add_child<true>(position, allocate(this->allocator, value, this->allocator), 1u, 0u);
     }
 
@@ -649,7 +649,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         struct_node<ConvertibleT, Children...> value) {
         return this->add_child<false>(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, value, this->allocator),
             value.get_subtree_size(),
             value.get_subtree_arity());
@@ -708,7 +708,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->add_child<true>(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());
@@ -736,7 +736,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->add_child<false>(
             position,
-            // Last allocator is forwarded to Node constructor to allocate its children.
+            // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
             node.get_subtree_size(),
             node.get_subtree_arity());

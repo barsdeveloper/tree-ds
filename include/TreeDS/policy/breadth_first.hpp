@@ -121,12 +121,12 @@ class breadth_first_impl final
     }
 
     void update(Node& current, Node* replacement) {
-        // Delete child of the previous nodes from open_nodes.
+        // Delete child of the previous nodes from open_nodes
         if (this->navigator.get_first_child(current)) {
             assert(this->navigator.get_parent(*this->open_nodes.back()) == &current);
             this->open_nodes.pop_back();
         }
-        // Push from back the children of the replacement node.
+        // Push from back the children of the replacement node
         Node* child = replacement != nullptr
             ? this->navigator.get_first_child(*replacement)
             : nullptr;
@@ -142,6 +142,6 @@ class breadth_first_impl final
 namespace md::policy {
 
 struct breadth_first : detail::policy_tag<detail::breadth_first_impl> {
-    // What needed is inherited.
+    // What needed is inherited
 };
 } // namespace md::policy

@@ -19,8 +19,8 @@ class struct_node {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     value_t value;                 // Value hold by this node
-    std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root.
-    std::size_t subtree_arity = 0; // Arity of the tree having this node as root.
+    std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root
+    std::size_t subtree_arity = 0; // Arity of the tree having this node as root
     children_t children {};        // Tuple containing actual children
 
     /*   ---   CONSTRUCTORS   ---   */
@@ -78,7 +78,7 @@ class struct_node {
     }
 };
 
-// Functions to generate struct_node objects.
+// Functions to generate struct_node objects
 template <typename T>
 constexpr struct_node<T> n(T value) {
     return {value};

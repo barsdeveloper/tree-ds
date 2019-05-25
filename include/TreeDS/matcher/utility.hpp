@@ -47,7 +47,7 @@ namespace detail {
      * index_of_capture<int, std::tuple<std::vector<char>, std::list<int>, std::set<int>, std::deque<bool>>>
      *     = 1 + index_of_capture<int, std::tuple<std::list<int>, std::set<int>, std::deque<bool>>> // #3
      *     = 1 + 1 + index_of_capture<int, std::tuple<std::set<int>, std::deque<bool>>>             // #2
-     *                                                ^^^^^^^^^^^^^ // Remember we are looking for this guy.
+     *                                                ^^^^^^^^^^^^^ // Remember we are looking for this guy
      *     = 1 + 1 + 0
      *     = 2 <- std::set<int> is Tuple's element 2.
      *
@@ -65,8 +65,8 @@ namespace detail {
      */
     // 1
     template <
-        typename Name,  // Name to look for.
-        typename Tuple> // Tuple with the rest of the elements.
+        typename Name,  // Name to look for
+        typename Tuple> // Tuple with the rest of the elements
     constexpr std::size_t index_of_capture = 1;
 
     // 2
@@ -78,7 +78,7 @@ namespace detail {
 
     // 3
     template <class T, class U, typename... Types>
-    // Unpacking happens here: we discard the first element of the tuple (U) and recur using the remaining elements.
+    // Unpacking happens here: we discard the first element of the tuple (U) and recur using the remaining elements
     constexpr std::size_t index_of_capture<
         T,
         std::tuple<U, Types...>> = 1 + index_of_capture<T, std::tuple<Types...>>;

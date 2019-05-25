@@ -15,24 +15,19 @@
 
 namespace md {
 
-template <typename Policy, typename ValueMatcher, typename... Children>
-class any_matcher : public matcher<any_matcher<Policy, ValueMatcher, Children...>, ValueMatcher, Children...> {
+template <typename ValueMatcher, typename... Children>
+class any_matcher : public matcher<any_matcher<ValueMatcher, Children...>, ValueMatcher, Children...> {
 
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename...>
     friend class matcher;
     friend class pattern<any_matcher>;
     template <typename VM>
-    friend any_matcher<Policy, VM> star(const VM&);
-
-    /*   ---   TYPES   ---   */
-    public:
-    template <typename... OtherChildren>
-    using rebin_children = any_matcher<Policy, ValueMatcher, OtherChildren...>;
+    friend any_matcher<VM> star(const VM&);
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
-    static constexpr matcher_info_t info {true, false};
+    static constexpr matcher_info_t info {(... && Children::info.matches_null), false};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
@@ -42,13 +37,45 @@ class any_matcher : public matcher<any_matcher<Policy, ValueMatcher, Children...
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         using node_t = allocator_value_type<NodeAllocator>;
         node_pred_navigator navigator(
-            &node,              // Navigate the subtree represented by node.
-            [this](node_t& n) { // Stop when finding a non-matching node.
+            &node,              // Navigate the subtree represented by node
+            [this](node_t& n) { // Stop when finding a non-matching node
                 return this->match_value(n);
             });
-        detail::pre_order_impl<node_t, decltype(navigator), NodeAllocator> it(&node, navigator, allocator);
-        // TODO get nodes and shallow match agains children...
-        // Then deep match the children.
+        std::array<node_t*, this->children_count()> match_try_begin = {};
+        detail::pre_order_impl it(&node, navigator, allocator);
+        int index     = -1;
+        auto do_match = [&](auto& child) {
+            node_t* current          = it.get_current_node();
+            match_try_begin[++index] = current;
+            if (current == nullptr) {
+                return child.info.matches_null;
+            }
+            while (current) {
+                it.increment();
+                if (child.match_node(*current)) {
+                    return true;
+                }
+                current = it.get_current_node();
+            }
+            return false;
+        };
+        auto do_rematch = [&](auto& child) -> bool {
+            it = detail::pre_order_impl(static_cast<node_t*>(child.target_node), navigator, allocator);
+            it.increment();
+            return do_match(child);
+        };
+        while (!back_apply(
+            // Function to invoke
+            [](auto&... nodes) {
+                return (... && call(nodes));
+            },
+            // Using elements of tuple
+            this->children,
+            // Starting from index to the end
+            index)) {
+            // Do remath the previous child
+            single_apply(do_rematch, this->children, index - 1);
+        }
         return false;
     }
 
@@ -73,13 +100,13 @@ class any_matcher : public matcher<any_matcher<Policy, ValueMatcher, Children...
     }
 
     template <typename... Nodes>
-    constexpr any_matcher<Policy, ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
+    constexpr any_matcher<ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
 };
 
 template <typename ValueMatcher>
-any_matcher<policy::pre_order, ValueMatcher> star(const ValueMatcher& value_matcher) {
+any_matcher<ValueMatcher> star(const ValueMatcher& value_matcher) {
     return {value_matcher};
 }
 

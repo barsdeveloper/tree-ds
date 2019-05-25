@@ -70,7 +70,7 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
             || this->arity() != other.arity()) {
             return false;
         }
-        // At the end is either null (both) or same as the other.
+        // At the end is either null (both) or same as the other
         return this->get_root() == nullptr || *this->get_root() == *other.get_root();
     }
 };

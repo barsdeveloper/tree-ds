@@ -31,14 +31,14 @@ class nary_node : public node<T, nary_node<T>> {
     using node<T, nary_node<T>>::node;
 
     public:
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit nary_node(Args&&... args) :
             node<T, nary_node>(nullptr, std::forward<Args>(args)...) {
         this->manage_parent_last_child();
     }
 
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple)
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit nary_node(const std::tuple<Args...>& args_tuple) :
             node<T, nary_node>(nullptr, args_tuple) {
@@ -117,7 +117,7 @@ class nary_node : public node<T, nary_node<T>> {
         typename... EmplaceArgs,
         typename... Nodes,
         typename Allocator = std::allocator<nary_node>,
-        typename = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
+        typename           = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit nary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = Allocator()) :
@@ -140,20 +140,20 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename Allocator, typename... Nodes>
     void manage_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
         std::size_t children_count = sizeof...(Nodes);
-        // Pointer to the considered child (which is itself a pointer to nary_node).
+        // Pointer to the considered child (which is itself a pointer to nary_node)
         nary_node* result         = nullptr;
         nary_node** current_child = &result;
-        // Lambda that assigns one child at time.
+        // Lambda that assigns one child at time
         auto assign_child = [&](auto node) {
-            *current_child                       = node;             // Assign child.
-            (*current_child)->following_siblings = --children_count; // Assign siblings count.
-            (*current_child)->parent             = this;             // Set the parent of that child.
+            *current_child                       = node;             // Assign child
+            (*current_child)->following_siblings = --children_count; // Assign siblings count
+            (*current_child)->parent             = this;             // Set the parent of that child
             if (children_count == 0) {
                 this->last_child = *current_child;
             }
-            current_child = &(*current_child)->next_sibling; // Go to next child.
+            current_child = &(*current_child)->next_sibling; // Go to next child
         };
-        // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
+        // Lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto process_child = [&](auto& structure_node) {
             static_assert(
                 !std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>,
@@ -364,46 +364,46 @@ class nary_node : public node<T, nary_node<T>> {
 
     /*   ---   Compare egains itself   ---   */
     bool operator==(const nary_node& other) const {
-        // Trivial case exclusion.
+        // Trivial case exclusion
         if ((this->first_child == nullptr) != (other.first_child == nullptr)
             || (this->next_sibling == nullptr) != (other.next_sibling == nullptr)) {
             return false;
         }
-        // Test value for inequality.
+        // Test value for inequality
         if (this->value != other.value) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->first_child && *this->first_child != *other.first_child) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->next_sibling && *this->next_sibling != *other.next_sibling) {
             return false;
         }
-        // All the possible false cases were tested, then it's true.
+        // All the possible false cases were tested, then it's true
         return true;
     }
 
     /*   ---   Compare egains binary_node   ---   */
     bool operator==(const binary_node<T>& other) const {
-        // Trivial case exclusion.
+        // Trivial case exclusion
         if (this->has_children() != other.has_children()) {
             return false;
         }
-        // Test value for inequality.
+        // Test value for inequality
         if (this->get_value() != other.get_value()) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->has_children() && !this->first_child->operator==(*other.get_first_child())) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->next_sibling && !this->next_sibling->operator==(*other.get_next_sibling())) {
             return false;
         }
-        // All the possible false cases were tested, then it's true.
+        // All the possible false cases were tested, then it's true
         return true;
     }
 
@@ -417,18 +417,18 @@ class nary_node : public node<T, nary_node<T>> {
         if ((this->first_child == nullptr) != (other.children_count() == 0)) {
             return false;
         }
-        // Test value for inequality.
+        // Test value for inequality
         if (this->value != other.get_value()) {
             return false;
         }
-        // Pointer to the considered child (which is itself a pointer to const nary_node).
+        // Pointer to the considered child (which is itself a pointer to const nary_node)
         const nary_node* const* current_child = &this->first_child;
-        // Lambda that constructs (by calling allocate) a nary_node from a struct_node.
+        // Lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto compare_child = [&](auto& structure_node) -> bool {
             bool result;
             if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>) {
                 result = *current_child == nullptr;
-            } else { // Not empty node.
+            } else { // Not empty node
                 result = *current_child && **current_child == structure_node;
             }
             current_child = &(*current_child)->next_sibling;
@@ -436,7 +436,7 @@ class nary_node : public node<T, nary_node<T>> {
         };
         return std::apply(
                    [&](auto&... nodes) {
-                       // Call compare_child for each element in the tuple other.get_children() and check all are true.
+                       // Call compare_child for each element in the tuple other.get_children() and check all are true
                        return (compare_child(nodes) && ...);
                    },
                    other.get_children())

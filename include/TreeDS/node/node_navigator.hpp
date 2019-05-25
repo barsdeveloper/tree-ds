@@ -143,7 +143,7 @@ class node_navigator {
             if (relative_level == 0) {
                 break;
             }
-            // Go to the node that is on the other direction branch and at the same level.
+            // Go to the node that is on the other direction branch and at the same level
             breanch_crossed = this->template get_other_branch<!Left>(*deepest_extremum_child);
         } while (relative_level < 0);
         return deepest_extremum_child;
@@ -183,7 +183,7 @@ class node_navigator {
                     return false;
                 },
                 // Then return
-                std::function<Node*(Node&, Node&)>()); // Never called ("Until" lambda retuns always false).
+                std::function<Node*(Node&, Node&)>()); // Never called ("Until" lambda retuns always false)
             if (current_level > deepest_level) {
                 deepest_level = current_level;
                 deepest_node  = current_node;

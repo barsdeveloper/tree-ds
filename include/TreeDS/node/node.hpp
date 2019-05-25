@@ -18,14 +18,14 @@ class node {
     Node* parent = nullptr;
 
     protected:
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit node(Node* parent, Args&&... args) :
             value(args...),
             parent(parent) {
     }
 
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple)
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit node(Node* parent, const std::tuple<Args...>& args_tuple) :
             value(std::make_from_tuple<T>(std::move(args_tuple))),
@@ -33,13 +33,13 @@ class node {
     }
 
     public:
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T.
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit node(Args&&... args) :
             node(nullptr, std::forward<Args>(args)...) {
     }
 
-    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple).
+    // Forward constructor: the arguments are forwarded directly to the constructor of the type T (packed as tuple)
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit node(const std::tuple<Args...>& args_tuple) :
             node(nullptr, args_tuple) {

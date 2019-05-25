@@ -66,7 +66,7 @@ class post_order_impl final
 
 namespace md::policy {
 struct post_order : detail::policy_tag<detail::post_order_impl> {
-    // What needed is inherited.
+    // What needed is inherited
 };
 
 } // namespace md::policy

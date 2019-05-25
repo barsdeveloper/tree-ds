@@ -45,6 +45,6 @@ class siblings_impl final
 } // namespace md::detail
 namespace md::policy {
 struct siblings : detail::policy_tag<detail::siblings_impl> {
-    // What needed is inherited.
+    // What needed is inherited
 };
 } // namespace md::policy

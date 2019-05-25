@@ -78,7 +78,7 @@ class binary_node : public node<T, binary_node<T>> {
         typename... EmplaceArgs,
         typename... Nodes,
         typename Allocator = std::allocator<binary_node>,
-        typename = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
+        typename           = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit binary_node(
         const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
         Allocator&& allocator = Allocator()) :
@@ -323,24 +323,24 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     bool operator==(const binary_node& other) const {
-        // Trivial case exclusion.
+        // Trivial case exclusion
         if (this->has_left_child() != other.has_left_child()
             || this->has_right_child() != other.has_right_child()) {
             return false;
         }
-        // Test value for inequality.
+        // Test value for inequality
         if (this->value != other.value) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->left && !this->left->operator==(*other.left)) {
             return false;
         }
-        // Deep comparison (at this point both are either null or something).
+        // Deep comparison (at this point both are either null or something)
         if (this->right && !this->right->operator==(*other.right)) {
             return false;
         }
-        // All the possible false cases were tested, then it's true.
+        // All the possible false cases were tested, then it's true
         return true;
     }
 
@@ -353,7 +353,7 @@ class binary_node : public node<T, binary_node<T>> {
         if (other.children_count() > 2) {
             return false;
         }
-        // Test value for inequality.
+        // Test value for inequality
         if (!(this->value == other.get_value())) {
             return false;
         }
@@ -387,7 +387,7 @@ class binary_node : public node<T, binary_node<T>> {
         } else if (this->right) {
             return false;
         }
-        // All the possible false cases were tested, then it's true.
+        // All the possible false cases were tested, then it's true
         return true;
     }
 

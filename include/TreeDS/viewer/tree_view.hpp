@@ -37,7 +37,7 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
     tree_view(
         const basic_tree<T, Node, TreePolicy, Allocator>& tree,
         const tree_iterator<
-            basic_tree<T, Node, TreePolicy, Allocator>, // Tree_iterator always refers to basic_tree, no subclasses.
+            basic_tree<T, Node, TreePolicy, Allocator>, // Tree_iterator always refers to basic_tree, no subclasses
             IteratorPolicy,
             Constant>& position) :
             super(

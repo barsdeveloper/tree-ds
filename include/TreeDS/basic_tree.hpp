@@ -277,7 +277,7 @@ class basic_tree {
             || this->arity() != other.arity()) {
             return false;
         }
-        // At the end is either null (both) or same as the other.
+        // At the end is either null (both) or same as the other
         return (this->root == nullptr && other.root == nullptr) || this->root->operator==(*other.root);
     }
 

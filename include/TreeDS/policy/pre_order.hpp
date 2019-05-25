@@ -51,10 +51,10 @@ class pre_order_impl final
         }
         return prev_sibling
             ? keep_calling(
-                  *prev_sibling,
-                  [this](Node& node) {
-                      return this->navigator.get_last_child(node);
-                  })
+                *prev_sibling,
+                [this](Node& node) {
+                    return this->navigator.get_last_child(node);
+                })
             : nullptr;
     }
 
@@ -71,7 +71,7 @@ class pre_order_impl final
 
 namespace md::policy {
 struct pre_order : detail::policy_tag<detail::pre_order_impl> {
-    // What needed is inherited.
+    // What needed is inherited
 };
 
 } // namespace md::policy
