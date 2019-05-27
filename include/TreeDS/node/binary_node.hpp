@@ -16,6 +16,7 @@ namespace md {
 template <typename T>
 class binary_node : public node<T, binary_node<T>> {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename, bool>
     friend class tree_iterator;
 
@@ -25,13 +26,12 @@ class binary_node : public node<T, binary_node<T>> {
     template <typename A>
     friend void deallocate(A&, typename A::value_type*);
 
-    public:
-    using super = node<T, binary_node>;
-
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     binary_node* left  = nullptr;
     binary_node* right = nullptr;
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     using node<T, binary_node<T>>::node;
 
@@ -218,6 +218,30 @@ class binary_node : public node<T, binary_node<T>> {
         return this->right != nullptr;
     }
 
+    const binary_node* get_prev_sibling() const {
+        return this->is_right_child()
+            ? this->parent->left
+            : nullptr;
+    }
+
+    binary_node* get_prev_sibling() {
+        return this->is_right_child()
+            ? this->parent->left
+            : nullptr;
+    }
+
+    const binary_node* get_next_sibling() const {
+        return this->is_left_child()
+            ? this->parent->right
+            : nullptr;
+    }
+
+    binary_node* get_next_sibling() {
+        return this->is_left_child()
+            ? this->parent->right
+            : nullptr;
+    }
+
     const binary_node* get_left_child() const {
         return this->left;
     }
@@ -258,28 +282,30 @@ class binary_node : public node<T, binary_node<T>> {
             : this->left;
     }
 
-    const binary_node* get_prev_sibling() const {
-        return this->is_right_child()
-            ? this->parent->left
-            : nullptr;
+    const binary_node* get_child(std::size_t index) const {
+        switch (index) {
+        case 0:
+            return this->get_first_child();
+        case 1:
+            return this->left && this->right
+                ? this->right
+                : nullptr;
+        default:
+            return nullptr;
+        }
     }
 
-    binary_node* get_prev_sibling() {
-        return this->is_right_child()
-            ? this->parent->left
-            : nullptr;
-    }
-
-    const binary_node* get_next_sibling() const {
-        return this->is_left_child()
-            ? this->parent->right
-            : nullptr;
-    }
-
-    binary_node* get_next_sibling() {
-        return this->is_left_child()
-            ? this->parent->right
-            : nullptr;
+    binary_node* get_child(std::size_t index) {
+        switch (index) {
+        case 0:
+            return this->get_first_child();
+        case 1:
+            return this->left && this->right
+                ? this->right
+                : nullptr;
+        default:
+            return nullptr;
+        }
     }
 
     std::size_t children() const {
@@ -358,7 +384,7 @@ class binary_node : public node<T, binary_node<T>> {
             return false;
         }
         if constexpr (sizeof...(Nodes) >= 1) {
-            const auto& left = get_child<0>(other);
+            const auto& left = md::get_child<0>(other);
             if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
@@ -373,7 +399,7 @@ class binary_node : public node<T, binary_node<T>> {
             return false;
         }
         if constexpr (sizeof...(Nodes) >= 2) {
-            const auto& right = get_child<1>(other);
+            const auto& right = md::get_child<1>(other);
             if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,

@@ -15,18 +15,21 @@ namespace md {
 template <typename T>
 class nary_node : public node<T, nary_node<T>> {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename, bool>
     friend class tree_iterator;
 
     template <typename, typename, typename, typename>
     friend class tree;
 
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     std::size_t following_siblings = 0u;
     nary_node* next_sibling        = nullptr;
     nary_node* first_child         = nullptr;
     nary_node* last_child; // It will be set by manage_parent_last_child() <- every constructor must call this method
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     using node<T, nary_node<T>>::node;
 
@@ -45,7 +48,7 @@ class nary_node : public node<T, nary_node<T>> {
         this->manage_parent_last_child();
     }
 
-    /*   ---   Move Constructor   ---   */
+    // Move Constructor
     explicit nary_node(nary_node&& other) :
             node<T, nary_node>(std::move(other.get_value())),
             following_siblings(other.following_siblings),
@@ -126,6 +129,7 @@ class nary_node : public node<T, nary_node<T>> {
         this->manage_parent_last_child();
     }
 
+    /*   ---   METHODS   ---   */
     protected:
     // Every constructor must call this in order to initialize last_child for itself or parent
     void manage_parent_last_child() {
@@ -286,6 +290,18 @@ class nary_node : public node<T, nary_node<T>> {
         }
     }
 
+    template <typename Node>
+    static Node* calculate_child(Node* ptr, std::size_t index) {
+        Node* current = ptr->first_child;
+        if (current != nullptr && index == current->following_siblings) {
+            return ptr->last_child;
+        }
+        for (std::size_t i = 0; i < index && current != nullptr; ++i) {
+            current = current->next_sibling;
+        }
+        return current;
+    }
+
     template <typename Allocator>
     nary_node* shallow_copy_assign_child(const nary_node& child, Allocator&& allocator) {
         assert(!child.is_root());
@@ -305,22 +321,6 @@ class nary_node : public node<T, nary_node<T>> {
             : false;
     }
 
-    const nary_node* get_first_child() const {
-        return this->first_child;
-    }
-
-    nary_node* get_first_child() {
-        return this->first_child;
-    }
-
-    const nary_node* get_last_child() const {
-        return this->last_child;
-    }
-
-    nary_node* get_last_child() {
-        return this->last_child;
-    }
-
     const nary_node* get_prev_sibling() const {
         return nary_node::calculate_prev_sibling(this);
     }
@@ -337,6 +337,30 @@ class nary_node : public node<T, nary_node<T>> {
         return this->next_sibling;
     }
 
+    const nary_node* get_first_child() const {
+        return this->first_child;
+    }
+
+    nary_node* get_first_child() {
+        return this->first_child;
+    }
+
+    const nary_node* get_last_child() const {
+        return this->last_child;
+    }
+
+    nary_node* get_last_child() {
+        return this->last_child;
+    }
+
+    const nary_node* get_child(std::size_t index) const {
+        return calculate_child(this, index);
+    }
+
+    nary_node* get_child(std::size_t index) {
+        return calculate_child(this, index);
+    }
+
     std::size_t children() const {
         return this->first_child
             ? this->first_child->get_following_siblings() + 1
@@ -346,18 +370,6 @@ class nary_node : public node<T, nary_node<T>> {
     std::size_t get_following_siblings() const {
         return this->following_siblings;
     }
-
-    const nary_node* get_child(std::size_t index) const {
-        const nary_node* const* current = &this->first_child;
-        if (*current != nullptr && index == (*current)->following_siblings) {
-            return this->last_child;
-        }
-        for (std::size_t i = 0; i < index && *current != nullptr; ++i) {
-            current = &(*current)->next_sibling;
-        }
-        return *current;
-    }
-
     std::tuple<nary_node*, nary_node*> get_resources() {
         return std::make_tuple(this->first_child, this->next_sibling);
     }

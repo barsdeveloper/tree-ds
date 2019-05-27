@@ -103,7 +103,9 @@ class breadth_first_impl final
             result.push_back(next);
         }
         // Manage right elements
-        node = this->navigator.get_right_branch(*this->current->get_parent());
+        node = this->navigator.is_root(*this->current)
+            ? nullptr
+            : this->navigator.get_right_branch(*this->current->get_parent());
         while (node) {
             process_child();
             node = this->navigator.get_right_branch(*node);

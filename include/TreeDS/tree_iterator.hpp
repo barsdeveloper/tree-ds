@@ -19,6 +19,7 @@ template <
     bool Constant = false>
 class tree_iterator {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename, typename, typename>
     friend class basic_tree;
 
@@ -28,6 +29,7 @@ class tree_iterator {
     template <typename, typename, bool>
     friend class tree_iterator;
 
+    /*   ---   TYPES   ---   */
     public:
     using tree_type = std::conditional_t<Constant, const Tree, Tree>;
     using node_type = std::conditional_t<
@@ -50,10 +52,12 @@ class tree_iterator {
     using reference         = value_type&;
     using iterator_category = std::bidirectional_iterator_tag;
 
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     actual_policy_type policy;
     tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
 
+    /*   ---   CREATION   ---   */
     protected:
     // Constructor used by tree to create an iterator
     tree_iterator(Policy policy, tree_type& tree, node_type* current_node = nullptr) :
@@ -74,7 +78,8 @@ class tree_iterator {
     tree_iterator<Tree, Policy, !C> craft_non_constant_iterator() const {
         return tree_iterator<Tree, Policy, !C>(
             *this,
-            const_cast<std::decay_t<Tree>*>(this->pointed_tree));
+            const_cast<std::decay_t<Tree>*>(this->pointed_tree),
+            const_cast<std::remove_const_t<node_type>*>(this->get_raw_node()));
     }
 
     public:
@@ -112,11 +117,25 @@ class tree_iterator {
             : tree_iterator<Tree, OtherPolicy, Constant>();
     }
 
-    const node_type* get_node() const {
+    /*   ---   METHODS   ---   */
+    private:
+    template <typename F, typename... AdditionalArgs>
+    tree_iterator& do_move(F&& function, AdditionalArgs&&... args) {
+        this->policy = actual_policy_type(
+            this->policy,
+            function(
+                this->policy.get_navigator(),
+                *this->get_raw_node(),
+                std::forward<AdditionalArgs>(args)...));
+        return *this;
+    }
+
+    public:
+    const node_type* get_raw_node() const {
         return this->policy.get_current_node();
     }
 
-    node_type* get_node() {
+    node_type* get_raw_node() {
         return this->policy.get_current_node();
     }
 
@@ -125,17 +144,18 @@ class tree_iterator {
     }
 
     const value_type& operator*() const {
-        return this->get_node()->value;
+        return this->get_raw_node()->value;
     }
 
     value_type* operator->() {
-        return &(this->get_node()->value);
+        return &(this->get_raw_node()->value);
     }
 
     const value_type* operator->() const {
-        return &(this->get_node()->value);
+        return &(this->get_raw_node()->value);
     }
 
+    /*   ---   COMPARISON   ---   */
     template <bool OtherConst>
     bool operator==(const tree_iterator<Tree, Policy, OtherConst>& other) const {
         return this->pointed_tree == other.pointed_tree
@@ -147,10 +167,34 @@ class tree_iterator {
         return !this->operator==(other);
     }
 
+    tree_iterator& go_parent() {
+        return this->do_move(std::mem_fn(&navigator_type::get_parent));
+    }
+
+    tree_iterator& go_prev_sibling() {
+        return this->do_move(std::mem_fn(&navigator_type::get_prev_sibling));
+    }
+
+    tree_iterator& go_next_sibling() {
+        return this->do_move(std::mem_fn(&navigator_type::get_next_sibling));
+    }
+
+    tree_iterator& go_first_child() {
+        return this->do_move(std::mem_fn(&navigator_type::get_first_child));
+    }
+
+    tree_iterator& go_last_child() {
+        return this->do_move(std::mem_fn(&navigator_type::get_last_child));
+    }
+
+    tree_iterator& go_child(std::size_t index) {
+        return this->do_move(std::mem_fn(&navigator_type::get_child), index);
+    }
+
     tree_iterator& operator++() {
         if (this->policy.get_current_node() != nullptr) {
             this->policy.increment();
-        } else if (this->pointed_tree != nullptr && this->pointed_tree->get_root() != nullptr) {
+        } else if (this->pointed_tree != nullptr && this->pointed_tree->root != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => incremented from end() => go to its first element (rewind)
@@ -171,7 +215,7 @@ class tree_iterator {
     tree_iterator& operator--() {
         if (this->policy.get_current_node() != nullptr) {
             this->policy.decrement();
-        } else if (this->pointed_tree != nullptr && this->pointed_tree->get_root() != nullptr) {
+        } else if (this->pointed_tree != nullptr && this->pointed_tree->root != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => decremented from end() => go to its last element (before end())
@@ -193,34 +237,5 @@ class tree_iterator {
         this->policy.update(current, replacement);
     }
 };
-
-namespace detail {
-    template <
-        typename Tree,
-        typename Policy,
-        bool Constant = false>
-    class tree_iterator_node_return : public tree_iterator<Tree, Policy, Constant> {
-
-        using tree_iterator<Tree, Policy, Constant>::tree_iterator;
-        using node_type = typename tree_iterator<Tree, Policy, Constant>::node_type;
-
-        node_type& operator*() {
-            return this->get_node()->value;
-        }
-
-        const node_type& operator*() const {
-            return this->get_node();
-        }
-
-        node_type* operator->() {
-            return &(this->get_node());
-        }
-
-        const node_type* operator->() const {
-            return &(this->get_node());
-        }
-    };
-
-} // namespace detail
 
 } // namespace md

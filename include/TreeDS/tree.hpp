@@ -41,18 +41,21 @@ template <
     typename Allocator>
 class tree : public basic_tree<T, Node, Policy, Allocator> {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename, typename, typename>
     friend class tree;
 
     public:
-    //   ---   TYPES   ---
+    /*   ---   TYPES   ---   */
     DECLARE_TREEDS_TYPES(T, Node, Policy, Allocator)
     using super = basic_tree<T, Node, Policy, Allocator>;
 
+    /*   ---   VALIDATION   ---   */
     static_assert(
         is_tag_of_policy<Policy>,
         "\"Policy\" template parameter is expected to be an actual policy tag.");
 
+    /*   ---   CONSTRUCTORS   ---   */
     protected:
     tree(node_type* root) :
             super(root, 0u, 0u, navigator_type(root, false)) {
@@ -68,7 +71,6 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     public:
-    //   ---   CONSTRUCTORS   ---
     /**
      * Create an empty tree.
      */
@@ -166,7 +168,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     }
 
     public:
-    //   ---   ASSIGNMENT   ---
+    /*   ---   ASSIGNMENT   ---   */
     // Copy assignment
     tree& operator=(const tree& other) {
         return this->operator=<Policy>(other);
@@ -232,7 +234,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return *this;
     }
 
-    //   ---   ITERATORS   ---
+    // Iterators
     using super::begin;
     using super::end;
     using super::rbegin;
@@ -279,8 +281,8 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
     public:
     using super::get_root;
 
-    Node* get_root() {
-        return this->root;
+    const_iterator<policy::fixed> get_root() {
+        return {policy::fixed(), *this, this->root};
     }
 
     //   ---   MODIFIERS   ---
@@ -324,7 +326,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * efficient work around except crazy approaches like traversing the whole tree starting from the root to
          * retrieve a non constant version of the value we already have.
          */
-        node_type* target = const_cast<node_type*>(position.get_node());
+        node_type* target = const_cast<node_type*>(position.get_raw_node());
         if (target != nullptr) { // If iterator points to valid node
             assert(this->root != nullptr);
             position.update(*target, replacement);
@@ -361,7 +363,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * efficient work around except crazy approaches like traversing the whole tree starting from the root to
          * retrieve a non constant version of the value we already have.
          */
-        node_type* target = const_cast<node_type*>(position.get_node());
+        node_type* target = const_cast<node_type*>(position.get_raw_node());
         if (target == nullptr) {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
@@ -393,7 +395,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
          * efficient work around except crazy approaches like traversing the whole tree starting from the root to
          * retrieve a non constant version of the value we already have.
          */
-        node_type* target = const_cast<node_type*>(position.get_node());
+        node_type* target = const_cast<node_type*>(position.get_raw_node());
         if (target != nullptr) { // If iterator points to valid node
             assert(this->root != nullptr);
             position.update(*target, nullptr);
@@ -508,7 +510,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             !other.empty()
-                ? allocate(this->allocator, *other.get_root(), this->allocator)
+                ? allocate(this->allocator, *other.root, this->allocator)
                 : nullptr,
             other.size(),
             other.arity());
@@ -599,7 +601,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return this->add_child<true>(
             position,
             !other.empty()
-                ? allocate(this->allocator, *other.get_root(), this->allocator)
+                ? allocate(this->allocator, *other.root, this->allocator)
                 : nullptr,
             1u,
             0u);
@@ -662,7 +664,7 @@ class tree : public basic_tree<T, Node, Policy, Allocator> {
         return this->add_child<false>(
             position,
             !other.empty()
-                ? allocate(this->allocator, *other.get_root())
+                ? allocate(this->allocator, *other.root)
                 : nullptr,
             1u,
             0u);

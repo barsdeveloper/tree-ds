@@ -154,7 +154,7 @@ void NaryTreeViewIterationTest::iteration() {
     QCOMPARE(actualArity, expectedArity);
 
     auto it = view.begin(policy::pre_order());
-    while (it.get_node() != nullptr)
+    while (it.get_raw_node() != nullptr)
         ++it;
     QVERIFY(it == view.end(policy::pre_order()));
 

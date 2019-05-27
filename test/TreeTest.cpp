@@ -1,5 +1,4 @@
 #include <QtTest/QtTest>
-#include <stdexcept> // std::logic_error
 
 #include <TreeDS/tree>
 
@@ -106,7 +105,7 @@ void TreeTest::naryTree() {
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(copy2.size(), 0);
     QCOMPARE(copy2.arity(), 0);
-    QCOMPARE(copy2.get_root(), nullptr);
+    QCOMPARE(copy2.get_root(), copy2.end(policy::fixed()));
     QVERIFY(moved != copy2);
     QVERIFY(moved == tree);
     QVERIFY(tree == moved);
@@ -118,16 +117,16 @@ void TreeTest::naryTree() {
     QCOMPARE(copy2.arity(), 3);
     QCOMPARE(moved.size(), 0);
     QCOMPARE(moved.arity(), 0);
-    QVERIFY(moved.get_root() == nullptr);
-    QVERIFY(copy2.get_root() != nullptr);
+    QVERIFY(moved.get_raw_root() == nullptr);
+    QCOMPARE(*copy2.get_root(), 'a');
 
     moved = move(copy2);
     QCOMPARE(copy2.size(), 0);
     QCOMPARE(copy2.arity(), 0);
     QCOMPARE(moved.size(), 12);
     QCOMPARE(moved.arity(), 3);
-    QVERIFY(moved.get_root() != nullptr);
-    QVERIFY(copy2.get_root() == nullptr);
+    QCOMPARE(*moved.get_root(), 'a');
+    QVERIFY(copy2.get_raw_root() == nullptr);
 
     // g -> !
     auto bang_it = moved.insert_over(
@@ -143,7 +142,7 @@ void TreeTest::naryTree() {
     expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
-    QCOMPARE(bang_it.get_node()->get_following_siblings(), 0);
+    QCOMPARE(bang_it.get_raw_node()->get_following_siblings(), 0);
 
     // b -> ?
     auto it = find(
@@ -158,7 +157,7 @@ void TreeTest::naryTree() {
     QCOMPARE(moved.size(), 8);
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(actual, expected);
-    QCOMPARE(it.get_node()->get_following_siblings(), 1);
+    QCOMPARE(it.get_raw_node()->get_following_siblings(), 1);
 
     // e -> t
     auto t_it = moved.insert_over(
@@ -166,13 +165,13 @@ void TreeTest::naryTree() {
         't');
     // parent of t is now ?
     QCOMPARE(
-        find(moved.begin(), moved.end(), 't').get_node()->get_parent()->get_value(),
+        find(moved.begin(), moved.end(), 't').get_raw_node()->get_parent()->get_value(),
         '?');
     QCOMPARE(*t_it, 't');
 
-    nary_node<char>* n_d = find(moved.begin(), moved.end(), 'd').get_node();
-    nary_node<char>* n_t = find(moved.begin(), moved.end(), 't').get_node();
-    nary_node<char>* n_f = find(moved.begin(), moved.end(), 'f').get_node();
+    nary_node<char>* n_d = find(moved.begin(), moved.end(), 'd').get_raw_node();
+    nary_node<char>* n_t = find(moved.begin(), moved.end(), 't').get_raw_node();
+    nary_node<char>* n_f = find(moved.begin(), moved.end(), 'f').get_raw_node();
     QCOMPARE(n_d->get_prev_sibling(), nullptr);
     QCOMPARE(n_d->get_next_sibling(), n_t);
     QCOMPARE(n_d->get_following_siblings(), 2);
@@ -185,7 +184,7 @@ void TreeTest::naryTree() {
 
     // erase t
     auto it_f = moved.erase(find(moved.begin(policy::post_order()), moved.end(policy::post_order()), 't'));
-    QCOMPARE(it_f.get_node(), n_f);
+    QCOMPARE(it_f.get_raw_node(), n_f);
     QCOMPARE(n_d->get_prev_sibling(), nullptr);
     QCOMPARE(n_d->get_next_sibling(), n_f);
     QCOMPARE(n_d->get_following_siblings(), 1);

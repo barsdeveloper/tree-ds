@@ -29,6 +29,7 @@
 
 #include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/policy/breadth_first.hpp>
+#include <TreeDS/policy/fixed.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace md {
@@ -232,8 +233,7 @@ class basic_tree {
     /**
      * @brief Returns the maximum possible number of elements the tree can hold.
      * @details Please note that this is not the real value because the size of the tree will be more likely limited by
-     * the amount of free memory. You never want to use this method, it is stupid, it exists just to say that this
-     * library is stl-like.
+     * the amount of free memory.
      * @return maximum possible number of elements
      */
     size_type max_size() const {
@@ -241,12 +241,16 @@ class basic_tree {
     }
 
     /*   ---   GETTER METHODS   ---   */
-    const Node* get_root() const {
+    node_type* get_raw_root() const {
         return this->root;
     }
 
-    Node* get_root() {
+    node_type* get_raw_root() {
         return this->root;
+    }
+
+    const_iterator<policy::fixed> get_root() const {
+        return {policy::fixed(), *this, this->root};
     }
 
     node_navigator<const node_type> get_node_navigator() const {

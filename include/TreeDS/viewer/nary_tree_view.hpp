@@ -31,7 +31,7 @@ class nary_tree_view : public tree_view<T, nary_node<T>, Policy, Allocator> {
             return false;
         }
         // At the end is either null (both) or same as the other
-        return this->get_root() == nullptr || *this->get_root() == *other.get_root();
+        return this->root == nullptr || *this->root == *other.get_raw_root();
     }
 };
 

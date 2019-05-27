@@ -25,6 +25,7 @@ class IteratorTest : public QObject {
     void requirements();
     void test1();
     void test2();
+    void test3();
 };
 
 void IteratorTest::requirements() {
@@ -178,9 +179,9 @@ void IteratorTest::test2() {
     QCOMPARE((*const_ref).method(), "constant");
 
     // Direct method call (thorugh iterator->node->value->method).
-    QCOMPARE(it1.get_node()->get_value().method(), "mutable");
-    QCOMPARE(itc1.get_node()->get_value().method(), "constant");
-    QCOMPARE(const_ref.get_node()->get_value().method(), "constant");
+    QCOMPARE(it1.get_raw_node()->get_value().method(), "mutable");
+    QCOMPARE(itc1.get_raw_node()->get_value().method(), "constant");
+    QCOMPARE(const_ref.get_raw_node()->get_value().method(), "constant");
 
     // Iterator equals constant itself.
     QVERIFY(it1 == itc1);
@@ -205,6 +206,66 @@ void IteratorTest::test2() {
     QVERIFY(itc2 != itc1);
     QVERIFY(!(itc1 == itc2));
     QVERIFY(!(itc2 == itc1));
+}
+
+void IteratorTest::test3() {
+    const nary_tree<char> tree {
+        n('a')(
+            n('b')(
+                n('e'),
+                n('f')(
+                    n('g'))),
+            n('c')(
+                n('g'),
+                n('h')),
+            n('d'))};
+
+    auto it_1 = tree.begin();
+    it_1.go_last_child();
+    QCOMPARE(*it_1, 'd');
+
+    it_1.go_parent();
+    QCOMPARE(*it_1, 'a');
+
+    it_1.go_last_child();
+    QCOMPARE(*it_1, 'd');
+
+    it_1.go_parent();
+    QCOMPARE(*it_1, 'a');
+
+    auto it_2 = it_1.other_policy(policy::pre_order()).go_child(1);
+    QCOMPARE(*it_2, 'c');
+
+    it_2.go_prev_sibling();
+    QCOMPARE(*it_2, 'b');
+
+    it_2.go_last_child();
+    QCOMPARE(*it_2, 'f');
+
+    // Enough, now let's go wild
+    auto it_3
+        = it_2
+              .other_policy(policy::breadth_first())
+              .go_first_child()
+              .other_policy(policy::fixed())
+              .go_parent()
+              .go_parent()
+              .other_policy(policy::post_order())
+              .go_next_sibling()
+              .go_next_sibling()
+              .go_parent();
+    QCOMPARE(*it_3, 'a');
+
+    auto it_4
+        = it_3
+              .other_policy(policy::siblings())
+              .go_child(0)
+              .go_next_sibling()
+              .other_policy(policy::pre_order())
+              .go_prev_sibling()
+              .go_first_child()
+              .other_policy(policy::breadth_first());
+    QCOMPARE(*it_4, 'e');
 }
 
 QTEST_MAIN(IteratorTest)

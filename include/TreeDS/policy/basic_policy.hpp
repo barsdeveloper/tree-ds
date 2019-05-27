@@ -51,13 +51,21 @@ class basic_policy {
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
+    basic_policy(const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
+            basic_policy(const_cast<Node*>(other.current), other.navigator, other.allocator) {
+    }
+
+    template <
+        typename OtherActualPolicy,
+        typename OtherNode,
+        typename OtherNodeNavigator,
+        typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
+        typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     basic_policy(
         const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
-        const node_type* current = nullptr) :
-            basic_policy(
-                const_cast<Node*>(current != nullptr ? current : other.get_current_node()),
-                other.navigator,
-                other.get_allocator()) {
+        const node_type* current) :
+            basic_policy(const_cast<Node*>(current), other.navigator, other.allocator) {
     }
 
     public:
@@ -67,6 +75,10 @@ class basic_policy {
 
     node_type* get_current_node() const {
         return this->current;
+    }
+
+    navigator_type get_navigator() const {
+        return this->navigator;
     }
 
     const allocator_type& get_allocator() const {
