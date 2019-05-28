@@ -78,7 +78,7 @@ class tree_iterator {
     tree_iterator<Tree, Policy, !C> craft_non_constant_iterator() const {
         return tree_iterator<Tree, Policy, !C>(
             *this,
-            const_cast<std::decay_t<Tree>*>(this->pointed_tree),
+            const_cast<std::remove_const_t<Tree>*>(this->pointed_tree),
             const_cast<std::remove_const_t<node_type>*>(this->get_raw_node()));
     }
 

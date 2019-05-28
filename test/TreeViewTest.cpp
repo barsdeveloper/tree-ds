@@ -7,6 +7,7 @@ template class md::binary_tree_view<int>;
 template class md::nary_tree_view<char>;
 
 using namespace md;
+using namespace std;
 
 class TreeViewTest : public QObject {
 
@@ -31,12 +32,19 @@ class TreeViewTest : public QObject {
 };
 
 void TreeViewTest::naryTreeView() {
-    nary_tree_view<std::string> view(nary, std::find(nary.begin(), nary.end(), "four"));
-    QCOMPARE(view.size(), 8);
-    QCOMPARE(view.arity(), 4);
-    QCOMPARE(*view.get_root(), "four");
-    QCOMPARE(view.get_root().go_parent().get_raw_node(), nullptr); // Cannot go upper than the root using the iterator
-    // TODO: Add more tests
+    nary_tree_view<string> view1(nary, find(nary.begin(), nary.end(), "four"));
+    QCOMPARE(view1.size(), 8);
+    QCOMPARE(view1.arity(), 4);
+    QCOMPARE(*view1.get_root(), "four");
+    QCOMPARE(view1.get_root().go_parent().get_raw_node(), nullptr); // Cannot go upper than the root using the iterator
+
+    nary_tree_view<string> view2;
+    view2 = nary;
+    QCOMPARE(view2.size(), 12);
+    QCOMPARE(view2.arity(), 4);
+    QCOMPARE(*view2.get_root(), "one");
+
+    view2 = nary_tree_view<string> {view2, view2.get_root().go_first_child().go_first_child()};
 }
 
 QTEST_MAIN(TreeViewTest);

@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef> // std::size_t
+
 #include <TreeDS/basic_tree.hpp>
 #include <TreeDS/matcher/node/matcher.hpp>
+#include <TreeDS/tree.hpp>
 
 namespace md {
 

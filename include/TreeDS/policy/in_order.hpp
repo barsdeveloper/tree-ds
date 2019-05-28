@@ -1,6 +1,4 @@
 #pragma once
-
-#include <memory>      // std::allocator
 #include <type_traits> // std::is_same_v
 
 #include <TreeDS/policy/basic_policy.hpp>

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <functional> // std::mem_fn()
-#include <memory>     // std::allocator
-
 #include <TreeDS/policy/basic_policy.hpp>
 #include <TreeDS/utility.hpp>
 
@@ -51,10 +48,10 @@ class pre_order_impl final
         }
         return prev_sibling
             ? keep_calling(
-                *prev_sibling,
-                [this](Node& node) {
-                    return this->navigator.get_last_child(node);
-                })
+                  *prev_sibling,
+                  [this](Node& node) {
+                      return this->navigator.get_last_child(node);
+                  })
             : nullptr;
     }
 

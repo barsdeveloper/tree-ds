@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdexcept> // std::logic_error
+#include <stdexcept>   // std::logic_error
+#include <type_traits> // std::is_same_v
 
 #include <TreeDS/basic_tree.hpp>
 #include <TreeDS/policy/pre_order.hpp>
@@ -25,21 +26,23 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
             super(nullptr, 0, 0, node_navigator<Node>(nullptr, false)) {
     }
 
-    template <typename ViewPolicy>
-    tree_view(const basic_tree<T, Node, ViewPolicy, Allocator>& tree) :
+    template <typename TreeNode, typename TreePolicy>
+    tree_view(const basic_tree<T, TreeNode, TreePolicy, Allocator>& tree) :
             super(tree.root, tree.size_value, tree.arity_value, tree.navigator) {
+        static_assert(
+            std::is_convertible_v<std::add_pointer_t<TreeNode>, std::add_pointer_t<Node>>,
+            "The view must refer to the same type of tree/view: either nary or binary.");
     }
 
     template <
+        typename TreeNode,
         typename TreePolicy,
+        typename IteratorTree,
         typename IteratorPolicy,
-        bool Constant>
+        bool IteratorConstant>
     tree_view(
-        const basic_tree<T, Node, TreePolicy, Allocator>& tree,
-        const tree_iterator<
-            basic_tree<T, Node, TreePolicy, Allocator>, // Tree_iterator always refers to basic_tree, no subclasses
-            IteratorPolicy,
-            Constant>& position) :
+        const basic_tree<T, TreeNode, TreePolicy, Allocator>& tree,
+        const tree_iterator<IteratorTree, IteratorPolicy, IteratorConstant>& position) :
             super(
                 position.get_raw_node(),
                 position.get_raw_node()
@@ -53,8 +56,14 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
                         : 0u
                     : 0u,
                 navigator_type(position.get_raw_node(), true)) {
+        static_assert(
+            std::is_convertible_v<std::add_pointer_t<TreeNode>, std::add_pointer_t<Node>>,
+            "The view must refer to the same type of tree/view: either nary or binary.");
+        static_assert(
+            std::is_same_v<std::decay_t<Node>, std::decay_t<typename IteratorTree::node_type>>,
+            "The iterator must belong to the tree.");
         if (!tree.is_own_iterator(position)) {
-            throw std::logic_error("Tried to create an nary_tree_biew with an iterator not belonging to the tree.");
+            throw std::logic_error("Tried to create an nary_tree_view with an iterator not belonging to the tree.");
         }
     }
 };

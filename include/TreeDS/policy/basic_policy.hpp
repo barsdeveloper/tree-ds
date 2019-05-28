@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory> // std::allocator
-
 #include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/utility.hpp>
 

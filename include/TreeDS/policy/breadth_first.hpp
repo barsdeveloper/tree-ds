@@ -1,10 +1,8 @@
 #pragma once
 
 #include <deque>
-#include <memory> // std::allocator
+#include <memory> // std::allocator_traits
 
-#include <TreeDS/node/node.hpp>
-#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/policy/basic_policy.hpp>
 
 namespace md::detail {
@@ -128,7 +126,7 @@ class breadth_first_impl final
             assert(this->navigator.get_parent(*this->open_nodes.back()) == &current);
             this->open_nodes.pop_back();
         }
-        // Push from back the children of the replacement node
+        // Push back the children of first child
         Node* child = replacement != nullptr
             ? this->navigator.get_first_child(*replacement)
             : nullptr;

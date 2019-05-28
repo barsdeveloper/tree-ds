@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional> // std::mem_fn
-
 #include <TreeDS/policy/basic_policy.hpp>
 #include <TreeDS/utility.hpp>
 

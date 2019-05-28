@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cassert> // assert()
-#include <memory>  // std::unique_ptr, std::allocator_traits
-#include <tuple>
+#include <memory> // std::unique_ptr, std::allocator_traits
+#include <tuple>  // std::apply()
 
 #include <TreeDS/utility.hpp>
 

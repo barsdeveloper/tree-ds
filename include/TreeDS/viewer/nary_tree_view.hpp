@@ -13,15 +13,15 @@ template <
     typename T,
     typename Policy    = default_policy,
     typename Allocator = std::allocator<T>>
-class nary_tree_view : public tree_view<T, nary_node<T>, Policy, Allocator> {
+class nary_tree_view : public tree_view<T, const nary_node<T>, Policy, Allocator> {
 
-    using tree_view<T, nary_node<T>, Policy, Allocator>::tree_view;
+    using tree_view<T, const nary_node<T>, Policy, Allocator>::tree_view;
 
     public:
     DECLARE_TREEDS_TYPES(T, const nary_node<T>, Policy, Allocator)
 
     // Import the overloads of the operator== into the current class (would be shadowed otherwise)
-    using tree_view<T, nary_node<T>, Policy, Allocator>::operator==;
+    using tree_view<T, const nary_node<T>, Policy, Allocator>::operator==;
 
     template <typename OtherPolicy>
     bool operator==(const binary_tree_view<T, OtherPolicy, Allocator>& other) const {
