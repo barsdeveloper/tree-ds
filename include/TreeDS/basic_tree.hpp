@@ -49,7 +49,7 @@ class basic_tree {
     template <typename, typename, typename>
     friend class tree;
 
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class tree_view;
 
     template <typename, typename, bool>

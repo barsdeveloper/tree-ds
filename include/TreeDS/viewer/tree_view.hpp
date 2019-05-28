@@ -12,7 +12,6 @@
 namespace md {
 
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator>
