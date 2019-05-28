@@ -1,26 +1,26 @@
 #pragma once
 
-#define DECLARE_TREEDS_TYPES(VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T)                                                    \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::value_type;                                      \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::reference;                                       \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::const_reference;                                 \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::node_type;                                       \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::size_type;                                       \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::difference_type;                                 \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::pointer;                                         \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::const_pointer;                                   \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::policy_type;                                     \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::navigator_type;                                  \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::allocator_type;                                  \
-    using typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::node_allocator_type;                             \
-    template <typename P>                                                                                               \
-    using iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template iterator<P>;                 \
-    template <typename P>                                                                                               \
-    using const_iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template const_iterator<P>;     \
-    template <typename P>                                                                                               \
-    using reverse_iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template reverse_iterator<P>; \
-    template <typename P>                                                                                               \
-    using const_reverse_iterator = typename basic_tree<VALUE_T, NODE_T, POLICY_T, ALLOCATOR_T>::template const_reverse_iterator<P>;
+#define DECLARE_TREEDS_TYPES(NODE_T, POLICY_T, ALLOCATOR_T)                                                    \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::value_type;                                      \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::reference;                                       \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::const_reference;                                 \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::node_type;                                       \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::size_type;                                       \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::difference_type;                                 \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::pointer;                                         \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::const_pointer;                                   \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::policy_type;                                     \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::navigator_type;                                  \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::allocator_type;                                  \
+    using typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::node_allocator_type;                             \
+    template <typename P>                                                                                      \
+    using iterator = typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::template iterator<P>;                 \
+    template <typename P>                                                                                      \
+    using const_iterator = typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::template const_iterator<P>;     \
+    template <typename P>                                                                                      \
+    using reverse_iterator = typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::template reverse_iterator<P>; \
+    template <typename P>                                                                                      \
+    using const_reverse_iterator = typename basic_tree<NODE_T, POLICY_T, ALLOCATOR_T>::template const_reverse_iterator<P>;
 
 #include <cstddef>
 #include <iterator> // std::make_reverse_iterator
@@ -36,22 +36,17 @@ namespace md {
 
 using default_policy = policy::breadth_first;
 
-template <typename, typename, typename, typename>
+template <typename, typename, typename>
 class tree;
 
-template <typename T, typename Node, typename Policy, typename Allocator>
+template <typename Node, typename Policy, typename Allocator>
 class basic_tree {
 
-    static_assert(is_tag_of_policy<Policy>, "Invalid Policy template parameter, pick one from namespace md::policy");
-    static_assert(
-        std::is_same_v<T, allocator_value_type<Allocator>>,
-        "Invalid allocator::value_type");
-
     /*  ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class basic_tree;
 
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class tree;
 
     template <typename, typename, typename, typename>
@@ -66,18 +61,23 @@ class basic_tree {
     /*   ---   TYPES   ---   */
     public:
     // General
-    using value_type          = T;
+    using value_type          = std::remove_reference_t<decltype(std::declval<Node>().get_value())>;
     using reference           = value_type&;
     using const_reference     = const value_type&;
     using node_type           = Node;
     using size_type           = std::size_t;
     using difference_type     = std::ptrdiff_t;
-    using pointer             = T*;
-    using const_pointer       = const T*;
+    using pointer             = value_type*;
+    using const_pointer       = const value_type*;
     using policy_type         = Policy;
     using navigator_type      = node_navigator<node_type>;
     using allocator_type      = Allocator;
     using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<node_type>>;
+
+    static_assert(is_tag_of_policy<Policy>, "Invalid Policy template parameter, pick one from namespace md::policy");
+    static_assert(
+        std::is_same_v<std::decay_t<value_type>, allocator_value_type<Allocator>>,
+        "Invalid allocator::value_type");
 
     // Iterators
     template <typename P>
@@ -186,7 +186,7 @@ class basic_tree {
     template <typename OtherPolicy, bool Constant>
     bool is_own_iterator(
         const tree_iterator<
-            basic_tree<T, Node, Policy, Allocator>,
+            basic_tree<Node, Policy, Allocator>,
             OtherPolicy,
             Constant>& it) const {
         return it.pointed_tree == this;
@@ -223,7 +223,7 @@ class basic_tree {
         if (!this->empty() && this->arity_value == 0u && this->root->has_children()) {
             this->arity_value = calculate_arity(
                 *this->root,
-                std::is_same_v<std::decay_t<Node>, binary_node<T>>
+                std::is_same_v<std::decay_t<Node>, binary_node<value_type>>
                     ? 2u
                     : std::numeric_limits<std::size_t>::max());
         }
@@ -274,7 +274,7 @@ class basic_tree {
     /*  ---   COMPARISON   ---   */
     public:
     template <typename OtherPolicy>
-    bool operator==(const basic_tree<T, Node, OtherPolicy, Allocator>& other) const {
+    bool operator==(const basic_tree<Node, OtherPolicy, Allocator>& other) const {
         // Trivial test
         if (this->empty() != other.empty()
             || this->size() != other.size()
@@ -286,10 +286,10 @@ class basic_tree {
     }
 
     template <
-        typename ConvertibleT,
+        typename ConvertibleV,
         typename... Children,
-        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, value_type>>>
-    bool operator==(const struct_node<ConvertibleT, Children...>& other) const {
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleV, value_type>>>
+    bool operator==(const struct_node<ConvertibleV, Children...>& other) const {
         // Test if different size or arity
         if (this->size() != other.get_subtree_size()
             || this->arity() != other.get_subtree_arity()) {
@@ -307,75 +307,68 @@ class basic_tree {
 // TODO: replace as soon as space ship operator (<=>) is available
 // tree
 template <
-    typename T,
     typename Node,
     typename Policy1,
     typename Policy2,
     typename Allocator>
-bool operator!=(const basic_tree<T, Node, Policy1, Allocator>& lhs, const basic_tree<T, Node, Policy2, Allocator>& rhs) {
+bool operator!=(const basic_tree<Node, Policy1, Allocator>& lhs, const basic_tree<Node, Policy2, Allocator>& rhs) {
     return !lhs.operator==(rhs);
 }
 
 // struct_node
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
-bool operator==(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+bool operator==(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
-bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<ConvertibleT, Children...>& rhs) {
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+bool operator!=(const basic_tree<Node, Policy, Allocator>& lhs, const struct_node<ConvertibleT, Children...>& rhs) {
     return !lhs.operator==(rhs);
 }
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
-bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }
 
 // empty struct_node
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator==(const struct_node<detail::empty_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator==(const struct_node<detail::empty_t>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const basic_tree<T, Node, Policy, Allocator>& lhs, const struct_node<detail::empty_t>& rhs) {
+bool operator!=(const basic_tree<Node, Policy, Allocator>& lhs, const struct_node<detail::empty_t>& rhs) {
     return !lhs.operator==(rhs);
 }
 
 template <
-    typename T,
     typename Node,
     typename Policy,
     typename Allocator>
-bool operator!=(const struct_node<detail::empty_t>& lhs, const basic_tree<T, Node, Policy, Allocator>& rhs) {
+bool operator!=(const struct_node<detail::empty_t>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }
 

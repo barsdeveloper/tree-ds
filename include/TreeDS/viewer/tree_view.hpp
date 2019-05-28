@@ -16,18 +16,18 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
+class tree_view : public basic_tree<const Node, Policy, Allocator> {
 
     public:
-    DECLARE_TREEDS_TYPES(T, const Node, Policy, Allocator)
-    using super = basic_tree<T, const Node, Policy, Allocator>;
+    DECLARE_TREEDS_TYPES(const Node, Policy, Allocator)
+    using super = basic_tree<const Node, Policy, Allocator>;
 
     tree_view() :
             super(nullptr, 0, 0, node_navigator<Node>(nullptr, false)) {
     }
 
     template <typename TreeNode, typename TreePolicy>
-    tree_view(const basic_tree<T, TreeNode, TreePolicy, Allocator>& tree) :
+    tree_view(const basic_tree<TreeNode, TreePolicy, Allocator>& tree) :
             super(tree.root, tree.size_value, tree.arity_value, tree.navigator) {
         static_assert(
             std::is_convertible_v<std::add_pointer_t<TreeNode>, std::add_pointer_t<Node>>,
@@ -41,7 +41,7 @@ class tree_view : public basic_tree<T, const Node, Policy, Allocator> {
         typename IteratorPolicy,
         bool IteratorConstant>
     tree_view(
-        const basic_tree<T, TreeNode, TreePolicy, Allocator>& tree,
+        const basic_tree<TreeNode, TreePolicy, Allocator>& tree,
         const tree_iterator<IteratorTree, IteratorPolicy, IteratorConstant>& position) :
             super(
                 position.get_raw_node(),

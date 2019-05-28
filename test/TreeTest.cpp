@@ -7,7 +7,7 @@
 using namespace std;
 using namespace md;
 
-template class md::tree<int, nary_node<int>, policy::breadth_first, std::allocator<int>>;
+template class md::tree<nary_node<int>, policy::breadth_first, std::allocator<int>>;
 
 class TreeTest : public QObject {
 

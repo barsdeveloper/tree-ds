@@ -20,12 +20,12 @@ template <
     typename T,
     typename Policy    = default_policy,
     typename Allocator = std::allocator<T>>
-class binary_tree : public tree<T, binary_node<T>, Policy, Allocator> {
-    using super = tree<T, binary_node<T>, Policy, Allocator>;
+class binary_tree : public tree<binary_node<T>, Policy, Allocator> {
+    using super = tree<binary_node<T>, Policy, Allocator>;
 
     public:
-    using tree<T, binary_node<T>, Policy, Allocator>::tree;
-    using tree<T, binary_node<T>, Policy, Allocator>::operator=;
+    using tree<binary_node<T>, Policy, Allocator>::tree;
+    using tree<binary_node<T>, Policy, Allocator>::operator=;
 };
 
 } // namespace md

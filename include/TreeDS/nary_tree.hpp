@@ -21,17 +21,17 @@ template <
     typename T,
     typename Policy    = default_policy,
     typename Allocator = std::allocator<T>>
-class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
-    using super = tree<T, nary_node<T>, Policy, Allocator>;
+class nary_tree : public tree<nary_node<T>, Policy, Allocator> {
+    using super = tree<nary_node<T>, Policy, Allocator>;
 
     // Inherit constructors from parent class
-    using tree<T, nary_node<T>, Policy, Allocator>::tree;
+    using tree<nary_node<T>, Policy, Allocator>::tree;
 
     public:
     /// @brief Construct from {@link #binary_tree}
     template <typename OtherPolicy>
     nary_tree(const binary_tree<T, OtherPolicy, Allocator>& other) :
-            tree<T, nary_node<T>, Policy, Allocator>(
+            tree<nary_node<T>, Policy, Allocator>(
                 other.get_raw_root()
                     ? allocate(this->allocator, *other.get_raw_root(), this->allocator).release()
                     : nullptr,
@@ -43,7 +43,7 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     }
 
     // Import the overloads of the operator= into the current class (that would be shadowed otherwise)
-    using tree<T, nary_node<T>, Policy, Allocator>::operator=;
+    using tree<nary_node<T>, Policy, Allocator>::operator=;
 
     template <typename OtherPolicy>
     nary_tree& operator=(const binary_tree<T, OtherPolicy, Allocator>& other) {
@@ -60,7 +60,7 @@ class nary_tree : public tree<T, nary_node<T>, Policy, Allocator> {
     }
 
     // Import the overloads of the operator== into the current class (would be shadowed otherwise)
-    using tree<T, nary_node<T>, Policy, Allocator>::operator==;
+    using tree<nary_node<T>, Policy, Allocator>::operator==;
 
     template <typename OtherPolicy>
     bool operator==(const binary_tree<T, OtherPolicy, Allocator>& other) const {

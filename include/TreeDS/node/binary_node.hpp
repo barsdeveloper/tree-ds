@@ -20,7 +20,7 @@ class binary_node : public node<T, binary_node<T>> {
     template <typename, typename, bool>
     friend class tree_iterator;
 
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class tree;
 
     template <typename A>

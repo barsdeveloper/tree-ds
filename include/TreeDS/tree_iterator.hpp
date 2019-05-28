@@ -7,10 +7,10 @@
 
 namespace md {
 
-template <typename, typename, typename, typename>
+template <typename, typename, typename>
 class basic_tree;
 
-template <typename, typename, typename, typename>
+template <typename, typename, typename>
 class tree;
 
 template <
@@ -20,10 +20,10 @@ template <
 class tree_iterator {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class basic_tree;
 
-    template <typename, typename, typename, typename>
+    template <typename, typename, typename>
     friend class tree;
 
     template <typename, typename, bool>
