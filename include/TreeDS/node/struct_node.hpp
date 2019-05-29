@@ -11,6 +11,9 @@ namespace md {
 template <typename T, typename... Children>
 class struct_node {
 
+    template <typename, typename...>
+    friend class struct_node;
+
     /*   ---   TYPES   ---   */
     public:
     using children_t = std::tuple<Children...>;
@@ -19,9 +22,10 @@ class struct_node {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     value_t value;                 // Value hold by this node
+    children_t children {};        // Tuple containing actual children
     std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root
     std::size_t subtree_arity = 0; // Arity of the tree having this node as root
-    children_t children {};        // Tuple containing actual children
+    std::size_t index         = 0; // The index of this node as a child
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -32,16 +36,22 @@ class struct_node {
         std::size_t prev_arity     = 0;
         std::size_t children_count = 0;
         if constexpr (sizeof...(Children) > 0) {
-            auto call = [&](auto&& node) {
+            std::size_t index  = 0;
+            auto do_each_child = [&](auto& node) {
+                node.index = index++;
                 if constexpr (std::is_same_v<decltype(node.get_value()), detail::empty_t>) {
                     return;
                 } else {
-                    children_count += 1;
+                    ++children_count;
                 }
                 size += node.get_subtree_size();
                 prev_arity = std::max(prev_arity, node.get_subtree_arity());
             };
-            (..., call(children));
+            std::apply(
+                [&](auto&... child) {
+                    (..., do_each_child(child));
+                },
+                this->children);
         }
         this->subtree_size  = size;
         this->subtree_arity = std::max(children_count, prev_arity);
@@ -66,6 +76,9 @@ class struct_node {
 
     constexpr std::size_t get_subtree_arity() const {
         return this->subtree_arity;
+    }
+    constexpr std::size_t get_index() const {
+        return this->index;
     }
 
     template <typename... Nodes>

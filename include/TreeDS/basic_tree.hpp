@@ -35,6 +35,8 @@
 namespace md {
 
 using default_policy = policy::breadth_first;
+template <typename Node>
+using node_value_t = std::remove_reference_t<decltype(std::declval<Node>().get_value())>;
 
 template <typename, typename, typename>
 class tree;
@@ -322,7 +324,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, node_value_t<Node>>>>
 bool operator==(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
@@ -332,7 +334,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, node_value_t<Node>>>>
 bool operator!=(const basic_tree<Node, Policy, Allocator>& lhs, const struct_node<ConvertibleT, Children...>& rhs) {
     return !lhs.operator==(rhs);
 }
@@ -342,7 +344,7 @@ template <
     typename Allocator,
     typename ConvertibleT,
     typename... Children,
-    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, const typename basic_tree<Node, Policy, Allocator>::value_type>>>
+    typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, node_value_t<Node>>>>
 bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return !rhs.operator==(lhs);
 }

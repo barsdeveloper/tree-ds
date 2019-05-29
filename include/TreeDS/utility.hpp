@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cassert>     // assert
 #include <cstddef>     // std::size_t
+#include <functional>  // std::invoke()
 #include <tuple>       // std::std::make_from_tuple
 #include <type_traits> // std::std::enable_if_t, std::is_invocable_v, std::void_t
 #include <utility>     // std::declval(), std::make_index_sequence
@@ -98,20 +100,25 @@ namespace detail {
     template <std::size_t Target> // target is index + 1, Target = 0 is invalid
     struct element_apply_construction {
         template <typename F, typename Tuple>
-        static constexpr auto& single_apply(F& f, Tuple& tuple, std::size_t index) {
+        static constexpr decltype(auto) single_apply(F&& f, Tuple&& tuple, std::size_t index) {
             static_assert(Target > 0, "Requested index does not exist in the tuple.");
             if (index == Target - 1) {
-                return f(std::get<Target - 1>(tuple));
+                if constexpr ((std::tuple_size_v<Tuple>) > 0) {
+                    return std::invoke(std::forward<F>(f), std::get<Target - 1>(tuple));
+                }
             } else {
-                return element_apply_construction<Target - 1>::single_apply(f, tuple, index);
+                return element_apply_construction<Target - 1>::single_apply(
+                    std::forward<F>(f),
+                    std::forward<Tuple>(tuple),
+                    index);
             }
         }
         template <typename F, typename Tuple>
-        static constexpr auto& back_apply(F& f, Tuple& tuple, std::size_t index) {
+        static constexpr decltype(auto) back_apply(F&& f, Tuple&& tuple, std::size_t index) {
             if (index == Target - 1) {
                 return apply_at_indexes(
-                    f,
-                    tuple,
+                    std::forward<F>(f),
+                    std::forward<Tuple>(tuple),
                     [=](std::size_t val) {
                         return val + index;
                     },
@@ -121,24 +128,59 @@ namespace detail {
             }
         }
         template <typename F, typename Tuple, typename AlterIndexes, std::size_t... Indexes>
-        static constexpr auto& apply_at_indexes(
-            F& f,
-            Tuple& tuple,
-            const AlterIndexes& alter,
+        static constexpr decltype(auto) apply_at_indexes(
+            F&& f,
+            Tuple&& tuple,
+            AlterIndexes& alter,
             std::index_sequence<Indexes...>) {
-            return f(std::get<alter(Indexes)>(tuple)...);
+            if constexpr (std::tuple_size_v<Tuple>> 0) {
+                return std::invoke(
+                    std::forward<F>(f),
+                    std::get<alter(Indexes)>(tuple)...);
+            } else {
+                return f();
+            }
+        }
+    };
+    template <>
+    struct element_apply_construction<0> {
+        template <typename F, typename Tuple>
+        static constexpr decltype(auto) single_apply(F&& f, Tuple&&, std::size_t) {
+            return f();
+        }
+        template <typename F, typename Tuple>
+        static constexpr decltype(auto) back_apply(F&& f, Tuple&&, std::size_t) {
+            return f();
         }
     };
 } // namespace detail
 
-template <typename F, typename... Args>
-void single_apply(const F& f, std::tuple<Args...>& tuple, std::size_t index) {
-    return detail::element_apply_construction<sizeof...(Args)>::single_apply(f, tuple, index);
+/**
+ * @brief Invoke the Callable object with an argument taken from the tuple at position {@link index}.
+ */
+template <typename F, typename Tuple>
+decltype(auto) single_apply(F&& f, Tuple&& tuple, std::size_t index) {
+    static_assert(
+        std::is_invocable_v<F>,
+        "Function F must be invocable without any argument (because we use a runtime index thus having to instantiate all the possible combination of arguments from this tuple).");
+    return detail::element_apply_construction<
+        std::tuple_size_v<
+            std::remove_reference_t<
+                Tuple>>>::single_apply(std::forward<F>(f), std::forward<Tuple>(tuple), index);
 }
 
-template <typename F, typename... Args>
-void back_apply(const F& f, std::tuple<Args...>& tuple, std::size_t from) {
-    return detail::element_apply_construction<sizeof...(Args)>::apply(f, tuple, from);
+/**
+ * @brief Invoke the Callable object f with arguments taken from the tuple starting in position {@link from}
+ */
+template <typename F, typename Tuple>
+decltype(auto) back_apply(F&& f, Tuple&& tuple, std::size_t from) {
+    static_assert(
+        std::is_invocable_v<F>,
+        "Function F must be invocable without any argument (because we use a runtime index thus having to instantiate all the possible combination of arguments from this tuple).");
+    return detail::element_apply_construction<
+        std::tuple_size_v<
+            std::remove_reference_t<
+                Tuple>>>::back_apply(std::forward<F>(f), std::forward<Tuple>(tuple), from);
 }
 
 template <

@@ -36,7 +36,7 @@ class basic_policy {
             allocator(allocator) {
     }
 
-    basic_policy(Node* current, const navigator_type& navigator, const Allocator& allocator) :
+    basic_policy(Node* current, const NodeNavigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
@@ -83,27 +83,32 @@ class basic_policy {
         return this->allocator;
     }
 
-    void increment() {
+    ActualPolicy& increment() {
         this->current = static_cast<ActualPolicy*>(this)->increment_impl();
+        return *static_cast<ActualPolicy*>(this);
     }
 
-    void decrement() {
+    ActualPolicy& decrement() {
         this->current = static_cast<ActualPolicy*>(this)->decrement_impl();
+        return *static_cast<ActualPolicy*>(this);
     }
 
-    void go_first() {
+    ActualPolicy& go_first() {
         this->current = static_cast<ActualPolicy*>(this)->go_first_impl();
+        return *static_cast<ActualPolicy*>(this);
     }
 
-    void go_last() {
+    ActualPolicy& go_last() {
         this->current = static_cast<ActualPolicy*>(this)->go_last_impl();
+        return *static_cast<ActualPolicy*>(this);
     }
 
-    void update(node_type& current, node_type* replacement) {
+    ActualPolicy& update(node_type& current, node_type* replacement) {
         // Subclasses can override this in roder to manage their status
         if (&current == this->current) {
             this->current = replacement;
         }
+        return *static_cast<ActualPolicy*>(this);
     }
 };
 

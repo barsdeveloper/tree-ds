@@ -26,7 +26,7 @@ class any_matcher : public matcher<any_matcher<ValueMatcher, Children...>, Value
     friend any_matcher<VM> star(const VM&);
 
     /*   ---   ATTRIBUTES   ---   */
-    protected:
+    public:
     static constexpr matcher_info_t info {(... && Children::info.matches_null), false};
 
     /*   ---   CONSTRUCTORS   ---   */
@@ -40,43 +40,72 @@ class any_matcher : public matcher<any_matcher<ValueMatcher, Children...>, Value
             &node,              // Navigate the subtree represented by node
             [this](node_t& n) { // Stop when finding a non-matching node
                 return this->match_value(n);
-            });
-        std::array<node_t*, this->children_count()> match_try_begin = {};
-        detail::pre_order_impl it(&node, navigator, allocator);
-        int index     = -1;
-        auto do_match = [&](auto& child) {
-            node_t* current          = it.get_current_node();
-            match_try_begin[++index] = current;
-            if (current == nullptr) {
-                return child.info.matches_null;
-            }
-            while (current) {
-                it.increment();
-                if (child.match_node(*current)) {
-                    return true;
-                }
-                current = it.get_current_node();
-            }
-            return false;
-        };
-        auto do_rematch = [&](auto& child) -> bool {
-            it = detail::pre_order_impl(static_cast<node_t*>(child.target_node), navigator, allocator);
-            it.increment();
-            return do_match(child);
-        };
-        while (!back_apply(
-            // Function to invoke
-            [](auto&... nodes) {
-                return (... && call(nodes));
             },
-            // Using elements of tuple
-            this->children,
-            // Starting from index to the end
-            index)) {
-            // Do remath the previous child
-            single_apply(do_rematch, this->children, index - 1);
+            true);
+        // Each children has a pointer to the node where it started its match attempt, the last one is always nullptr
+        std::array<node_t*, sizeof...(Children) + 1> match_attempt_begin = {};
+        detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
+        unsigned current_child = 0;
+        auto do_match          = [&](auto&... nodes) {
+            if constexpr (sizeof...(nodes) > 0) {
+                auto logic = [&](auto& child) {
+                    ++current_child;
+                    node_t* current                        = target_it.get_current_node();
+                    match_attempt_begin[child.get_index()] = current;
+                    if (current == nullptr) {
+                        return child.info.matches_null;
+                    }
+                    while (current) {
+                        target_it.increment();
+                        if (child.match_node(*current)) {
+                            return true;
+                        }
+                        current = target_it.get_current_node();
+                    }
+                    return false;
+                };
+                return (... && logic(nodes));
+            } else {
+                return true;
+            }
+        };
+        /*
+         * Takes as input a child (from `this->children`) and calls the function containing the logic to rematch that
+         * child. Why multiple args then if we are only taking one argument? This lambda will be passed to the function
+         * `single_apply`, which invokes a callable (`do_rematch`) with an argument which is an element of the tuple at
+         * some index. Being that index a runtime entity, we must equipe our function with the ability to accept as
+         * argument any element from the tuple or no element at all. This is the reason to wrap the lambda containing
+         * the logic into another lambda accepting an arbitrary number of arguments (of any type). All the overloads
+         * are relevant at compile time but invariants garantee to never be called at runtime (thus assert(false)).
+         */
+        auto do_rematch = [&](auto&... args) {
+            if constexpr (sizeof...(args) == 1) {
+                // Logic to rematch the node
+                auto logic = [&](auto& child) -> bool {
+                    target_it
+                        = policy::pre_order()
+                              .get_instance(static_cast<node_t*>(child.target_node), navigator, allocator)
+                              .increment();
+                    // If the successive target node is the one where the next child started (and failed) its match attempt
+                    if (target_it.get_current_node() == match_attempt_begin[child.get_index() + 1]) {
+                        // Then his child failed to rematch so as to leave the next child with a potentially positive attempt
+                        return false;
+                    }
+                    return do_match(child);
+                };
+                return logic(args...);
+            } else {
+                assert(false); // This branch should never be traversed at runtime.
+                return false;
+            }
+        };
+        while (!back_apply(do_match, this->children, current_child)) {
+            --current_child; // Becuse do_match increments it always
+            while (current_child >= 0 && !single_apply(do_rematch, this->children, current_child)) {
+                --current_child;
+            }
         }
-        return false;
+        return current_child == this->children_count();
     }
 
     template <typename NodeAllocator>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iterator>    // std::iterator
-#include <type_traits> // std::conditional, std::enable_if
+#include <functional>  // mem_fn()
+#include <type_traits> // std::conditional_t, std::enable_if_t
 
 #include <TreeDS/node/binary_node.hpp>
 

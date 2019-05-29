@@ -3,7 +3,6 @@
 #include <memory> // std::allocator
 
 #include <TreeDS/basic_tree.hpp>
-#include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/viewer/binary_tree_view.hpp>
 #include <TreeDS/viewer/tree_view.hpp>
 

@@ -4,7 +4,6 @@
 
 #include <TreeDS/binary_tree.hpp>
 #include <TreeDS/node/nary_node.hpp>
-#include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
 
 namespace md {

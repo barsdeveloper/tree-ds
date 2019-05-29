@@ -9,8 +9,8 @@ namespace md {
 template <typename Node, typename Predicate>
 class node_pred_navigator {
 
-    template <typename, bool, typename>
-    friend class node_navigator;
+    template <typename, typename>
+    friend class node_pred_navigator;
 
     public:
     using node_type      = Node;
@@ -27,21 +27,31 @@ class node_pred_navigator {
             predicate() {
     }
 
+
     template <
         typename OtherNode, typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>>
     node_pred_navigator(const node_pred_navigator<OtherNode, Predicate>& other) :
             is_subtree(other.is_subtree),
-            root(const_cast<node_type*>(other.root)),
-            predicate(other.predicate) {
+            root(const_cast<node_type*>(other.root)) {
     }
 
-    template <
-        typename Pred = Predicate,
-        typename      = std::enable_if_t<std::is_same_v<Pred, Predicate> && !std::is_void_v<Pred>>>
-    node_pred_navigator(Node* root, Pred predicate, bool is_subtree = true) :
+    node_pred_navigator(Node* root, Predicate predicate, bool is_subtree = true) :
             is_subtree(is_subtree),
             root(root),
             predicate(predicate) {
+    }
+
+    node_pred_navigator operator=(const node_pred_navigator& other) {
+        return this->operator=<Node>(other);
+    }
+    
+    
+    template <
+        typename OtherNode, typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>>
+    node_pred_navigator operator=(const node_pred_navigator<OtherNode, Predicate>& other) {
+        this->is_subtree = other.is_subtree;
+        this->root = other.root;
+        return *this;
     }
 
     protected:
