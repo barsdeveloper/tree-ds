@@ -62,6 +62,27 @@ class pre_order_impl final
     Node* go_last_impl() {
         return this->navigator.get_highest_right_leaf();
     }
+
+    Node* depth_increment() {
+        bool found   = false;
+        Node* result = keep_calling(
+            // From
+            *this->current,
+            // Keep calling
+            [this](Node& node) {
+                return this->navigator.get_first_child(node);
+            },
+            // Until
+            [&](Node&, Node& child) {
+                found = true;
+                return !this->navigator.is_last_child(child);
+            },
+            // Then return
+            [this](Node&, Node& child) {
+                return &child;
+            });
+        return found ? result : nullptr;
+    }
 };
 
 } // namespace md::detail
