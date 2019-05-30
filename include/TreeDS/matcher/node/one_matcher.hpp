@@ -7,6 +7,7 @@
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/matcher/pattern.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
+#include <TreeDS/policy/siblings.hpp>
 
 namespace md {
 
@@ -31,8 +32,21 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
             return false;
         }
         // Match children of the pattern
-        auto node_supplier = one_matcher::get_children_supplier(node);
-        return this->match_children(node_supplier, allocator);
+        using node_t           = allocator_value_type<NodeAllocator>;
+        node_t* current_target = node.get_first_child();
+        auto do_match_child    = [&](auto& child) {
+            if (child.match_node(current_target, allocator)) {
+                return true;
+            }
+            while (current_target != nullptr) {
+                current_target = current_target->get_next_sibling();
+                if (child.match_node(current_target, allocator)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        return this->match_children(do_match_child);
     }
 
     template <typename NodeAllocator>

@@ -103,9 +103,7 @@ namespace detail {
         static constexpr decltype(auto) single_apply(F&& f, Tuple&& tuple, std::size_t index) {
             static_assert(Target > 0, "Requested index does not exist in the tuple.");
             if (index == Target - 1) {
-                if constexpr ((std::tuple_size_v<Tuple>) > 0) {
-                    return std::invoke(std::forward<F>(f), std::get<Target - 1>(tuple));
-                }
+                return std::invoke(std::forward<F>(f), std::get<Target - 1>(tuple));
             } else {
                 return element_apply_construction<Target - 1>::single_apply(
                     std::forward<F>(f),
@@ -130,10 +128,11 @@ namespace detail {
  */
 template <typename F, typename Tuple>
 decltype(auto) apply_at_index(F&& f, Tuple&& tuple, std::size_t index) {
-    return detail::element_apply_construction<
-        std::tuple_size_v<
-            std::remove_reference_t<
-                Tuple>>>::single_apply(std::forward<F>(f), std::forward<Tuple>(tuple), index);
+    constexpr std::size_t tuple_size = std::tuple_size_v<std::decay_t<Tuple>>;
+    return detail::element_apply_construction<tuple_size>::single_apply(
+        std::forward<F>(f),
+        std::forward<Tuple>(tuple),
+        index);
 }
 
 template <

@@ -63,7 +63,12 @@ class pre_order_impl final
         return this->navigator.get_highest_right_leaf();
     }
 
-    Node* depth_increment() {
+    // Used by any_matcher, please ignore
+    /**
+     * @brief Go in depth by traversing first children until a ramification is found.
+     * @return the first child {@b after} of the ramification's node
+     */
+    Node* go_depth_first_ramification() {
         bool found   = false;
         Node* result = keep_calling(
             // From

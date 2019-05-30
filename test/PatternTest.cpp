@@ -1,4 +1,5 @@
 #include <QtTest/QtTest>
+#include <stdexcept>
 #include <string>
 
 #include <TreeDS/match>
@@ -75,11 +76,14 @@ void PatternTest::simpleMatch() {
                 n(2),
                 n(3)))};
     binary_tree<int> result;
+    nary_tree<int> nary_result;
 
     pattern simple(one(1));
     QVERIFY(simple.match(tree1));
     simple.assign_result(result);
     QCOMPARE(result, n(1));
+    QVERIFY_EXCEPTION_THROWN(simple.assign_result(nary_result), std::invalid_argument);
+
     QVERIFY(simple.match(tree2));
     simple.assign_result(result);
     QCOMPARE(result, n(1));
@@ -90,42 +94,56 @@ void PatternTest::simpleMatch() {
     QVERIFY(simple2.match(tree1));
     simple2.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
+
     QVERIFY(simple2.match(tree2));
     simple2.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
 
     pattern simple3 {
-        cpt(one(1)(
-            cpt(capture_name<'b'>(), one(2))))};
+        one(1)(
+            one(3))};
     QVERIFY(simple3.match(tree1));
     simple3.assign_result(result);
-    QCOMPARE(result, n(1)(n(2)));
-    simple3.assign_capture(capture_index<1>(), result);
-    QCOMPARE(result, n(2));
-    simple3.assign_capture(capture_index<0>(), result);
-    QCOMPARE(result, n(1)(n(2)));
-    simple3.assign_capture(capture_name<'b'>(), result);
-    QCOMPARE(result, n(2));
+    QCOMPARE(result, n(1)(n(), n(3)));
+
+    QVERIFY(!simple3.match(tree2));
+    simple3.assign_result(result);
+    QCOMPARE(result, n());
 
     pattern simple4 {
+        cpt(one(1)(
+            cpt(capture_name<'b'>(), one(2))))};
+    QVERIFY(simple4.match(tree1));
+    simple4.assign_result(result);
+    QCOMPARE(result, n(1)(n(2)));
+    simple4.assign_capture(capture_index<1>(), result);
+    QCOMPARE(result, n(2));
+    simple4.assign_capture(capture_index<0>(), result);
+    QCOMPARE(result, n(1)(n(2)));
+    simple4.assign_capture(capture_name<'b'>(), result);
+    QCOMPARE(result, n(2));
+
+    pattern simple5 {
         one(true_matcher())(
             one(true_matcher()),
             one(3))};
-    QVERIFY(simple4.match(tree1));
-    simple4.assign_result(result);
+    QVERIFY(simple5.match(tree1));
+    simple5.assign_result(result);
     QCOMPARE(result, n(1)(n(2), n(3)));
-    QVERIFY(!simple4.match(tree2));
-    simple4.assign_result(result);
+
+    QVERIFY(!simple5.match(tree2));
+    simple5.assign_result(result);
     QCOMPARE(result, n());
 
-    pattern simple5 {
+    pattern simple6 {
         one(1)(
             one(2),
             cpt(capture_name<'t'>(), star(true_matcher())))};
-    QVERIFY(simple5.match(tree1));
+    QVERIFY(simple6.match(tree1));
     //simple5.assign_result(result);
     //QCOMPARE(result, n(1)(n(2), n(3)));
-    QVERIFY(simple5.match(tree2));
+
+    QVERIFY(simple6.match(tree2));
 }
 
 QTEST_MAIN(PatternTest);

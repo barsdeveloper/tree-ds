@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstddef>     // std::size_t
-#include <functional>  // std::function
-#include <type_traits> // std::is_convertible_v
+#include <type_traits> // std::is_same_v, std::is_convertible_v
 
 #include <TreeDS/matcher/utility.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
@@ -87,20 +86,26 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         }
     }
 
-    template <typename NodeSupplier, typename NodeAllocator>
-    bool match_children(NodeSupplier supplier, NodeAllocator& allocator) {
-        if constexpr (matcher::children_count() == 0) {
-            return true;
-        } else {
-            auto call = [&](auto&& node) {
-                return node.match_node(supplier(), allocator);
-            };
-            return std::apply(
-                [&](auto&... nodes) {
-                    return (... && call(nodes));
-                },
-                this->children);
+    template <typename MatchFunction, typename RematchFunction = std::nullptr_t>
+    bool match_children(MatchFunction do_match, RematchFunction do_rematch = nullptr) {
+        if constexpr (matcher::children_count() > 0) {
+            int current_child;
+            for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
+                if (!apply_at_index(do_match, this->children, current_child)) {
+                    if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
+                        return false;
+                    } else {
+                        while (--current_child >= 0) {
+                            if (apply_at_index(do_rematch, this->children, current_child)) {
+                                break; // We found a child that could rematch and leave the other children new nodes
+                            }
+                        }
+                    }
+                }
+            }
+            return current_child == this->children_count();
         }
+        return true;
     }
 
     template <typename NodeTargetSupplier, typename NodeAllocator>
@@ -139,8 +144,8 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     bool match_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
-        if (Derived::info.matches_null && node == nullptr) {
-            return true;
+        if (node == nullptr) {
+            return Derived::info.matches_null;
         }
         if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
             this->target_node = node;

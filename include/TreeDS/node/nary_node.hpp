@@ -302,12 +302,6 @@ class nary_node : public node<T, nary_node<T>> {
         return current;
     }
 
-    template <typename Allocator>
-    nary_node* shallow_copy_assign_child(const nary_node& child, Allocator&& allocator) {
-        assert(!child.is_root());
-        this->append_child(allocate(allocator, child->get_value()).release());
-    }
-
     public:
     bool is_last_child() const {
         return this->parent
@@ -370,8 +364,15 @@ class nary_node : public node<T, nary_node<T>> {
     std::size_t get_following_siblings() const {
         return this->following_siblings;
     }
+
     std::tuple<nary_node*, nary_node*> get_resources() {
         return std::make_tuple(this->first_child, this->next_sibling);
+    }
+
+    template <typename Allocator>
+    nary_node* shallow_copy_assign_child(const nary_node& child, Allocator&& allocator) {
+        assert(!child.is_root());
+        this->append_child(allocate(allocator, child.get_value()).release());
     }
 
     /*   ---   Compare egains itself   ---   */
