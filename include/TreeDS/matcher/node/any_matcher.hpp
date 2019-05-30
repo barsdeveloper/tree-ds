@@ -28,7 +28,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {(... && Children::info.matches_null), false};
+    static constexpr matcher_info_t info {true, false};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
@@ -50,7 +50,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             node_t* current                        = target_it.get_current_node();
             match_attempt_begin[child.get_index()] = current;
             if (current == nullptr) {
-                return child.info.matches_null;
+                return child.matches_null();
             }
             while (current) {
                 target_it.increment();
@@ -78,22 +78,9 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
-        using node_t     = allocator_value_type<NodeAllocator>;
-        auto frontier_it = this->frontier.cbegin();
-        unique_node_ptr<NodeAllocator> root;
-        if (this->matched_node != nullptr) {
-            root = allocate(allocator, static_cast<node_t*>(this->matched_node)->get_value());
-            this->allocate_subtree(root.get(), this->matched_node->get_first_child(), allocator, frontier_it);
+        auto target_node = this->get_target_node(allocator);
+        if constexpr (any_matcher::children_count() == 0) {
         }
-        return root;
-    }
-
-    template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> allocate_subtree(
-        typename NodeAllocator::value_type& target,
-        typename NodeAllocator::value_type* node,
-        NodeAllocator& allocator) {
-        return nullptr;
     }
 
     template <typename... Nodes>

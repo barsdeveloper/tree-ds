@@ -51,9 +51,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
-        unique_node_ptr<NodeAllocator> result = allocate(
-            allocator,
-            static_cast<allocator_value_type<NodeAllocator>*>(this->target_node)->get_value());
+        unique_node_ptr<NodeAllocator> result = this->get_target_node(allocator);
         this->attach_matched_children(
             [&]() {
                 return result.get();
