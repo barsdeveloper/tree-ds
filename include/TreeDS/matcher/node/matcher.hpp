@@ -68,10 +68,6 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     /*   ---   METHODS   ---   */
     protected:
-    static constexpr bool matches_null() {
-        return Derived::info.matches_null && (... && Children::matches_null());
-    }
-
     template <typename Node>
     static auto get_children_supplier(Node& target) {
         return [node = target.get_first_child()]() mutable -> Node* {
@@ -156,7 +152,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     template <typename NodeAllocator>
     bool match_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
         if (node == nullptr) {
-            return matcher::matches_null();
+            return Derived::info.matches_null;
         }
         if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
             this->target_node = node;

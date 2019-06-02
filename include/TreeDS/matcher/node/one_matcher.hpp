@@ -62,9 +62,9 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
 
     template <typename NodeAllocator>
     void attach_matched_impl(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
-        target.shallow_copy_assign_child(
+        target.allocate_assign_child(
             *static_cast<allocator_value_type<NodeAllocator>*>(this->target_node),
-            std::forward<NodeAllocator>(allocator));
+            allocator);
     }
 
     template <typename... Nodes>

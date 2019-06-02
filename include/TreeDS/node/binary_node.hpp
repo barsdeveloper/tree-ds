@@ -40,7 +40,15 @@ class binary_node : public node<T, binary_node<T>> {
             node<T, binary_node<T>>(other.value),
             left(other.left),
             right(other.right) {
-        other.move_resources_to(*this);
+        if (other.left) {
+            other.left->parent = this;
+        }
+        if (other.right) {
+            other.right->parent = this;
+        }
+        other.parent = nullptr;
+        other.left   = nullptr;
+        other.right  = nullptr;
     }
 
     /*   ---   Wide acceptance copy constructor using allocator   ---   */
@@ -49,11 +57,11 @@ class binary_node : public node<T, binary_node<T>> {
             node<T, binary_node<T>>(other.value),
             left(
                 other.left
-                    ? attach_children(allocate(allocator, *other.left, allocator).release())
+                    ? attach_child(allocate(allocator, *other.left, allocator).release())
                     : nullptr),
             right(
                 other.right
-                    ? attach_children(allocate(allocator, *other.right, allocator).release())
+                    ? attach_child(allocate(allocator, *other.right, allocator).release())
                     : nullptr) {
     }
 
@@ -70,7 +78,7 @@ class binary_node : public node<T, binary_node<T>> {
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
-        attach_children();
+        attach_child();
     }
 
     /*   ---   Emplacing from struct_node using allocator   ---   */
@@ -86,7 +94,7 @@ class binary_node : public node<T, binary_node<T>> {
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
         static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
-        attach_children();
+        attach_child();
     }
 
     ~binary_node() = default;
@@ -115,19 +123,6 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     protected:
-    /// Move the resources hold by this node to another node
-    void move_resources_to(binary_node& node) {
-        if (this->left) {
-            this->left->parent = &node;
-        }
-        if (this->right) {
-            this->right->parent = &node;
-        }
-        this->parent = nullptr;
-        this->left   = nullptr;
-        this->right  = nullptr;
-    }
-
     /// Discard this whole subtree and replace it with node
     void replace_with(binary_node* node) {
         assert(node == nullptr || node->is_root());
@@ -138,7 +133,7 @@ class binary_node : public node<T, binary_node<T>> {
                 this->parent->right = node;
             }
             if (node != nullptr) {
-                this->parent->attach_children(node);
+                this->parent->attach_child(node);
             }
             this->parent = nullptr;
         }
@@ -151,7 +146,7 @@ class binary_node : public node<T, binary_node<T>> {
                 this->left  = nullptr;
             }
             if (this->left == nullptr) {
-                return this->left = this->attach_children(node);
+                return this->left = this->attach_child(node);
             }
         }
         return nullptr;
@@ -164,19 +159,19 @@ class binary_node : public node<T, binary_node<T>> {
                 this->right = nullptr;
             }
             if (this->right == nullptr) {
-                return this->right = this->attach_children(node);
+                return this->right = this->attach_child(node);
             }
         }
         return nullptr;
     }
 
-    binary_node* attach_children(binary_node* node) {
+    binary_node* attach_child(binary_node* node) {
         assert(node != nullptr);
         node->parent = this;
         return node;
     }
 
-    void attach_children() {
+    void attach_child() {
         if (left != nullptr) {
             left->parent = this;
         }
@@ -331,21 +326,27 @@ class binary_node : public node<T, binary_node<T>> {
         return std::make_tuple(this->left, this->right);
     }
 
-    long hash_code() const;
+    binary_node* assign_child_like(binary_node& child, const binary_node& reference_child) {
+        binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
+        assert(target == nullptr);
+        target = &child;
+        return this->attach_child(&child);
+    }
 
     template <typename Allocator>
-    binary_node* shallow_copy_assign_child(const binary_node& child, Allocator&& allocator) {
-        assert(!child.is_root());
-        auto copy = allocate(allocator, child.get_value());
-        if (child.is_left_child()) {
-            assert(!this->has_left_child());
-            this->left = copy.release();
-            return this->attach_children(this->left);
-        } else {
-            assert(!this->has_right_child());
-            this->right = copy.release();
-            return this->attach_children(this->right);
-        }
+    binary_node* allocate_assign_child(const binary_node& reference_child, Allocator& allocator) {
+        assert(!reference_child.is_root());
+        return this->assign_child_like(
+            *allocate(allocator, reference_child.get_value()).release(),
+            reference_child);
+    }
+
+    template <typename Allocator>
+    unique_node_ptr<Allocator> allocate_assign_parent(const binary_node& reference_copy, Allocator& allocator) {
+        assert(!reference_copy.is_root());
+        auto parent = allocate(allocator, reference_copy.get_parent()->get_value());
+        parent->assign_child(*this, reference_copy);
+        return std::move(parent);
     }
 
     bool operator==(const binary_node& other) const {
@@ -416,6 +417,8 @@ class binary_node : public node<T, binary_node<T>> {
         // All the possible false cases were tested, then it's true
         return true;
     }
+
+    long hash_code() const;
 
 }; // namespace ds
 

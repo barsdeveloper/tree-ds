@@ -28,12 +28,32 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {true, false};
+    static constexpr matcher_info_t info {(... && Children::info.matches_null), false};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
 
     /*   ---   METHODS   ---   */
+    private:
+    template <typename NodeAllocator, typename CheckNode>
+    static void keep_assigning_children(
+        allocator_value_type<NodeAllocator>& target,
+        const allocator_value_type<NodeAllocator>& reference,
+        NodeAllocator& allocator,
+        CheckNode&& check_function) {
+        using node_t        = allocator_value_type<NodeAllocator>;
+        const node_t* child = reference.get_first_child();
+        while (child != nullptr) {
+            if (!check_function(*child)) {
+                continue;
+            }
+            node_t* new_target = target.allocate_assign_child(*child, allocator);
+            keep_assigning_children(*new_target, *child, allocator, check_function);
+            child = child->get_next_sibling();
+        }
+    }
+
+    public:
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         using node_t = allocator_value_type<NodeAllocator>;
@@ -78,8 +98,50 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
-        auto target_node = this->get_target_node(allocator);
         if constexpr (any_matcher::children_count() == 0) {
+            if constexpr (Quantifier == quantifier::RELUCTANT) {
+                return nullptr;
+            } else if constexpr (Quantifier == quantifier::DEFAULT) {
+                return this->get_target_node(allocator);
+            } else {
+                using node_t = allocator_value_type<NodeAllocator>;
+                unique_node_ptr<NodeAllocator> node(this->get_target_node(allocator));
+                any_matcher::keep_assigning_children(
+                    *node,
+                    *static_cast<node_t*>(this->target_node),
+                    allocator,
+                    [this](const node_t& check) {
+                        return this->match_value(check.get_value());
+                    });
+            }
+        } else {
+            using node_t = allocator_value_type<NodeAllocator>;
+            if constexpr (Quantifier == quantifier::RELUCTANT) {
+                unique_node_ptr<NodeAllocator> result(this->get_target_node(allocator));
+                std::unordered_map<node_t*, node_t*> already_cloned {};
+                auto call = [](auto& child) {
+                    node_t* parent = static_cast<node_t*>(child.target_node);
+                    auto target_it = already_cloned.find(parent);
+                    if (target_it != already_cloned.end()) {
+                        // TODO continue
+                    }
+                };
+                for (std::size_t current_child = 0; current_child < any_matcher::children_count(); ++current_child) {
+                    apply_at_index(assign_target, this->children, current_child);
+                }
+            } else if constexpr (Quantifier == quantifier::DEFAULT) {
+                return this->get_target_node(allocator);
+            } else {
+                using node_t = allocator_value_type<NodeAllocator>;
+                unique_node_ptr<NodeAllocator> node(this->get_target_node(allocator));
+                any_matcher::keep_assigning_children(
+                    *node,
+                    *static_cast<node_t*>(this->target_node),
+                    allocator,
+                    [this](const node_t& check) {
+                        return this->match_value(check.get_value());
+                    });
+            }
         }
     }
 
