@@ -1,4 +1,5 @@
 #include <QtTest/QtTest>
+#include <sstream> // std::stringstream
 
 #include <TreeDS/tree>
 
@@ -54,6 +55,22 @@ void TreeTest::naryTree() {
                        n('i')(
                            n('l')),
                        n('j')))))); // No 'k'
+    stringstream stream;
+    stream << tree;
+    QCOMPARE(
+        stream.str(),
+        string(
+            "n('a')(\n"
+            "    n('b')(\n"
+            "        n('d'),\n"
+            "        n('e')(\n"
+            "            n('h')),\n"
+            "        n('f')),\n"
+            "    n('c')(\n"
+            "        n('g')(\n"
+            "            n('i')(\n"
+            "                n('l')),\n"
+            "            ...)))"));
 
     vector<char> expected {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
     vector<char> actual(tree.begin(), tree.end());

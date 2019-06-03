@@ -1,4 +1,5 @@
 #include <QtTest/QtTest>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -138,10 +139,11 @@ void PatternTest::simpleMatch() {
     pattern simple6 {
         one(1)(
             one(2),
-            cpt(capture_name<'t'>(), star(true_matcher())))};
+            cpt(capture_name<'t'>(), star<quantifier::RELUCTANT>(true_matcher())))};
     QVERIFY(simple6.match(tree1));
-    //simple5.assign_result(result);
-    //QCOMPARE(result, n(1)(n(2), n(3)));
+    simple5.assign_result(result);
+    std::cout << result;
+    // QCOMPARE(result, n(1)(n(2), n(3)));
 
     QVERIFY(simple6.match(tree2));
 }

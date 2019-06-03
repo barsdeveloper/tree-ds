@@ -1,15 +1,17 @@
 #pragma once
 
 #include <cassert> // assert
+#include <iomanip> // std::setw()
 #include <memory>  // std::unique_ptr
-#include <tuple>   // std::make_tuple()
-#include <type_traits>
-#include <utility> // std::move(), std::forward()
-#include <variant>
+#include <ostream>
+#include <tuple>       // std::make_tuple()
+#include <type_traits> //std::enable_if_t
+#include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/node/node.hpp>
 #include <TreeDS/node/struct_node.hpp>
+#include <TreeDS/utility.hpp>
 
 namespace md {
 
@@ -334,7 +336,7 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     template <typename Allocator>
-    binary_node* allocate_assign_child(const binary_node& reference_child, Allocator& allocator) {
+    binary_node* allocate_assign_child(Allocator& allocator, const binary_node& reference_child) {
         assert(!reference_child.is_root());
         return this->assign_child_like(
             *allocate(allocator, reference_child.get_value()).release(),
@@ -342,7 +344,7 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     template <typename Allocator>
-    unique_node_ptr<Allocator> allocate_assign_parent(const binary_node& reference_copy, Allocator& allocator) {
+    unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const binary_node& reference_copy) {
         assert(!reference_copy.is_root());
         auto parent = allocate(allocator, reference_copy.get_parent()->get_value());
         parent->assign_child(*this, reference_copy);
@@ -419,7 +421,6 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     long hash_code() const;
-
 }; // namespace ds
 
 // TODO: replace as soon as space ship operator (<=>) is available

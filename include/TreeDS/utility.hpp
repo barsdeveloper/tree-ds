@@ -1,8 +1,11 @@
 #pragma once
 
-#include <cassert>     // assert
-#include <cstddef>     // std::size_t
-#include <functional>  // std::invoke()
+#include <cassert>    // assert
+#include <cstddef>    // std::size_t
+#include <functional> // std::invoke()
+#include <iostream>   // std::cout
+#include <string>
+#include <string_view>
 #include <tuple>       // std::std::make_from_tuple
 #include <type_traits> // std::std::enable_if_t, std::is_invocable_v, std::void_t
 #include <utility>     // std::declval(), std::make_index_sequence
@@ -194,5 +197,77 @@ template <
     auto... A,
     auto... B>
 constexpr bool is_same_template<T<A...>, T<B...>> = true;
+
+template <typename T, typename = void>
+constexpr bool is_printable = false;
+
+template <typename T>
+constexpr bool is_printable<T, std::void_t<decltype(std::declval<decltype(std::cout)>() << std::declval<T>())>> = true;
+
+void code_like_print(std::ostream& stream) {
+    stream << "n()";
+}
+
+void code_like_print(std::ostream& stream, char c) {
+    stream << '\'' << c << '\'';
+}
+
+void code_like_print(std::ostream& stream, const char* c) {
+    stream << '\"' << c << '\"';
+}
+
+void code_like_print(std::ostream& stream, const std::string& c) {
+    stream << '\"' << c << '\"';
+}
+
+void code_like_print(std::ostream& stream, std::string_view c) {
+    stream << '\"' << c << '\"';
+}
+
+template <typename T>
+void code_like_print(std::ostream& stream, const T& c) {
+    stream << c;
+}
+
+struct print_preferences {
+    unsigned indentation_increment = 4;
+    int limit                      = 10;
+};
+
+template <typename Node>
+void print_node(
+    std::ostream& os,
+    const Node& node,
+    unsigned indentation,
+    print_preferences&& preferences = {}) {
+    if (preferences.limit <= 0) {
+        return;
+    }
+    os << std::string(indentation, ' ') << "n(";
+    code_like_print(os, node.get_value());
+    os << ')';
+    const Node* current = node.get_first_child();
+    if (current) {
+        os << "(\n";
+        if (--preferences.limit > 0) {
+            print_node(os, *current, indentation + preferences.indentation_increment, std::move(preferences));
+            for (
+                current = current->get_next_sibling();
+                current != nullptr;
+                current = current->get_next_sibling()) {
+                os << ",\n";
+                if (--preferences.limit > 0) {
+                    print_node(os, *current, indentation + preferences.indentation_increment, std::move(preferences));
+                } else {
+                    os << std::string(indentation + preferences.indentation_increment, ' ') << "...";
+                    break;
+                }
+            }
+        } else {
+            os << std::string(indentation + 4, ' ') << "...";
+        }
+        os << ")";
+    }
+}
 
 } // namespace md

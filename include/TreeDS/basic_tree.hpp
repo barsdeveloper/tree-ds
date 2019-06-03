@@ -26,6 +26,7 @@
 #include <iterator> // std::make_reverse_iterator
 #include <limits>   // std::numeric_limits
 #include <memory>   // std::unique_ptr, std::allocator_traits
+#include <ostream>  // std::ostream
 
 #include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/policy/breadth_first.hpp>
@@ -350,28 +351,33 @@ bool operator!=(const struct_node<ConvertibleT, Children...>& lhs, const basic_t
 }
 
 // empty struct_node
-template <
-    typename Node,
-    typename Policy,
-    typename Allocator>
+template <typename Node, typename Policy, typename Allocator>
 bool operator==(const struct_node<detail::empty_t>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
     return rhs.operator==(lhs);
 }
 
-template <
-    typename Node,
-    typename Policy,
-    typename Allocator>
+template <typename Node, typename Policy, typename Allocator>
 bool operator!=(const basic_tree<Node, Policy, Allocator>& lhs, const struct_node<detail::empty_t>& rhs) {
     return !lhs.operator==(rhs);
+}
+
+template <typename Node, typename Policy, typename Allocator>
+bool operator!=(const struct_node<detail::empty_t>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
+    return !rhs.operator==(lhs);
 }
 
 template <
     typename Node,
     typename Policy,
-    typename Allocator>
-bool operator!=(const struct_node<detail::empty_t>& lhs, const basic_tree<Node, Policy, Allocator>& rhs) {
-    return !rhs.operator==(lhs);
+    typename Allocator,
+    typename = std::enable_if<is_printable<decltype(std::declval<Node>().get_value())>>>
+std::ostream& operator<<(std::ostream& os, const basic_tree<Node, Policy, Allocator>& tree) {
+    if (tree.get_raw_root()) {
+        print_node(os, *tree.get_raw_root(), 0u);
+    } else {
+        code_like_print(os);
+    }
+    return os;
 }
 
 } // namespace md

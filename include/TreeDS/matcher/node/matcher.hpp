@@ -37,7 +37,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     std::size_t steps   = 1;
-    void* target_node   = nullptr;
+    void* referred_node = nullptr;
     captures_t captures = std::tuple_cat(
         [&]() {
             if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
@@ -63,7 +63,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
      */
     matcher(const matcher& other) :
             struct_node<ValueMatcher, Children...>(other),
-            target_node(other.target_node) {
+            referred_node(other.referred_node) {
     }
 
     /*   ---   METHODS   ---   */
@@ -119,7 +119,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         if constexpr (matcher::children_count() > 0) {
             auto* target = target_supplier();
             auto call    = [&](auto&& node) {
-                if (node.target_node != nullptr) {
+                if (node.referred_node != nullptr) {
                     node.attach_matched(*target, allocator);
                     target = target_supplier(); // Current target was managed, go to the next one
                 }
@@ -134,14 +134,19 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     protected:
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_target_node(NodeAllocator& allocator) const {
+    allocator_value_type<NodeAllocator>* get_referred_node(NodeAllocator&) const {
+        return static_cast<allocator_value_type<NodeAllocator>*>(this->referred_node);
+    }
+
+    template <typename NodeAllocator>
+    unique_node_ptr<NodeAllocator> clone_referred_node(NodeAllocator& allocator) const {
         using node_t = allocator_value_type<NodeAllocator>;
-        return allocate(allocator, static_cast<node_t*>(this->target_node)->get_value());
+        return allocate(allocator, this->get_referred_node(allocator)->get_value());
     }
 
     public:
     void reset() {
-        this->target_node = nullptr;
+        this->referred_node = nullptr;
         std::apply(
             [](auto&... child) {
                 (..., child.reset());
@@ -155,7 +160,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             return Derived::info.matches_null;
         }
         if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
-            this->target_node = node;
+            this->referred_node = node;
             return true;
         }
         return false;
@@ -169,7 +174,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> get_matched_node(NodeAllocator& allocator) {
-        if (this->target_node == nullptr) {
+        if (this->referred_node == nullptr) {
             return nullptr;
         }
         return static_cast<Derived*>(this)->get_matched_node_impl(allocator);
@@ -195,7 +200,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     void attach_matched(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
-        if (this->target_node == nullptr) {
+        if (this->referred_node == nullptr) {
             return;
         }
         return static_cast<Derived*>(this)->attach_matched_impl(target, allocator);
