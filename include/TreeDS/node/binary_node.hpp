@@ -148,10 +148,10 @@ class binary_node : public node<T, binary_node<T>> {
                 this->left  = nullptr;
             }
             if (this->left == nullptr) {
-                return this->left = this->attach_child(node);
+                this->left = this->attach_child(node);
             }
         }
-        return nullptr;
+        return node;
     }
 
     binary_node* append_child(binary_node* node) {
@@ -328,19 +328,13 @@ class binary_node : public node<T, binary_node<T>> {
         return std::make_tuple(this->left, this->right);
     }
 
-    binary_node* assign_child_like(binary_node& child, const binary_node& reference_child) {
+    template <typename Allocator>
+    binary_node* assign_child_like(unique_node_ptr<Allocator> child, const binary_node& reference_child) {
+        assert(child);
         binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
         assert(target == nullptr);
-        target = &child;
-        return this->attach_child(&child);
-    }
-
-    template <typename Allocator>
-    binary_node* allocate_assign_child(Allocator& allocator, const binary_node& reference_child) {
-        assert(!reference_child.is_root());
-        return this->assign_child_like(
-            *allocate(allocator, reference_child.get_value()).release(),
-            reference_child);
+        target = child.release();
+        return this->attach_child(target);
     }
 
     template <typename Allocator>

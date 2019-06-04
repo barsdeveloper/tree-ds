@@ -37,14 +37,9 @@ class capture_node : public matcher<capture_node<Name, Captured>, Name, Captured
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
+    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
         // Node retrieval is delegated to the captured pattern
-        return std::get<0>(this->children).get_matched_node(allocator);
-    }
-
-    template <typename NodeAllocator>
-    void attach_matched_impl(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
-        return std::get<0>(this->children).attach_matched(target, allocator);
+        return std::get<0>(this->children).result(allocator);
     }
 
     public:

@@ -87,7 +87,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(MatchFunction do_match, RematchFunction do_rematch = nullptr) {
+    bool match_children(MatchFunction& do_match, RematchFunction do_rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
@@ -108,43 +108,21 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         return true;
     }
 
-    template <typename NodeTargetSupplier, typename NodeAllocator>
-    void attach_matched_children(NodeTargetSupplier target_supplier, NodeAllocator& allocator) {
-        // Check that NodeTargetSupplier is some callable that returns a (not null) pointer to node
-        static_assert(
-            std::is_convertible_v<
-                NodeTargetSupplier,
-                std::function<allocator_value_type<NodeAllocator>*()>>,
-            "Argument target_supplier must be a callable that returns a (possibly null) pointer to node type.");
-        if constexpr (matcher::children_count() > 0) {
-            auto* target = target_supplier();
-            auto call    = [&](auto&& node) {
-                if (node.referred_node != nullptr) {
-                    node.attach_matched(*target, allocator);
-                    target = target_supplier(); // Current target was managed, go to the next one
-                }
-            };
-            std::apply(
-                [&](auto&... nodes) {
-                    (..., call(nodes));
-                },
-                this->children);
-        }
+    public:
+    bool empty() const {
+        return this->referred_node == nullptr;
     }
 
-    protected:
     template <typename NodeAllocator>
-    allocator_value_type<NodeAllocator>* get_referred_node(NodeAllocator&) const {
+    allocator_value_type<NodeAllocator>* get_node(NodeAllocator&) const {
         return static_cast<allocator_value_type<NodeAllocator>*>(this->referred_node);
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> clone_referred_node(NodeAllocator& allocator) const {
-        using node_t = allocator_value_type<NodeAllocator>;
-        return allocate(allocator, this->get_referred_node(allocator)->get_value());
+    unique_node_ptr<NodeAllocator> clone_node(NodeAllocator& allocator) const {
+        return allocate(allocator, this->get_node(allocator)->get_value());
     }
 
-    public:
     void reset() {
         this->referred_node = nullptr;
         std::apply(
@@ -173,21 +151,21 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node(NodeAllocator& allocator) {
+    unique_node_ptr<NodeAllocator> result(NodeAllocator& allocator) {
         if (this->referred_node == nullptr) {
             return nullptr;
         }
-        return static_cast<Derived*>(this)->get_matched_node_impl(allocator);
+        return static_cast<Derived*>(this)->result_impl(allocator);
     }
 
     template <std::size_t Index, typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_captured_node(capture_index<Index>, NodeAllocator& allocator) {
+    unique_node_ptr<NodeAllocator> marked_result(capture_index<Index>, NodeAllocator& allocator) {
         static_assert(Index < std::tuple_size_v<captures_t>, "There is no capture with the index requested.");
-        return std::get<Index>(this->captures).get_matched_node(allocator);
+        return std::get<Index>(this->captures).result(allocator);
     }
 
     template <char... Name, typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_captured_node(capture_name<Name...>, NodeAllocator& allocator) {
+    unique_node_ptr<NodeAllocator> marked_result(capture_name<Name...>, NodeAllocator& allocator) {
         static_assert(
             sizeof...(Name) > 0,
             "Capture's name must be not empty. For example capture_name<'a'> is OK, while capture_name<> is not.");
@@ -195,18 +173,10 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             detail::is_valid_name<capture_name<Name...>, captures_t>,
             "There is no capture with the name requested.");
         constexpr std::size_t index = detail::index_of_capture<capture_name<Name...>, captures_t>;
-        return std::get<index>(this->captures).get_matched_node(allocator);
+        return std::get<index>(this->captures).result(allocator);
     }
 
-    template <typename NodeAllocator>
-    void attach_matched(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
-        if (this->referred_node == nullptr) {
-            return;
-        }
-        return static_cast<Derived*>(this)->attach_matched_impl(target, allocator);
-    }
-
-    constexpr std::size_t capture_size() const {
+    constexpr std::size_t mark_count() const {
         return std::tuple_size_v<captures_t>;
     }
 

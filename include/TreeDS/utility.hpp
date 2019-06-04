@@ -106,7 +106,7 @@ namespace detail {
         static constexpr decltype(auto) single_apply(F&& f, Tuple&& tuple, std::size_t index) {
             static_assert(Target > 0, "Requested index does not exist in the tuple.");
             if (index == Target - 1) {
-                return std::invoke(std::forward<F>(f), std::get<Target - 1>(tuple));
+                return f(std::get<Target - 1>(tuple));
             } else {
                 return element_apply_construction<Target - 1>::single_apply(
                     std::forward<F>(f),
@@ -121,7 +121,7 @@ namespace detail {
         static constexpr decltype(auto) single_apply(F&& f, Tuple&& tuple, std::size_t) {
             assert(false);
             // This return is just for return type deduction
-            return std::invoke(std::forward<F>(f), std::get<0>(tuple));
+            return f(std::get<0>(tuple));
         }
     };
 } // namespace detail

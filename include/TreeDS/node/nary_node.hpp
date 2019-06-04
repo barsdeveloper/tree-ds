@@ -258,9 +258,8 @@ class nary_node : public node<T, nary_node<T>> {
                 current->following_siblings += 1u;
                 current = current->next_sibling;
             } while (current != nullptr);
-            return this->last_child;
         }
-        return nullptr;
+        return node;
     }
 
     template <typename Node>
@@ -370,9 +369,17 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     template <typename Allocator>
-    nary_node* shallow_copy_assign_child(const nary_node& child, Allocator&& allocator) {
-        assert(!child.is_root());
-        this->append_child(allocate(allocator, child.get_value()).release());
+    nary_node* assign_child_like(unique_node_ptr<Allocator> child, const nary_node&) {
+        assert(child);
+        return this->append_child(child.release);
+    }
+
+    template <typename Allocator>
+    unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const nary_node& reference_copy) {
+        assert(!reference_copy.is_root());
+        auto parent = allocate(allocator, reference_copy.get_parent()->get_value());
+        parent->append_child(this);
+        return std::move(parent);
     }
 
     /*   ---   Compare egains itself   ---   */

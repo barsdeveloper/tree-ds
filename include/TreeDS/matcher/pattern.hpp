@@ -57,7 +57,7 @@ class pattern {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }
-        tree = pattern_tree.get_matched_node(tree.allocator);
+        tree = pattern_tree.result(tree.allocator);
     }
 
     template <std::size_t Index, typename Node, typename Policy, typename Allocator>
@@ -66,7 +66,7 @@ class pattern {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }
-        tree = pattern_tree.get_captured_node(index, tree.allocator);
+        tree = pattern_tree.marked_result(index, tree.allocator);
     }
 
     template <char... Name, typename Node, typename Policy, typename Allocator>
@@ -75,11 +75,11 @@ class pattern {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }
-        tree = pattern_tree.get_captured_node(name, tree.allocator);
+        tree = pattern_tree.marked_result(name, tree.allocator);
     }
 
     std::size_t size() const {
-        return this->pattern_tree.capture_size();
+        return this->pattern_tree.mark_count();
     }
 };
 

@@ -32,39 +32,44 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
             return false;
         }
         // Match children of the pattern
-        using node_t           = allocator_value_type<NodeAllocator>;
-        node_t* current_target = node.get_first_child();
-        auto do_match_child    = [&](auto& child) {
-            if (child.match_node(current_target, allocator)) {
-                return true;
-            }
-            while (current_target != nullptr) {
-                current_target = current_target->get_next_sibling();
+        auto do_match_child = [&, current_target = node.get_first_child()](auto& child) mutable {
+            bool result = [&]() {
                 if (child.match_node(current_target, allocator)) {
                     return true;
                 }
+                while (current_target != nullptr) {
+                    current_target = current_target->get_next_sibling();
+                    if (child.match_node(current_target, allocator)) {
+                        return true;
+                    }
+                }
+                return false;
+            }();
+            // Advanced current_target to the next sibling
+            if (current_target) {
+                current_target = current_target->get_next_sibling();
             }
-            return false;
+            return result;
         };
         return this->match_children(do_match_child);
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
-        unique_node_ptr<NodeAllocator> result = this->clone_referred_node(allocator);
-        this->attach_matched_children(
-            [&]() {
-                return result.get();
+    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
+        unique_node_ptr<NodeAllocator> result = this->clone_node(allocator);
+        auto attach_child                     = [&](auto& child) {
+            if (!child.empty()) {
+                result->assign_child_like(
+                    child.clone_node(allocator),
+                    *child.get_node(allocator));
+            }
+        };
+        std::apply(
+            [&](auto&... children) {
+                (..., attach_child(children));
             },
-            allocator);
+            this->children);
         return std::move(result);
-    }
-
-    template <typename NodeAllocator>
-    void attach_matched_impl(allocator_value_type<NodeAllocator>& target, NodeAllocator& allocator) {
-        target.allocate_assign_child(
-            allocator,
-            *static_cast<allocator_value_type<NodeAllocator>*>(this->referred_node));
     }
 
     template <typename... Nodes>
