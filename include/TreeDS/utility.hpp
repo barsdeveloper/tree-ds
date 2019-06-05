@@ -22,6 +22,72 @@ class nary_node;
 template <typename>
 class node_navigator;
 
+template <
+    typename T,
+    typename Tuple,
+    typename = void>
+constexpr bool is_constructible_from_tuple = false;
+
+template <
+    typename T,
+    typename Tuple>
+constexpr bool is_constructible_from_tuple<
+    T,
+    Tuple,
+    std::enable_if_t<
+        std::is_invocable_v<
+            std::make_from_tuple<T>,
+            const Tuple&>>> = true;
+
+template <typename Policy, typename = void>
+constexpr bool is_tag_of_policy = false;
+
+template <typename Policy>
+constexpr bool is_tag_of_policy<
+    Policy,
+    std::void_t<
+        decltype(
+            std::declval<Policy>()
+                .template get_instance<
+                    binary_node<int>,
+                    node_navigator<binary_node<int>>,
+                    std::allocator<binary_node<int>>>(
+                    std::declval<binary_node<int>*>(),
+                    std::declval<node_navigator<binary_node<int>>>(),
+                    std::declval<std::allocator<int>>())),
+        Policy>> = true;
+
+// Check method Type::get_resources() exists
+template <typename Type, typename = void>
+constexpr bool holds_resources = false;
+
+template <typename Type>
+constexpr bool holds_resources<
+    Type,
+    std::void_t<decltype(std::declval<Type>().get_resources())>> = true;
+
+// Check if two types are instantiation of the same template
+template <typename T, typename U>
+constexpr bool is_same_template = std::is_same_v<T, U>;
+
+template <
+    template <typename...> class T,
+    typename... A,
+    typename... B>
+constexpr bool is_same_template<T<A...>, T<B...>> = true;
+
+template <
+    template <auto...> class T,
+    auto... A,
+    auto... B>
+constexpr bool is_same_template<T<A...>, T<B...>> = true;
+
+template <typename T, typename = void>
+constexpr bool is_printable = false;
+
+template <typename T>
+constexpr bool is_printable<T, std::void_t<decltype(std::declval<decltype(std::cout)>() << std::declval<T>())>> = true;
+
 namespace detail {
     struct empty_t {};
 } // namespace detail
@@ -131,78 +197,13 @@ namespace detail {
  */
 template <typename F, typename Tuple>
 decltype(auto) apply_at_index(F&& f, Tuple&& tuple, std::size_t index) {
+    static_assert(is_same_template<std::decay_t<Tuple>, std::tuple<>>, "Expected the second argument to be a tuple.");
     constexpr std::size_t tuple_size = std::tuple_size_v<std::decay_t<Tuple>>;
     return detail::element_apply_construction<tuple_size>::single_apply(
         std::forward<F>(f),
         std::forward<Tuple>(tuple),
         index);
 }
-
-template <
-    typename T,
-    typename Tuple,
-    typename = void>
-constexpr bool is_constructible_from_tuple = false;
-
-template <
-    typename T,
-    typename Tuple>
-constexpr bool is_constructible_from_tuple<
-    T,
-    Tuple,
-    std::enable_if_t<
-        std::is_invocable_v<
-            std::make_from_tuple<T>,
-            const Tuple&>>> = true;
-
-template <typename Policy, typename = void>
-constexpr bool is_tag_of_policy = false;
-
-template <typename Policy>
-constexpr bool is_tag_of_policy<
-    Policy,
-    std::void_t<
-        decltype(
-            std::declval<Policy>()
-                .template get_instance<
-                    binary_node<int>,
-                    node_navigator<binary_node<int>>,
-                    std::allocator<binary_node<int>>>(
-                    std::declval<binary_node<int>*>(),
-                    std::declval<node_navigator<binary_node<int>>>(),
-                    std::declval<std::allocator<int>>())),
-        Policy>> = true;
-
-// Check method Type::get_resources() exists
-template <typename Type, typename = void>
-constexpr bool holds_resources = false;
-
-template <typename Type>
-constexpr bool holds_resources<
-    Type,
-    std::void_t<decltype(std::declval<Type>().get_resources())>> = true;
-
-// Check if two types are instantiation of the same template
-template <typename T, typename U>
-constexpr bool is_same_template = std::is_same_v<T, U>;
-
-template <
-    template <typename...> class T,
-    typename... A,
-    typename... B>
-constexpr bool is_same_template<T<A...>, T<B...>> = true;
-
-template <
-    template <auto...> class T,
-    auto... A,
-    auto... B>
-constexpr bool is_same_template<T<A...>, T<B...>> = true;
-
-template <typename T, typename = void>
-constexpr bool is_printable = false;
-
-template <typename T>
-constexpr bool is_printable<T, std::void_t<decltype(std::declval<decltype(std::cout)>() << std::declval<T>())>> = true;
 
 void code_like_print(std::ostream& stream) {
     stream << "n()";

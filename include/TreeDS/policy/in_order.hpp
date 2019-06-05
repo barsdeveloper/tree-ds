@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits> // std::is_same_v
 
-#include <TreeDS/policy/basic_policy.hpp>
+#include <TreeDS/policy/policy_base.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md {
@@ -13,7 +13,9 @@ namespace detail {
 
     template <typename Node, typename NodeNavigator, typename Allocator, typename = void>
     class in_order_impl {
-        static_assert(!std::is_same_v<Node, binary_node<std::nullptr_t>>, "In_order iteration policy is implemented only for binary_tree");
+        static_assert(
+            !std::is_same_v<Node, binary_node<std::nullptr_t>>,
+            "In_order iteration policy is implemented only for binary_tree");
     };
 
     template <typename Node, typename NodeNavigator, typename Allocator>
@@ -23,12 +25,10 @@ namespace detail {
         Allocator,
         std::enable_if_t<is_same_template<std::decay_t<Node>, binary_node<std::nullptr_t>>>>
         final
-            : public basic_policy<in_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
-
-        using super = basic_policy<in_order_impl, Node, NodeNavigator, Allocator>;
+            : public policy_base<in_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
 
         public:
-        using basic_policy<in_order_impl, Node, NodeNavigator, Allocator>::basic_policy;
+        using policy_base<in_order_impl, Node, NodeNavigator, Allocator>::policy_base;
 
         Node* increment_impl() {
             Node* right = this->navigator.get_right_child(*this->current);

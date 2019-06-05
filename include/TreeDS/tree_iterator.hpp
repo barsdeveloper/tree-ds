@@ -8,7 +8,7 @@
 namespace md {
 
 template <typename, typename, typename>
-class basic_tree;
+class tree_base;
 
 template <typename, typename, typename>
 class tree;
@@ -21,7 +21,7 @@ class tree_iterator {
 
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename>
-    friend class basic_tree;
+    friend class tree_base;
 
     template <typename, typename, typename>
     friend class tree;

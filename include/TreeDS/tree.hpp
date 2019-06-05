@@ -7,11 +7,11 @@
 #include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/allocator_utility.hpp>
-#include <TreeDS/basic_tree.hpp>
 #include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/policy/pre_order.hpp>
+#include <TreeDS/tree_base.hpp>
 #include <TreeDS/tree_iterator.hpp>
 
 namespace md {
@@ -38,7 +38,7 @@ template <
     typename Node,
     typename Policy,
     typename Allocator>
-class tree : public basic_tree<Node, Policy, Allocator> {
+class tree : public tree_base<Node, Policy, Allocator> {
 
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename>
@@ -47,7 +47,7 @@ class tree : public basic_tree<Node, Policy, Allocator> {
     public:
     /*   ---   TYPES   ---   */
     DECLARE_TREEDS_TYPES(Node, Policy, Allocator)
-    using super = basic_tree<Node, Policy, Allocator>;
+    using super = tree_base<Node, Policy, Allocator>;
 
     /*   ---   VALIDATION   ---   */
     static_assert(
@@ -175,7 +175,7 @@ class tree : public basic_tree<Node, Policy, Allocator> {
 
     // Any other policy copy assignment
     template <typename OtherPolicy>
-    tree& operator=(const basic_tree<Node, OtherPolicy, Allocator>& other) {
+    tree& operator=(const tree_base<Node, OtherPolicy, Allocator>& other) {
         static_assert(
             std::is_copy_assignable_v<value_type>,
             "Tried to COPY ASSIGN a tree containing a non copyable type.");
@@ -504,7 +504,7 @@ class tree : public basic_tree<Node, Policy, Allocator> {
     template <typename P, bool C, typename OtherP>
     iterator<P> insert_over(
         const tree_iterator<super, P, C>& position,
-        const basic_tree<Node, OtherP, Allocator>& other) {
+        const tree_base<Node, OtherP, Allocator>& other) {
         return this->modify_subtree(
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
@@ -596,7 +596,7 @@ class tree : public basic_tree<Node, Policy, Allocator> {
     template <typename P, bool C, typename OtherP>
     iterator<P> insert_child_front(
         const tree_iterator<super, P, C>& position,
-        const basic_tree<Node, OtherP, Allocator>& other) {
+        const tree_base<Node, OtherP, Allocator>& other) {
         return this->add_child<true>(
             position,
             !other.empty()
@@ -659,7 +659,7 @@ class tree : public basic_tree<Node, Policy, Allocator> {
     template <typename P, bool C, typename OtherP>
     iterator<P> insert_child_back(
         const tree_iterator<super, P, C>& position,
-        const basic_tree<Node, OtherP, Allocator>& other) {
+        const tree_base<Node, OtherP, Allocator>& other) {
         return this->add_child<false>(
             position,
             !other.empty()

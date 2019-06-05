@@ -31,25 +31,24 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         if (!this->match_value(node.get_value())) {
             return false;
         }
+        auto target = node.get_first_child();
         // Match children of the pattern
-        auto do_match_child = [&, current_target = node.get_first_child()](auto& child) mutable {
-            bool result = [&]() {
-                if (child.match_node(current_target, allocator)) {
+        auto do_match_child = [&](auto& child) mutable {
+            auto* current = target;
+            if (child.match_node(current, allocator)) {
+                if (current) {
+                    target = current->get_next_sibling();
+                }
+                return true;
+            }
+            while (current != nullptr) {
+                current = current->get_next_sibling();
+                if (child.match_node(current, allocator)) {
+                    target = current->get_next_sibling();
                     return true;
                 }
-                while (current_target != nullptr) {
-                    current_target = current_target->get_next_sibling();
-                    if (child.match_node(current_target, allocator)) {
-                        return true;
-                    }
-                }
-                return false;
-            }();
-            // Advanced current_target to the next sibling
-            if (current_target) {
-                current_target = current_target->get_next_sibling();
             }
-            return result;
+            return child.info.matches_null;
         };
         return this->match_children(do_match_child);
     }
@@ -73,7 +72,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
     }
 
     template <typename... Nodes>
-    constexpr one_matcher<ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
+    constexpr one_matcher<ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
 };

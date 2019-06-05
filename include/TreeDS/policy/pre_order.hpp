@@ -1,18 +1,16 @@
 #pragma once
 
-#include <TreeDS/policy/basic_policy.hpp>
+#include <TreeDS/policy/policy_base.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md::detail {
 
 template <typename Node, typename NodeNavigator, typename Allocator>
 class pre_order_impl final
-        : public basic_policy<pre_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
-
-    using super = basic_policy<pre_order_impl, Node, NodeNavigator, Allocator>;
+        : public policy_base<pre_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
 
     public:
-    using basic_policy<pre_order_impl, Node, NodeNavigator, Allocator>::basic_policy;
+    using policy_base<pre_order_impl, Node, NodeNavigator, Allocator>::policy_base;
 
     Node* increment_impl() {
         Node* first_child = this->navigator.get_first_child(*this->current);

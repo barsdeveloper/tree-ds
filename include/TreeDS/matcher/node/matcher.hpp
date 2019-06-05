@@ -89,8 +89,14 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     template <typename MatchFunction, typename RematchFunction = std::nullptr_t>
     bool match_children(MatchFunction& do_match, RematchFunction do_rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
+            auto check_prefers_null = [&](auto& child) -> bool {
+                return child.info.matches_null && child.info.reluctant;
+            };
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
+                if (apply_at_index(check_prefers_null, this->children, current_child)) {
+                    continue;
+                }
                 if (!apply_at_index(do_match, this->children, current_child)) {
                     if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
                         return false;
@@ -182,7 +188,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename... Nodes>
     auto operator()(Nodes&&... nodes) const {
-        return static_cast<const Derived*>(this)->with_children(nodes...);
+        return static_cast<const Derived*>(this)->replace_children(nodes...);
     }
 };
 

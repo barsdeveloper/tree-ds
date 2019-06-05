@@ -28,7 +28,11 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {(... && Children::info.matches_null), false};
+    static constexpr matcher_info_t info {
+        // It matches null only if all its children do so
+        (... && Children::info.matches_null),
+        // It is reluctant if it has that quantifier
+        Quantifier == quantifier::RELUCTANT};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
@@ -153,7 +157,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     }
 
     template <typename... Nodes>
-    constexpr any_matcher<Quantifier, ValueMatcher, Nodes...> with_children(Nodes&... nodes) const {
+    constexpr any_matcher<Quantifier, ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
 };

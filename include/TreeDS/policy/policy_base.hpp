@@ -10,20 +10,15 @@ template <
     typename Node,
     typename NodeNavigator,
     typename Allocator>
-class basic_policy {
+class policy_base {
 
     template <typename, typename, typename, typename>
-    friend class basic_policy;
+    friend class policy_base;
 
     protected:
-    using node_type      = Node;
-    using navigator_type = NodeNavigator;
-    using allocator_type = Allocator;
-
-    protected:
-    node_type* current = nullptr;
-    navigator_type navigator;
-    allocator_type allocator {};
+    Node* current = nullptr;
+    NodeNavigator navigator;
+    Allocator allocator;
 
     public:
     /*
@@ -31,12 +26,12 @@ class basic_policy {
      * that we must reconstruct the state like if we started at the beginning and arrived at current. Current can also
      * be nullptr, this means the policy pointes at the beginning of the sequence.
      */
-    basic_policy(Node* current, const Allocator& allocator) :
+    policy_base(Node* current, const Allocator& allocator) :
             current(current),
             allocator(allocator) {
     }
 
-    basic_policy(Node* current, const NodeNavigator& navigator, const Allocator& allocator) :
+    policy_base(Node* current, const NodeNavigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
@@ -49,8 +44,8 @@ class basic_policy {
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
-    basic_policy(const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
-            basic_policy(const_cast<Node*>(other.current), other.navigator, other.allocator) {
+    policy_base(const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
+            policy_base(const_cast<Node*>(other.current), other.navigator, other.allocator) {
     }
 
     template <
@@ -60,26 +55,26 @@ class basic_policy {
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
-    basic_policy(
-        const basic_policy<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
-        const node_type* current) :
-            basic_policy(const_cast<Node*>(current), other.navigator, other.allocator) {
+    policy_base(
+        const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
+        const Node* current) :
+            policy_base(const_cast<Node*>(current), other.navigator, other.allocator) {
     }
 
     public:
-    node_type* get_root() const {
+    Node* get_root() const {
         return this->root;
     }
 
-    node_type* get_current_node() const {
+    Node* get_current_node() const {
         return this->current;
     }
 
-    navigator_type get_navigator() const {
+    NodeNavigator get_navigator() const {
         return this->navigator;
     }
 
-    const allocator_type& get_allocator() const {
+    const Allocator& get_allocator() const {
         return this->allocator;
     }
 
@@ -103,7 +98,7 @@ class basic_policy {
         return *static_cast<ActualPolicy*>(this);
     }
 
-    ActualPolicy& update(node_type& current, node_type* replacement) {
+    ActualPolicy& update(Node& current, Node* replacement) {
         // Subclasses can override this in roder to manage their status
         if (&current == this->current) {
             this->current = replacement;

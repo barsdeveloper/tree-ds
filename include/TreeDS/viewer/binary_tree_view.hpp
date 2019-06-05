@@ -1,6 +1,6 @@
 #pragma once
 
-#include <TreeDS/basic_tree.hpp>
+#include <TreeDS/tree_base.hpp>
 #include <TreeDS/viewer/tree_view.hpp>
 
 namespace md {

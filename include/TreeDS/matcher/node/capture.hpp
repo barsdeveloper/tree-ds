@@ -44,7 +44,7 @@ class capture_node : public matcher<capture_node<Name, Captured>, Name, Captured
 
     public:
     template <typename... Nodes>
-    constexpr capture_node<Name, Nodes...> with_children(Nodes&... nodes) const {
+    constexpr capture_node<Name, Nodes...> replace_children(Nodes&... nodes) const {
         static_assert(
             sizeof...(Nodes) == 0,
             "Just a single node can be captured and must be provided as argument: cpt(one(1)), not as children: cpt(...)(one(1))");

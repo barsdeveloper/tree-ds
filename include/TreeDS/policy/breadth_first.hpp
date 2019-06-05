@@ -3,7 +3,7 @@
 #include <deque>
 #include <memory> // std::allocator_traits
 
-#include <TreeDS/policy/basic_policy.hpp>
+#include <TreeDS/policy/policy_base.hpp>
 
 namespace md::detail {
 
@@ -14,18 +14,13 @@ namespace md::detail {
  */
 template <typename Node, typename NodeNavigator, typename Allocator>
 class breadth_first_impl final
-        : public basic_policy<breadth_first_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
-
-    using super          = basic_policy<breadth_first_impl, Node, NodeNavigator, Allocator>;
-    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<Node>>;
-    using typename super::node_type;
+        : public policy_base<breadth_first_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
 
     private:
-    std::deque<node_type*, Allocator> open_nodes = manage_initial_status();
-    allocator_type allocator;
+    std::deque<Node*, Allocator> open_nodes = manage_initial_status();
 
     public:
-    using basic_policy<breadth_first_impl, Node, NodeNavigator, Allocator>::basic_policy;
+    using policy_base<breadth_first_impl, Node, NodeNavigator, Allocator>::policy_base;
 
     // Formward puhes into open back and pops front
     Node* increment_impl() {
@@ -133,7 +128,9 @@ class breadth_first_impl final
         if (child != nullptr) {
             this->open_nodes.push_back(child);
         }
-        this->super::update(current, replacement);
+        this->policy_base<breadth_first_impl, Node, NodeNavigator, Allocator>::update(
+            current,
+            replacement);
     }
 };
 

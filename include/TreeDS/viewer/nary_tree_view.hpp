@@ -2,7 +2,7 @@
 
 #include <memory> // std::allocator
 
-#include <TreeDS/basic_tree.hpp>
+#include <TreeDS/tree_base.hpp>
 #include <TreeDS/viewer/binary_tree_view.hpp>
 #include <TreeDS/viewer/tree_view.hpp>
 

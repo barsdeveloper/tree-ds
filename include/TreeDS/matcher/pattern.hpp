@@ -5,7 +5,7 @@
 #include <stdexcept> // std::invalid_argument
 #include <typeindex>
 
-#include <TreeDS/basic_tree.hpp>
+#include <TreeDS/tree_base.hpp>
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/tree.hpp>
 
@@ -42,12 +42,12 @@ class pattern {
 
     public:
     template <typename Node, typename Policy, typename Allocator>
-    bool match(basic_tree<Node, Policy, Allocator>& tree) {
+    bool match(tree_base<Node, Policy, Allocator>& tree) {
         return this->do_match(tree);
     }
 
     template <typename Node, typename Policy, typename Allocator>
-    bool match(const basic_tree<Node, Policy, Allocator>& tree) {
+    bool match(const tree_base<Node, Policy, Allocator>& tree) {
         return this->do_match(tree);
     }
 
@@ -61,7 +61,7 @@ class pattern {
     }
 
     template <std::size_t Index, typename Node, typename Policy, typename Allocator>
-    void assign_capture(capture_index<Index> index, tree<Node, Policy, Allocator>& tree) {
+    void assign_mark(capture_index<Index> index, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.root)) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
@@ -70,7 +70,7 @@ class pattern {
     }
 
     template <char... Name, typename Node, typename Policy, typename Allocator>
-    void assign_capture(capture_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
+    void assign_mark(capture_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.root)) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
