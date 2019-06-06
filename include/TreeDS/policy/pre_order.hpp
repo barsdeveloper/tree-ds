@@ -46,10 +46,10 @@ class pre_order_impl final
         }
         return prev_sibling
             ? keep_calling(
-                  *prev_sibling,
-                  [this](Node& node) {
-                      return this->navigator.get_last_child(node);
-                  })
+                *prev_sibling,
+                [this](Node& node) {
+                    return this->navigator.get_last_child(node);
+                })
             : nullptr;
     }
 
@@ -66,7 +66,7 @@ class pre_order_impl final
      * @brief Go in depth by traversing first children until a ramification is found.
      * @return the first child {@b after} of the ramification's node
      */
-    Node* go_depth_first_ramification() {
+    pre_order_impl& go_depth_first_ramification() {
         bool found   = false;
         Node* result = keep_calling(
             // From
@@ -84,7 +84,8 @@ class pre_order_impl final
             [this](Node&, Node& child) {
                 return &child;
             });
-        return found ? result : nullptr;
+        this->current = found ? result : nullptr;
+        return *this;
     }
 };
 

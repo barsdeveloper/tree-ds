@@ -5,16 +5,16 @@
 #include <stdexcept> // std::invalid_argument
 #include <typeindex>
 
-#include <TreeDS/tree_base.hpp>
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/tree.hpp>
+#include <TreeDS/tree_base.hpp>
 
 namespace md {
 
 template <typename PatternTree>
 class pattern {
 
-    protected:
+    public:
     PatternTree pattern_tree;
     std::optional<std::type_index> node_type = std::nullopt;
     void* matched_tree                       = nullptr;

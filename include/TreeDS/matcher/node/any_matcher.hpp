@@ -74,11 +74,11 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             node_t* current                        = target_it.get_current_node();
             match_attempt_begin[child.get_index()] = current;
             if (current == nullptr) {
-                return child.matches_null();
+                return child.info.matches_null;
             }
             while (current) {
                 target_it.increment();
-                if (child.match_node(*current)) {
+                if (child.match_node(current, allocator)) {
                     return true;
                 }
                 current = target_it.get_current_node();
@@ -88,7 +88,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         auto do_rematch = [&](auto& child) -> bool {
             target_it
                 = policy::pre_order()
-                      .get_instance(static_cast<node_t*>(child.target_node), navigator, allocator)
+                      .get_instance(child.get_node(allocator), navigator, allocator)
                       .go_depth_first_ramification();
             // If the successive target node is the one where the next child started (and failed) its match attempt
             if (target_it.get_current_node() == nullptr) {
@@ -121,34 +121,36 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         } else {
             using node_t = allocator_value_type<NodeAllocator>;
             if constexpr (Quantifier == quantifier::RELUCTANT) {
-                // std::pair<reference, clone>
-                std::pair<node_t*, unique_node_ptr<NodeAllocator>> head(
-                    this->get_referred_node(allocator),
-                    this->clone_referred_node(allocator));
-                node_t* top_node = this->get_referred_node();
-                std::unordered_map<node_t*, node_t*> cloned_node;
-                while (head.first != top_node) {
-                    head.second = head.first->allocate_assign_parent(allocator, *head.first);
-                    head.first  = head.first->get_parent();
-                    cloned_node.insert({head.first, head.second.get()});
-                }
-                unique_node_ptr<NodeAllocator> result(this->clone_referred_node(allocator));
-                // Maps nodes from the matched tree to their clone in the result tree
-                auto attach_child = [&](auto& child) {
-                    std::pair<node_t*, unique_node_ptr<NodeAllocator>> child_head(
-                        child.get_referred_node(allocator),
-                        child.clone_referred_node(allocator));
-                    for (
-                        auto parent_it = cloned_node.find(child_head.first->get_parent());
-                        parent_it == cloned_node.end();
-                        parent_it = cloned_node.find(child.first->get_parent())) {
-                        child_head = {
-                            child_head.first->get_parent(),
-                            child_head.second->allocate_assign_parent()};
+                node_t* top_node                      = this->get_referred_node();
+                node_t* head                          = std::get<0>(this->children)->get_node(allocator);
+                unique_node_ptr<NodeAllocator> result = std::get<0>(this->children)->clone_node(allocator);
+                std::unordered_map<node_t*, node_t*> cloned_nodes;
+                // Clone first child branch
+                while (head != top_node) {
+                    result = result->allocate_assign_parent(allocator, *head);
+                    head   = head->get_parent();
+                    if constexpr (any_matcher::children_count() > 1) {
+                        cloned_nodes.insert({head, result.get()});
                     }
-                };
-                for (std::size_t current_child = 1; current_child < any_matcher::children_count(); ++current_child) {
-                    apply_at_index(attach_child, this->children, current_child);
+                }
+                if constexpr (any_matcher::children_count() > 1) {
+                    // Clone and attach the other children branches
+                    auto attach_child = [&](auto& child) {
+                        std::pair<node_t*, unique_node_ptr<NodeAllocator>> child_head(
+                            child.get_referred_node(allocator),
+                            child.clone_referred_node(allocator));
+                        for (
+                            auto parent_it = cloned_nodes.find(child_head.first->get_parent());
+                            parent_it == cloned_nodes.end();
+                            parent_it = cloned_nodes.find(child.first->get_parent())) {
+                            child_head = {
+                                child_head.first->get_parent(),
+                                child_head.second->allocate_assign_parent()};
+                        }
+                    };
+                    for (std::size_t current_child = 1; current_child < any_matcher::children_count(); ++current_child) {
+                        apply_at_index(attach_child, this->children, current_child);
+                    }
                 }
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
             } else {

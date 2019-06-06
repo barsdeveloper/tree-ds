@@ -37,7 +37,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     std::size_t steps   = 1;
-    void* referred_node = nullptr;
+    void* target_node   = nullptr;
     captures_t captures = std::tuple_cat(
         [&]() {
             if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
@@ -63,7 +63,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
      */
     matcher(const matcher& other) :
             struct_node<ValueMatcher, Children...>(other),
-            referred_node(other.referred_node) {
+            target_node(other.target_node) {
     }
 
     /*   ---   METHODS   ---   */
@@ -116,12 +116,12 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     public:
     bool empty() const {
-        return this->referred_node == nullptr;
+        return this->target_node == nullptr;
     }
 
     template <typename NodeAllocator>
     allocator_value_type<NodeAllocator>* get_node(NodeAllocator&) const {
-        return static_cast<allocator_value_type<NodeAllocator>*>(this->referred_node);
+        return static_cast<allocator_value_type<NodeAllocator>*>(this->target_node);
     }
 
     template <typename NodeAllocator>
@@ -130,7 +130,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     void reset() {
-        this->referred_node = nullptr;
+        this->target_node = nullptr;
         std::apply(
             [](auto&... child) {
                 (..., child.reset());
@@ -144,7 +144,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             return Derived::info.matches_null;
         }
         if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
-            this->referred_node = node;
+            this->target_node = node;
             return true;
         }
         return false;
@@ -158,7 +158,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> result(NodeAllocator& allocator) {
-        if (this->referred_node == nullptr) {
+        if (this->target_node == nullptr) {
             return nullptr;
         }
         return static_cast<Derived*>(this)->result_impl(allocator);

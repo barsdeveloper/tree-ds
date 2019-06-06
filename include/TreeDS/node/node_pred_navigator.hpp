@@ -27,7 +27,6 @@ class node_pred_navigator {
             predicate() {
     }
 
-
     template <
         typename OtherNode, typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>>
     node_pred_navigator(const node_pred_navigator<OtherNode, Predicate>& other) :
@@ -44,13 +43,12 @@ class node_pred_navigator {
     node_pred_navigator operator=(const node_pred_navigator& other) {
         return this->operator=<Node>(other);
     }
-    
-    
+
     template <
         typename OtherNode, typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>>
     node_pred_navigator operator=(const node_pred_navigator<OtherNode, Predicate>& other) {
         this->is_subtree = other.is_subtree;
-        this->root = other.root;
+        this->root       = other.root;
         return *this;
     }
 
@@ -280,7 +278,7 @@ class node_pred_navigator {
         }
         Node* result = node.get_prev_sibling();
         while (result && !this->predicate(*result)) {
-            result = this->node->get_prev_sibling();
+            result = result->get_prev_sibling();
         }
         return result;
     }
@@ -293,7 +291,7 @@ class node_pred_navigator {
         }
         Node* result = node.get_next_sibling();
         while (result && !this->predicate(*result)) {
-            result = node.get_next_sibling(*node);
+            result = result->get_next_sibling();
         }
         return result;
     }

@@ -16,6 +16,7 @@ class PatternTest : public QObject {
     private slots:
     void construction();
     void simpleMatch();
+    void test1();
 };
 
 void PatternTest::construction() {
@@ -152,7 +153,30 @@ void PatternTest::simpleMatch() {
 
         QVERIFY(p.match(tree2));
         p.assign_result(result);
+        QCOMPARE(result, n(1)(n(2)));
     }
+    {
+        pattern p {
+            one(1)(
+                one(2),
+                cpt(
+                    capture_name<'a'>(),
+                    star<quantifier::RELUCTANT>(true_matcher())(
+                        one(3))))};
+        QVERIFY(p.match(tree1));
+        p.assign_result(result);
+        QCOMPARE(result, n(1)(n(2), n(3)));
+
+        auto& str = get_child<0>(get_child<1>(p.pattern_tree));
+        auto& on  = get_child<0>(str);
+        QVERIFY(p.match(tree2));
+        p.assign_result(result);
+        cout << result;
+        QCOMPARE(result, n(1)(n(2), n(1)(n(3))));
+    }
+}
+
+void PatternTest::test1() {
 }
 
 QTEST_MAIN(PatternTest);
