@@ -101,7 +101,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> get_matched_node_impl(NodeAllocator& allocator) {
+    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
         if constexpr (any_matcher::children_count() == 0) {
             if constexpr (Quantifier == quantifier::RELUCTANT) {
                 return nullptr;
@@ -121,13 +121,13 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         } else {
             using node_t = allocator_value_type<NodeAllocator>;
             if constexpr (Quantifier == quantifier::RELUCTANT) {
-                node_t* top_node                      = this->get_referred_node();
-                node_t* head                          = std::get<0>(this->children)->get_node(allocator);
-                unique_node_ptr<NodeAllocator> result = std::get<0>(this->children)->clone_node(allocator);
+                node_t* top_node                      = this->get_node(allocator);
+                node_t* head                          = std::get<0>(this->children).get_node(allocator);
+                unique_node_ptr<NodeAllocator> result = std::get<0>(this->children).result(allocator);
                 std::unordered_map<node_t*, node_t*> cloned_nodes;
                 // Clone first child branch
                 while (head != top_node) {
-                    result = result->allocate_assign_parent(allocator, *head);
+                    result = result.release()->allocate_assign_parent(allocator, *head);
                     head   = head->get_parent();
                     if constexpr (any_matcher::children_count() > 1) {
                         cloned_nodes.insert({head, result.get()});
@@ -152,6 +152,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                         apply_at_index(attach_child, this->children, current_child);
                     }
                 }
+                return std::move(result);
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
             } else {
             }

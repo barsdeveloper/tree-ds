@@ -126,7 +126,8 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> clone_node(NodeAllocator& allocator) const {
-        return allocate(allocator, this->get_node(allocator)->get_value());
+        unique_node_ptr<NodeAllocator> result {allocate(allocator, this->get_node(allocator)->get_value())};
+        return result;
     }
 
     void reset() {

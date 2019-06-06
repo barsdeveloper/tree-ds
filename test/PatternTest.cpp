@@ -167,12 +167,16 @@ void PatternTest::simpleMatch() {
         p.assign_result(result);
         QCOMPARE(result, n(1)(n(2), n(3)));
 
-        auto& str = get_child<0>(get_child<1>(p.pattern_tree));
-        auto& on  = get_child<0>(str);
         QVERIFY(p.match(tree2));
         p.assign_result(result);
         cout << result;
-        QCOMPARE(result, n(1)(n(2), n(1)(n(3))));
+        QCOMPARE(
+            result,
+            n(1)(
+                n(2),
+                n(1)(
+                    n(),
+                    n(3))));
     }
 }
 

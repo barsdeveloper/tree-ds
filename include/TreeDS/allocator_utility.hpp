@@ -32,7 +32,7 @@ constexpr bool is_allocator_correct_type<
  * @param ptr pointer to a previously allocated value
  */
 template <typename Allocator>
-void deallocate(Allocator& allocator, typename Allocator::value_type* ptr) {
+void deallocate(Allocator& allocator, allocator_value_type<Allocator>* ptr) {
     if (ptr == nullptr) {
         return;
     }
@@ -68,13 +68,13 @@ struct deleter {
     deleter(Allocator& allocator) :
             allocator(allocator) {
     }
-    void operator()(typename Allocator::value_type* ptr) {
+    void operator()(allocator_value_type<Allocator>* ptr) {
         deallocate(allocator, ptr);
     }
 };
 
 template <typename NodeAllocactor>
-using unique_node_ptr = std::unique_ptr<typename NodeAllocactor::value_type, deleter<NodeAllocactor>>;
+using unique_node_ptr = std::unique_ptr<allocator_value_type<NodeAllocactor>, deleter<NodeAllocactor>>;
 
 /**
  * @private
@@ -89,8 +89,7 @@ using unique_node_ptr = std::unique_ptr<typename NodeAllocactor::value_type, del
 template <
     typename Allocator,
     typename... Args>
-std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>>
-allocate(Allocator& allocator, Args&&... args) {
+std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>> allocate(Allocator& allocator, Args&&... args) {
     // Allocate
     auto* ptr = std::allocator_traits<Allocator>::allocate(allocator, 1);
     // Construct

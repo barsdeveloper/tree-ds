@@ -59,7 +59,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         auto attach_child                     = [&](auto& child) {
             if (!child.empty()) {
                 result->assign_child_like(
-                    child.clone_node(allocator),
+                    child.result(allocator),
                     *child.get_node(allocator));
             }
         };

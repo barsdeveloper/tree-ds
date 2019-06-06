@@ -26,7 +26,7 @@ class binary_node : public node<T, binary_node<T>> {
     friend class tree;
 
     template <typename A>
-    friend void deallocate(A&, typename A::value_type*);
+    friend void deallocate(A&, allocator_value_type<A>*);
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
@@ -99,7 +99,7 @@ class binary_node : public node<T, binary_node<T>> {
         attach_child();
     }
 
-    ~binary_node() = default;
+    ~binary_node() {};
 
     private:
     template <typename... Nodes, typename Allocator>
@@ -165,6 +165,14 @@ class binary_node : public node<T, binary_node<T>> {
             }
         }
         return nullptr;
+    }
+
+    binary_node* assign_child_like(binary_node* child, const binary_node& reference_child) {
+        assert(child);
+        binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
+        assert(target == nullptr);
+        target = child;
+        return this->attach_child(target);
     }
 
     binary_node* attach_child(binary_node* node) {
@@ -330,18 +338,14 @@ class binary_node : public node<T, binary_node<T>> {
 
     template <typename Allocator>
     binary_node* assign_child_like(unique_node_ptr<Allocator> child, const binary_node& reference_child) {
-        assert(child);
-        binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
-        assert(target == nullptr);
-        target = child.release();
-        return this->attach_child(target);
+        return this->assign_child_like(child.release(), reference_child);
     }
 
     template <typename Allocator>
     unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const binary_node& reference_copy) {
         assert(!reference_copy.is_root());
-        auto parent = allocate(allocator, reference_copy.get_parent()->get_value());
-        parent->assign_child(*this, reference_copy);
+        unique_node_ptr<Allocator> parent = allocate(allocator, reference_copy.get_parent()->get_value());
+        parent->assign_child_like(this, reference_copy);
         return std::move(parent);
     }
 
