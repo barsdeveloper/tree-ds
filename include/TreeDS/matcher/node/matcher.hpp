@@ -101,10 +101,11 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
                         return false;
                     } else {
-                        while (--current_child >= 0) {
+                        while (current_child > 0) {
                             if (apply_at_index(do_rematch, this->children, current_child)) {
                                 break; // We found a child that could rematch and leave the other children new nodes
                             }
+                            --current_child;
                         }
                     }
                 }
@@ -126,8 +127,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> clone_node(NodeAllocator& allocator) const {
-        unique_node_ptr<NodeAllocator> result {allocate(allocator, this->get_node(allocator)->get_value())};
-        return result;
+        return allocate(allocator, this->get_node(allocator)->get_value());
     }
 
     void reset() {

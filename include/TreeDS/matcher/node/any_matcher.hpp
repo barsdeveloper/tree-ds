@@ -62,13 +62,17 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         using node_t = allocator_value_type<NodeAllocator>;
         node_pred_navigator navigator(
-            &node,              // Navigate the subtree represented by node
-            [this](node_t& n) { // Stop when finding a non-matching node
-                return this->match_value(n);
+            &node,           // Navigate the subtree represented by node
+            [&](node_t& n) { // Stop when finding a non-matching node
+                return
+                    // Node matches
+                    this->match_value(n)
+                    // It is a child of some node that matches
+                    || (&n != &node && this->match_value(n.get_parent()->get_value()));
             },
             true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
-        std::array<node_t*, sizeof...(Children) + 1> match_attempt_begin = {};
+        std::array<node_t*, sizeof...(Children) + 1> match_attempt_begin = {nullptr};
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
         auto do_match = [&](auto& child) -> bool {
             node_t* current                        = target_it.get_current_node();
@@ -148,7 +152,10 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                                 child_head.second->allocate_assign_parent()};
                         }
                     };
-                    for (std::size_t current_child = 1; current_child < any_matcher::children_count(); ++current_child) {
+                    for (
+                        std::size_t current_child = 1;
+                        current_child < any_matcher::children_count();
+                        ++current_child) {
                         apply_at_index(attach_child, this->children, current_child);
                     }
                 }

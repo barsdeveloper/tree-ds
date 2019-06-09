@@ -101,7 +101,7 @@ class tree_base {
     /// @brief Maximum number of children a node can have.
     mutable size_type arity_value = 0u;
     /// @brief An object used to navigate the nodes.
-    navigator_type navigator {};
+    navigator_type navigator {this->root, this->root ? this->root->is_root() : false};
     /// @brief Allocator object used to allocate the nodes.
     node_allocator_type allocator {};
     /// @brief Allocator object used by the method get_allocator to return the allocator supplied.

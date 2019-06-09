@@ -14,7 +14,7 @@ namespace md {
 template <typename PatternTree>
 class pattern {
 
-    public:
+    protected:
     PatternTree pattern_tree;
     std::optional<std::type_index> node_type = std::nullopt;
     void* matched_tree                       = nullptr;

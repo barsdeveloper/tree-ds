@@ -16,16 +16,15 @@ class struct_node {
 
     /*   ---   TYPES   ---   */
     public:
-    using children_t = std::tuple<Children...>;
-    using value_t    = T;
+    using value_t = T;
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
-    value_t value;                 // Value hold by this node
-    children_t children {};        // Tuple containing actual children
-    std::size_t subtree_size  = 1; // Number of nodes of the tree considering this one as root
-    std::size_t subtree_arity = 0; // Arity of the tree having this node as root
-    std::size_t index         = 0; // The index of this node as a child
+    value_t value;                       // Value hold by this node
+    std::tuple<Children...> children {}; // Tuple containing actual children
+    std::size_t subtree_size  = 1;       // Number of nodes of the tree considering this one as root
+    std::size_t subtree_arity = 0;       // Arity of the tree having this node as root
+    std::size_t index         = 0;       // The index of this node as a child
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -63,7 +62,7 @@ class struct_node {
 
     /*   ---   METHODS   ---   */
     static constexpr std::size_t children_count() {
-        return std::tuple_size_v<children_t>;
+        return sizeof...(Children);
     }
 
     constexpr T get_value() const {
@@ -86,7 +85,7 @@ class struct_node {
         return {this->value, nodes...};
     }
 
-    constexpr const children_t& get_children() const {
+    constexpr const std::tuple<Children...>& get_children() const {
         return this->children;
     }
 };

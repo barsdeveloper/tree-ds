@@ -81,7 +81,7 @@ class pre_order_impl final
                 return !this->navigator.is_last_child(child);
             },
             // Then return
-            [this](Node&, Node& child) {
+            [](Node&, Node& child) {
                 return &child;
             });
         this->current = found ? result : nullptr;
