@@ -1,5 +1,4 @@
 #include <QtTest/QtTest>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -169,7 +168,6 @@ void PatternTest::simpleMatch() {
 
         QVERIFY(p.match(tree2));
         p.assign_result(result);
-        cout << result;
         QCOMPARE(
             result,
             n(1)(

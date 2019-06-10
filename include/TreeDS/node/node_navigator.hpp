@@ -7,8 +7,8 @@
 
 namespace md {
 
-template <typename Node>
-class node_navigator : public navigator_base<node_navigator<Node>, Node> {
+template <typename NodePtr>
+class node_navigator : public navigator_base<node_navigator<NodePtr>, NodePtr> {
 
     template <typename>
     friend class node_navigator;
@@ -17,19 +17,19 @@ class node_navigator : public navigator_base<node_navigator<Node>, Node> {
     node_navigator() {
     }
 
-    template <typename N, typename = std::enable_if_t<std::is_same_v<std::decay_t<N>, std::decay_t<Node>>>>
+    template <typename N, typename = std::enable_if_t<is_decay_pointed_same<N, NodePtr>>>
     node_navigator(const node_navigator<N>& other) :
-            node_navigator(const_cast<Node*>(other.root), other.is_subtree) {
+            node_navigator(const_cast<NodePtr>(other.root), other.is_subtree) {
     }
 
-    node_navigator(Node* root, bool is_subtree = true) :
-            navigator_base<node_navigator<Node>, Node>(root, is_subtree) {
+    node_navigator(NodePtr root, bool is_subtree = true) :
+            navigator_base<node_navigator<NodePtr>, NodePtr>(root, is_subtree) {
     }
 
-    template <typename N, typename = std::enable_if_t<std::is_same_v<std::decay_t<N>, std::decay_t<Node>>>>
+    template <typename N, typename = std::enable_if_t<is_decay_pointed_same<N, NodePtr>>>
     node_navigator& operator=(const node_navigator<N>& other) {
         this->is_subtree = other.is_subtree;
-        this->root       = const_cast<Node*>(other.root);
+        this->root       = const_cast<NodePtr>(other.root);
     }
 };
 

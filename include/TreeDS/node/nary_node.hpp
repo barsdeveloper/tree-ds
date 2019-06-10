@@ -271,18 +271,18 @@ class nary_node : public node<T, nary_node<T>> {
             }
             return keep_calling(
                 // From
-                *first,
+                first,
                 // Keep calling
-                [](nary_node& node) {
-                    return node.next_sibling;
+                [](nary_node* node) {
+                    return node->next_sibling;
                 },
                 // Until
-                [&](nary_node&, nary_node& next) {
-                    return &next == ptr;
+                [&](nary_node*, nary_node* next) {
+                    return next == ptr;
                 },
                 // Then return
-                [](nary_node& prev, nary_node&) {
-                    return &prev;
+                [](nary_node* prev, nary_node*) {
+                    return prev;
                 });
         } else {
             return nullptr;

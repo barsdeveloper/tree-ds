@@ -73,7 +73,7 @@ class tree_base {
     using pointer             = value_type*;
     using const_pointer       = const value_type*;
     using policy_type         = Policy;
-    using navigator_type      = node_navigator<node_type>;
+    using navigator_type      = node_navigator<node_type*>;
     using allocator_type      = Allocator;
     using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<node_type>>;
 
@@ -256,11 +256,11 @@ class tree_base {
         return {policy::fixed(), *this, this->root};
     }
 
-    node_navigator<const node_type> get_node_navigator() const {
+    node_navigator<const node_type*> get_node_navigator() const {
         return this->navigator;
     }
 
-    node_navigator<node_type> get_node_navigator() {
+    node_navigator<node_type*> get_node_navigator() {
         return this->navigator;
     }
 

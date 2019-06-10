@@ -3,9 +3,9 @@
 #include <stdexcept>   // std::logic_error
 #include <type_traits> // std::is_same_v
 
-#include <TreeDS/tree_base.hpp>
 #include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/tree.hpp>
+#include <TreeDS/tree_base.hpp>
 #include <TreeDS/tree_iterator.hpp>
 #include <TreeDS/utility.hpp>
 
@@ -22,7 +22,7 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
     using super = tree_base<const Node, Policy, Allocator>;
 
     tree_view() :
-            super(nullptr, 0, 0, node_navigator<Node>(nullptr, false)) {
+            super(nullptr, 0, 0, node_navigator<Node*>(nullptr, false)) {
     }
 
     template <typename TreeNode, typename TreePolicy>
@@ -45,12 +45,12 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
             super(
                 position.get_raw_node(),
                 position.get_raw_node()
-                    ? tree.get_node_navigator().is_root(*position.get_raw_node())
+                    ? tree.get_node_navigator().is_root(position.get_raw_node())
                         ? tree.size_value
                         : 0u
                     : 0u,
                 position.get_raw_node()
-                    ? tree.get_node_navigator().is_root(*position.get_raw_node())
+                    ? tree.get_node_navigator().is_root(position.get_raw_node())
                         ? tree.arity_value
                         : 0u
                     : 0u,

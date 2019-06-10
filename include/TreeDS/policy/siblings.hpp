@@ -15,19 +15,19 @@ class siblings_impl final
     using policy_base<siblings_impl, Node, NodeNavigator, Allocator>::policy_base;
 
     Node* increment_impl() {
-        return this->navigator.get_next_sibling(*this->current);
+        return this->navigator.get_next_sibling(this->current);
     }
 
     Node* decrement_impl() {
-        return this->navigator.get_prev_sibling(*this->current);
+        return this->navigator.get_prev_sibling(this->current);
     }
 
     Node* go_first_impl() {
-        return this->navigator.get_first_child(*this->parent);
+        return this->navigator.get_first_child(this->parent);
     }
 
     Node* go_last_impl() {
-        return this->navigator.get_last_child(*this->parent);
+        return this->navigator.get_last_child(this->parent);
     }
 };
 

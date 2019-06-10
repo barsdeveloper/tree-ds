@@ -13,43 +13,43 @@ class pre_order_impl final
     using policy_base<pre_order_impl, Node, NodeNavigator, Allocator>::policy_base;
 
     Node* increment_impl() {
-        Node* first_child = this->navigator.get_first_child(*this->current);
+        Node* first_child = this->navigator.get_first_child(this->current);
         if (first_child) {
             return first_child;
         }
         // Cross to another branch (on the right)
         Node* result = keep_calling(
             // From
-            *this->current,
+            this->current,
             // Keep calling
-            [this](Node& node) {
+            [this](Node* node) {
                 return this->navigator.get_parent(node);
             },
             // Until
-            [this](Node& child, Node&) {
+            [this](Node* child, Node*) {
                 return !this->navigator.is_last_child(child);
             },
             // Then return
-            [&](Node& child, Node&) {
+            [&](Node* child, Node*) {
                 return this->navigator.get_next_sibling(child);
             });
-        return this->navigator.is_root(*result) ? nullptr : result;
+        return this->navigator.is_root(result) ? nullptr : result;
     }
 
     Node* decrement_impl() {
-        if (this->navigator.is_root(*this->current)) {
+        if (this->navigator.is_root(this->current)) {
             return nullptr;
         }
-        Node* prev_sibling = this->navigator.get_prev_sibling(*this->current);
+        Node* prev_sibling = this->navigator.get_prev_sibling(this->current);
         if (prev_sibling == nullptr) {
-            return this->navigator.get_parent(*this->current);
+            return this->navigator.get_parent(this->current);
         }
         return prev_sibling
             ? keep_calling(
-                *prev_sibling,
-                [this](Node& node) {
-                    return this->navigator.get_last_child(node);
-                })
+                  prev_sibling,
+                  [this](Node* node) {
+                      return this->navigator.get_last_child(node);
+                  })
             : nullptr;
     }
 
@@ -70,19 +70,19 @@ class pre_order_impl final
         bool found   = false;
         Node* result = keep_calling(
             // From
-            *this->current,
+            this->current,
             // Keep calling
-            [this](Node& node) {
+            [this](Node* node) {
                 return this->navigator.get_first_child(node);
             },
             // Until
-            [&](Node&, Node& child) {
+            [&](Node*, Node* child) {
                 found = true;
                 return !this->navigator.is_last_child(child);
             },
             // Then return
-            [](Node&, Node& child) {
-                return &child;
+            [](Node*, Node* child) {
+                return child;
             });
         this->current = found ? result : nullptr;
         return *this;

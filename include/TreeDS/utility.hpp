@@ -50,10 +50,10 @@ constexpr bool is_tag_of_policy<
             std::declval<Policy>()
                 .template get_instance<
                     binary_node<int>,
-                    node_navigator<binary_node<int>>,
+                    node_navigator<binary_node<int>*>,
                     std::allocator<binary_node<int>>>(
                     std::declval<binary_node<int>*>(),
-                    std::declval<node_navigator<binary_node<int>>>(),
+                    std::declval<node_navigator<binary_node<int>*>>(),
                     std::declval<std::allocator<int>>())),
         Policy>> = true;
 
@@ -82,6 +82,11 @@ template <
     auto... B>
 constexpr bool is_same_template<T<A...>, T<B...>> = true;
 
+template <typename A, typename B>
+constexpr bool is_decay_pointed_same = std::is_same_v<
+    std::decay_t<std::remove_pointer_t<A>>,
+    std::decay_t<std::remove_pointer_t<B>>>;
+
 template <typename T, typename = void>
 constexpr bool is_printable = false;
 
@@ -93,15 +98,15 @@ namespace detail {
 } // namespace detail
 
 template <typename Node, typename Call, typename Test, typename Result>
-Node* keep_calling(Node& from, Call call, Test test, Result result) {
-    Node* prev = &from;
-    Node* next = call(*prev);
+Node keep_calling(Node from, Call&& call, Test&& test, Result&& result) {
+    Node prev = from;
+    Node next = call(prev);
     while (next != nullptr) {
-        if (test(*prev, *next)) {
-            return result(*prev, *next);
+        if (test(prev, next)) {
+            return result(prev, next);
         }
         prev = next;
-        next = call(*prev);
+        next = call(prev);
     }
     return prev; // Returns something only if test() succeeds
 }
@@ -113,13 +118,13 @@ Node* keep_calling(Node& from, Call call, Test test, Result result) {
  *
  * The case from == nullptr is correctly managed.
  */
-template <typename Node, typename Callable>
-Node* keep_calling(Node& from, Callable call) {
-    Node* prev = &from;
-    Node* next = call(*prev);
+template <typename Node, typename Call>
+Node keep_calling(Node from, Call&& call) {
+    Node prev = from;
+    Node next = call(prev);
     while (next != nullptr) {
         prev = next;
-        next = call(*prev);
+        next = call(prev);
     }
     return prev;
 }

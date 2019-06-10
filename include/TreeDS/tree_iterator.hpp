@@ -125,7 +125,7 @@ class tree_iterator {
             this->policy,
             function(
                 this->policy.get_navigator(),
-                *this->get_raw_node(),
+                this->get_raw_node(),
                 std::forward<AdditionalArgs>(args)...));
         return *this;
     }

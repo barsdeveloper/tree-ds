@@ -30,14 +30,14 @@ class breadth_first_impl final
         // Get element to be returned
         Node* result = this->open_nodes.front();
         // Manage next sibling replacement in queue
-        Node* sibling = this->navigator.get_next_sibling(*result);
+        Node* sibling = this->navigator.get_next_sibling(result);
         if (sibling) {
             this->open_nodes.front() = sibling;
         } else {
             this->open_nodes.pop_front();
         }
         // Push back its first child
-        Node* first_child = this->navigator.get_first_child(*result);
+        Node* first_child = this->navigator.get_first_child(result);
         if (first_child) {
             this->open_nodes.push_back(first_child);
         }
@@ -46,21 +46,21 @@ class breadth_first_impl final
 
     Node* decrement_impl() {
         // Delete the child of current node from open_nodes
-        Node* first_child = this->navigator.get_first_child(*this->current);
+        Node* first_child = this->navigator.get_first_child(this->current);
         if (first_child) {
-            assert(this->navigator.get_parent(*this->open_nodes.back()) == this->current);
+            assert(this->navigator.get_parent(this->open_nodes.back()) == this->current);
             // Delete the child of the previous node from open_nodes (invariants garantee that it is the last element)
             this->open_nodes.pop_back();
         }
         // Delete next sibling of the current node from open_nodes
-        if (this->navigator.get_next_sibling(*this->current)) {
-            assert(this->navigator.get_prev_sibling(*this->open_nodes.front()) == this->current);
+        if (this->navigator.get_next_sibling(this->current)) {
+            assert(this->navigator.get_prev_sibling(this->open_nodes.front()) == this->current);
             this->open_nodes.pop_front();
         }
         // Calculate the previous element
-        Node* result = this->navigator.get_left_branch(*this->current);
+        Node* result = this->navigator.get_left_branch(this->current);
         if (result == nullptr) {
-            result = this->navigator.get_same_row_rightmost(*this->navigator.get_parent(*this->current));
+            result = this->navigator.get_same_row_rightmost(this->navigator.get_parent(this->current));
         }
         // Update queue
         this->open_nodes.push_front(this->current);
@@ -85,29 +85,29 @@ class breadth_first_impl final
         }
         Node* node;
         auto process_child = [&]() {
-            Node* first_child = this->navigator.get_first_child(*node);
+            Node* first_child = this->navigator.get_first_child(node);
             if (first_child) {
                 result.push_back(first_child);
             }
         };
         // Manage next_sibling insertion
-        Node* next = this->navigator.get_next_sibling(*this->current);
+        Node* next = this->navigator.get_next_sibling(this->current);
         if (next) {
             result.push_back(next);
         }
         // Manage right elements
-        node = this->navigator.is_root(*this->current)
+        node = this->navigator.is_root(this->current)
             ? nullptr
-            : this->navigator.get_right_branch(*this->current->get_parent());
+            : this->navigator.get_right_branch(this->navigator.get_parent(this->current));
         while (node) {
             process_child();
-            node = this->navigator.get_right_branch(*node);
+            node = this->navigator.get_right_branch(node);
         }
         // Manage lower row, left elements
-        node = this->navigator.get_same_row_leftmost(*this->current);
+        node = this->navigator.get_same_row_leftmost(this->current);
         while (node != nullptr && node != this->current) {
             process_child();
-            node = this->navigator.get_right_branch(*node);
+            node = this->navigator.get_right_branch(node);
         }
         // Manage current node child
         node = this->current;
@@ -117,13 +117,13 @@ class breadth_first_impl final
 
     void update(Node& current, Node* replacement) {
         // Delete child of the previous nodes from open_nodes
-        if (this->navigator.get_first_child(current)) {
-            assert(this->navigator.get_parent(*this->open_nodes.back()) == &current);
+        if (this->navigator.get_first_child(&current)) {
+            assert(this->navigator.get_parent(this->open_nodes.back()) == &current);
             this->open_nodes.pop_back();
         }
         // Push back the children of first child
         Node* child = replacement != nullptr
-            ? this->navigator.get_first_child(*replacement)
+            ? this->navigator.get_first_child(replacement)
             : nullptr;
         if (child != nullptr) {
             this->open_nodes.push_back(child);
