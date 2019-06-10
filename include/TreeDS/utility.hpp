@@ -49,7 +49,7 @@ constexpr bool is_tag_of_policy<
         decltype(
             std::declval<Policy>()
                 .template get_instance<
-                    binary_node<int>,
+                    binary_node<int>*,
                     node_navigator<binary_node<int>*>,
                     std::allocator<binary_node<int>>>(
                     std::declval<binary_node<int>*>(),

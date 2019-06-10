@@ -11,50 +11,48 @@ class binary_node;
 
 namespace detail {
 
-    template <typename Node, typename NodeNavigator, typename Allocator, typename = void>
+    template <typename NodePtr, typename NodeNavigator, typename Allocator, typename = void>
     class in_order_impl {
-        static_assert(
-            !std::is_same_v<Node, binary_node<std::nullptr_t>>,
-            "In_order iteration policy is implemented only for binary_tree");
+        // Empty
     };
 
-    template <typename Node, typename NodeNavigator, typename Allocator>
+    template <typename NodePtr, typename NodeNavigator, typename Allocator>
     class in_order_impl<
-        Node,
+        NodePtr,
         NodeNavigator,
         Allocator,
-        std::enable_if_t<is_same_template<std::decay_t<Node>, binary_node<std::nullptr_t>>>>
+        std::enable_if_t<is_same_template<std::decay_t<std::remove_pointer_t<NodePtr>>, binary_node<std::nullptr_t>>>>
         final
-            : public policy_base<in_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
+            : public policy_base<in_order_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
         public:
-        using policy_base<in_order_impl, Node, NodeNavigator, Allocator>::policy_base;
+        using policy_base<in_order_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
 
-        Node* increment_impl() {
-            Node* right = this->navigator.get_right_child(this->current);
+        NodePtr increment_impl() {
+            NodePtr right = this->navigator.get_right_child(this->current);
             if (right) {
                 return keep_calling(
                     // From
                     right,
                     // Keep calling
-                    [this](Node* node) {
+                    [this](NodePtr node) {
                         return this->navigator.get_left_child(node);
                     });
             } else {
-                bool found   = false;
-                Node* result = keep_calling(
+                bool found     = false;
+                NodePtr result = keep_calling(
                     // From
                     this->current,
                     // Keep calling
-                    [this](Node* node) {
+                    [this](NodePtr node) {
                         return this->navigator.get_parent(node);
                     },
                     // Until
-                    [this](Node* child, Node*) {
+                    [this](NodePtr child, NodePtr) {
                         return this->navigator.is_left_child(child);
                     },
                     // Then return
-                    [&](Node*, Node* parent) {
+                    [&](NodePtr, NodePtr parent) {
                         found = true;
                         return parent;
                     });
@@ -62,12 +60,12 @@ namespace detail {
             }
         }
 
-        Node* decrement_impl() {
-            Node* left = this->navigator.get_left_child(this->current);
+        NodePtr decrement_impl() {
+            NodePtr left = this->navigator.get_left_child(this->current);
             if (left) {
                 return keep_calling(
                     left,
-                    [this](Node* node) {
+                    [this](NodePtr node) {
                         return this->navigator.get_right_child(node);
                     });
             }
@@ -75,31 +73,31 @@ namespace detail {
                 // From
                 this->current,
                 // Keep calling
-                [this](Node* node) {
+                [this](NodePtr node) {
                     return this->navigator.get_parent(node);
                 },
                 // Until
-                [this](Node* child, Node*) {
+                [this](NodePtr child, NodePtr) {
                     return this->navigator.is_right_child(child);
                 },
                 // Then return
-                [](Node*, Node* parent) {
+                [](NodePtr, NodePtr parent) {
                     return parent;
                 });
         }
 
-        Node* go_first_impl() {
+        NodePtr go_first_impl() {
             return keep_calling(
                 this->navigator.get_root(),
-                [this](Node* node) {
+                [this](NodePtr node) {
                     return this->navigator.get_left_child(node);
                 });
         }
 
-        Node* go_last_impl() {
+        NodePtr go_last_impl() {
             return keep_calling(
                 this->navigator.get_root(),
-                [this](Node* node) {
+                [this](NodePtr node) {
                     return this->navigator.get_right_child(node);
                 });
         }

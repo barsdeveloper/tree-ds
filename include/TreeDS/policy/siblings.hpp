@@ -4,29 +4,29 @@
 
 namespace md::detail {
 
-template <typename Node, typename NodeNavigator, typename Allocator>
+template <typename NodePtr, typename NodeNavigator, typename Allocator>
 class siblings_impl final
-        : public policy_base<siblings_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
+        : public policy_base<siblings_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
     protected:
-    Node* parent = nullptr;
+    NodePtr parent = nullptr;
 
     public:
-    using policy_base<siblings_impl, Node, NodeNavigator, Allocator>::policy_base;
+    using policy_base<siblings_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
 
-    Node* increment_impl() {
+    NodePtr increment_impl() {
         return this->navigator.get_next_sibling(this->current);
     }
 
-    Node* decrement_impl() {
+    NodePtr decrement_impl() {
         return this->navigator.get_prev_sibling(this->current);
     }
 
-    Node* go_first_impl() {
+    NodePtr go_first_impl() {
         return this->navigator.get_first_child(this->parent);
     }
 
-    Node* go_last_impl() {
+    NodePtr go_last_impl() {
         return this->navigator.get_last_child(this->parent);
     }
 };

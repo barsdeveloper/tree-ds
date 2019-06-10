@@ -7,7 +7,7 @@ namespace md::detail {
 
 template <
     typename ActualPolicy,
-    typename Node,
+    typename NodePtr,
     typename NodeNavigator,
     typename Allocator>
 class policy_base {
@@ -16,7 +16,7 @@ class policy_base {
     friend class policy_base;
 
     protected:
-    Node* current = nullptr;
+    NodePtr current = nullptr;
     NodeNavigator navigator;
     Allocator allocator;
 
@@ -26,12 +26,12 @@ class policy_base {
      * that we must reconstruct the state like if we started at the beginning and arrived at current. Current can also
      * be nullptr, this means the policy pointes at the beginning of the sequence.
      */
-    policy_base(Node* current, const Allocator& allocator) :
+    policy_base(NodePtr current, const Allocator& allocator) :
             current(current),
             allocator(allocator) {
     }
 
-    policy_base(Node* current, const NodeNavigator& navigator, const Allocator& allocator) :
+    policy_base(NodePtr current, const NodeNavigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
@@ -42,10 +42,10 @@ class policy_base {
         typename OtherNode,
         typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
+        typename = std::enable_if_t<is_decay_pointed_same<OtherNode, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     policy_base(const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
-            policy_base(const_cast<Node*>(other.current), other.navigator, other.allocator) {
+            policy_base(const_cast<NodePtr>(other.current), other.navigator, other.allocator) {
     }
 
     template <
@@ -53,20 +53,20 @@ class policy_base {
         typename OtherNode,
         typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<std::is_same_v<std::decay_t<OtherNode>, std::decay_t<Node>>>,
+        typename = std::enable_if_t<is_decay_pointed_same<OtherNode, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     policy_base(
         const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
-        const Node* current) :
-            policy_base(const_cast<Node*>(current), other.navigator, other.allocator) {
+        const NodePtr current) :
+            policy_base(const_cast<NodePtr>(current), other.navigator, other.allocator) {
     }
 
     public:
-    Node* get_root() const {
+    NodePtr get_root() const {
         return this->root;
     }
 
-    Node* get_current_node() const {
+    NodePtr get_current_node() const {
         return this->current;
     }
 
@@ -98,9 +98,9 @@ class policy_base {
         return *static_cast<ActualPolicy*>(this);
     }
 
-    ActualPolicy& update(Node& current, Node* replacement) {
+    ActualPolicy& update(NodePtr current, NodePtr replacement) {
         // Subclasses can override this in roder to manage their status
-        if (&current == this->current) {
+        if (current == this->current) {
             this->current = replacement;
         }
         return *static_cast<ActualPolicy*>(this);
@@ -114,14 +114,14 @@ class policy_base {
 template <template <typename...> class PolicyTemplate>
 struct policy_tag {
     template <
-        typename Node,
+        typename NodePtr,
         typename NodeNavigator,
         typename Allocator>
-    PolicyTemplate<Node, NodeNavigator, Allocator> get_instance(
-        Node* current,
+    PolicyTemplate<NodePtr, NodeNavigator, Allocator> get_instance(
+        NodePtr current,
         const NodeNavigator& navigator,
         const Allocator& allocator) const {
-        return {current, navigator, allocator};
+        return PolicyTemplate<NodePtr, NodeNavigator, Allocator>(current, navigator, allocator);
     }
 };
 

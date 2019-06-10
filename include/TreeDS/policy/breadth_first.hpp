@@ -12,41 +12,41 @@ namespace md::detail {
  * to right, and from top to bottom.  Please note that this iterator is intended to be usedforward only (incremented
  * only). Reverse order iteration is possible (and tested) though it will imply severe performance drop.
  */
-template <typename Node, typename NodeNavigator, typename Allocator>
+template <typename NodePtr, typename NodeNavigator, typename Allocator>
 class breadth_first_impl final
-        : public policy_base<breadth_first_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
+        : public policy_base<breadth_first_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
     private:
-    std::deque<Node*, Allocator> open_nodes = manage_initial_status();
+    std::deque<NodePtr, Allocator> open_nodes = manage_initial_status();
 
     public:
-    using policy_base<breadth_first_impl, Node, NodeNavigator, Allocator>::policy_base;
+    using policy_base<breadth_first_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
 
     // Formward puhes into open back and pops front
-    Node* increment_impl() {
+    NodePtr increment_impl() {
         if (this->open_nodes.empty()) {
             return nullptr;
         }
         // Get element to be returned
-        Node* result = this->open_nodes.front();
+        NodePtr result = this->open_nodes.front();
         // Manage next sibling replacement in queue
-        Node* sibling = this->navigator.get_next_sibling(result);
+        NodePtr sibling = this->navigator.get_next_sibling(result);
         if (sibling) {
             this->open_nodes.front() = sibling;
         } else {
             this->open_nodes.pop_front();
         }
         // Push back its first child
-        Node* first_child = this->navigator.get_first_child(result);
+        NodePtr first_child = this->navigator.get_first_child(result);
         if (first_child) {
             this->open_nodes.push_back(first_child);
         }
         return result;
     }
 
-    Node* decrement_impl() {
+    NodePtr decrement_impl() {
         // Delete the child of current node from open_nodes
-        Node* first_child = this->navigator.get_first_child(this->current);
+        NodePtr first_child = this->navigator.get_first_child(this->current);
         if (first_child) {
             assert(this->navigator.get_parent(this->open_nodes.back()) == this->current);
             // Delete the child of the previous node from open_nodes (invariants garantee that it is the last element)
@@ -58,7 +58,7 @@ class breadth_first_impl final
             this->open_nodes.pop_front();
         }
         // Calculate the previous element
-        Node* result = this->navigator.get_left_branch(this->current);
+        NodePtr result = this->navigator.get_left_branch(this->current);
         if (result == nullptr) {
             result = this->navigator.get_same_row_rightmost(this->navigator.get_parent(this->current));
         }
@@ -67,31 +67,31 @@ class breadth_first_impl final
         return result;
     }
 
-    Node* go_first_impl() {
+    NodePtr go_first_impl() {
         this->open_nodes.clear();
         this->open_nodes.push_back(this->navigator.get_root());
         return this->increment_impl();
     }
 
-    Node* go_last_impl() {
+    NodePtr go_last_impl() {
         this->open_nodes.clear();
         return this->navigator.get_deepest_rightmost_leaf();
     }
 
-    std::deque<Node*, Allocator> manage_initial_status() {
-        std::deque<Node*, Allocator> result;
+    std::deque<NodePtr, Allocator> manage_initial_status() {
+        std::deque<NodePtr, Allocator> result;
         if (this->current == nullptr) {
             return result;
         }
-        Node* node;
+        NodePtr node;
         auto process_child = [&]() {
-            Node* first_child = this->navigator.get_first_child(node);
+            NodePtr first_child = this->navigator.get_first_child(node);
             if (first_child) {
                 result.push_back(first_child);
             }
         };
         // Manage next_sibling insertion
-        Node* next = this->navigator.get_next_sibling(this->current);
+        NodePtr next = this->navigator.get_next_sibling(this->current);
         if (next) {
             result.push_back(next);
         }
@@ -115,20 +115,20 @@ class breadth_first_impl final
         return std::move(result);
     }
 
-    void update(Node& current, Node* replacement) {
+    void update(NodePtr current, NodePtr replacement) {
         // Delete child of the previous nodes from open_nodes
-        if (this->navigator.get_first_child(&current)) {
-            assert(this->navigator.get_parent(this->open_nodes.back()) == &current);
+        if (this->navigator.get_first_child(current)) {
+            assert(this->navigator.get_parent(this->open_nodes.back()) == current);
             this->open_nodes.pop_back();
         }
         // Push back the children of first child
-        Node* child = replacement != nullptr
+        NodePtr child = replacement
             ? this->navigator.get_first_child(replacement)
             : nullptr;
         if (child != nullptr) {
             this->open_nodes.push_back(child);
         }
-        this->policy_base<breadth_first_impl, Node, NodeNavigator, Allocator>::update(
+        this->policy_base<breadth_first_impl, NodePtr, NodeNavigator, Allocator>::update(
             current,
             replacement);
     }

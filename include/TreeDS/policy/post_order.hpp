@@ -5,30 +5,30 @@
 
 namespace md::detail {
 
-template <typename Node, typename NodeNavigator, typename Allocator>
+template <typename NodePtr, typename NodeNavigator, typename Allocator>
 class post_order_impl final
-        : public policy_base<post_order_impl<Node, NodeNavigator, Allocator>, Node, NodeNavigator, Allocator> {
+        : public policy_base<post_order_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
     public:
-    using policy_base<post_order_impl, Node, NodeNavigator, Allocator>::policy_base;
+    using policy_base<post_order_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
 
-    Node* increment_impl() {
+    NodePtr increment_impl() {
         if (this->navigator.is_root(this->current)) {
             return nullptr;
         }
-        Node* next_sibling = this->navigator.get_next_sibling(this->current);
+        NodePtr next_sibling = this->navigator.get_next_sibling(this->current);
         if (next_sibling == nullptr) {
             return this->navigator.get_parent(this->current);
         }
         return keep_calling(
             next_sibling,
-            [this](Node* node) {
+            [this](NodePtr node) {
                 return this->navigator.get_first_child(node);
             });
     }
 
-    Node* decrement_impl() {
-        Node* result = this->navigator.get_last_child(this->current);
+    NodePtr decrement_impl() {
+        NodePtr result = this->navigator.get_last_child(this->current);
         if (result) {
             return result;
         }
@@ -36,24 +36,24 @@ class post_order_impl final
             // From
             this->current,
             // Keep calling
-            [this](Node* node) {
+            [this](NodePtr node) {
                 return this->navigator.get_parent(node);
             },
             // Until
-            [this](Node* child, Node*) {
+            [this](NodePtr child, NodePtr) {
                 return !this->navigator.is_first_child(child);
             },
             // Then return
-            [this](Node* child, Node*) {
+            [this](NodePtr child, NodePtr) {
                 return this->navigator.get_prev_sibling(child);
             });
     }
 
-    Node* go_first_impl() {
+    NodePtr go_first_impl() {
         return this->navigator.get_highest_left_leaf();
     }
 
-    Node* go_last_impl() {
+    NodePtr go_last_impl() {
         return this->navigator.get_root();
     }
 };

@@ -234,7 +234,7 @@ class tree_iterator {
     }
 
     void update(node_type& current, node_type* replacement) {
-        this->policy.update(current, replacement);
+        this->policy.update(&current, replacement);
     }
 };
 
