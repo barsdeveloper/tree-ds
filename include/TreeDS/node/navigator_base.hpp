@@ -10,15 +10,19 @@ namespace md {
 template <typename Derived, typename NodePtr>
 class navigator_base {
 
-    using derived_this = const Derived*;
-
+    /*   ---   FRIENDS   ---   */
     template <typename>
     friend class node_navigator;
 
+    /*   ---   TYPES   ---   */
+    using derived_this = const Derived*;
+
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     bool is_subtree = false;
     NodePtr root    = nullptr;
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     navigator_base() {
     }
@@ -28,6 +32,7 @@ class navigator_base {
             root(root) {
     }
 
+    /*   ---   METHODS   ---   */
     protected:
     template <bool Left>
     NodePtr get_other_branch(NodePtr node) const {

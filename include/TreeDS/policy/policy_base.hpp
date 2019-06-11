@@ -42,7 +42,7 @@ class policy_base {
         typename OtherNode,
         typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<is_decay_pointed_same<OtherNode, NodePtr>>,
+        typename = std::enable_if_t<is_const_cast_equivalent<OtherNode, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     policy_base(const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
             policy_base(const_cast<NodePtr>(other.current), other.navigator, other.allocator) {
@@ -53,7 +53,7 @@ class policy_base {
         typename OtherNode,
         typename OtherNodeNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<is_decay_pointed_same<OtherNode, NodePtr>>,
+        typename = std::enable_if_t<is_const_cast_equivalent<OtherNode, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     policy_base(
         const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,

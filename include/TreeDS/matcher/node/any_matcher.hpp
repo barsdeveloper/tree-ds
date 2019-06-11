@@ -3,6 +3,7 @@
 #include <TreeDS/matcher/node/matcher.hpp>
 #include <TreeDS/matcher/pattern.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
+#include <TreeDS/node/generative_navigator.hpp>
 #include <TreeDS/node/node_pred_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/policy/pre_order.hpp>

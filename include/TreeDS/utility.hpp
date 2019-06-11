@@ -83,9 +83,14 @@ template <
 constexpr bool is_same_template<T<A...>, T<B...>> = true;
 
 template <typename A, typename B>
-constexpr bool is_decay_pointed_same = std::is_same_v<
-    std::decay_t<std::remove_pointer_t<A>>,
-    std::decay_t<std::remove_pointer_t<B>>>;
+constexpr bool is_const_cast_equivalent
+    = std::conjunction_v<
+        // If both are either pointers or not
+        std::bool_constant<std::is_pointer_v<A> == std::is_pointer_v<B>>,
+        // They point to the same type (ignoring const/volatile)
+        std::is_same<
+            std::decay_t<std::remove_pointer_t<A>>,
+            std::decay_t<std::remove_pointer_t<B>>>>;
 
 template <typename T, typename = void>
 constexpr bool is_printable = false;

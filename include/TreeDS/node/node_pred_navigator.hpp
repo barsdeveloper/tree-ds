@@ -8,12 +8,15 @@ namespace md {
 template <typename NodePtr, typename Predicate>
 class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, Predicate>, NodePtr> {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename>
     friend class node_pred_navigator;
 
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     Predicate predicate;
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     template <typename Pred = Predicate, typename = std::enable_if_t<std::is_default_constructible_v<Pred>>>
     node_pred_navigator() :
@@ -21,9 +24,9 @@ class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, P
     }
 
     template <
-        typename OtherNode,
-        typename = std::enable_if_t<std::is_same_v<std::decay_t<std::remove_pointer_t<OtherNode>>, std::decay_t<std::remove_pointer_t<NodePtr>>>>>
-    node_pred_navigator(const node_pred_navigator<OtherNode, Predicate>& other) :
+        typename OtherNodePtr,
+        typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
+    node_pred_navigator(const node_pred_navigator<OtherNodePtr, Predicate>& other) :
             node_pred_navigator(const_cast<NodePtr*>(other.root, other.is_subtree)) {
     }
 
@@ -32,18 +35,21 @@ class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, P
             predicate(predicate) {
     }
 
+    /*   ---   ASSIGNMENT   ---   */
     node_pred_navigator operator=(const node_pred_navigator& other) {
         return this->operator=<NodePtr>(other);
     }
 
     template <
-        typename OtherNode, typename = std::enable_if_t<std::is_same_v<std::decay_t<std::remove_pointer_t<OtherNode>>, std::decay_t<std::remove_pointer_t<NodePtr>>>>>
-    node_pred_navigator operator=(const node_pred_navigator<OtherNode, Predicate>& other) {
+        typename OtherNodePtr,
+        typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
+    node_pred_navigator operator=(const node_pred_navigator<OtherNodePtr, Predicate>& other) {
         this->is_subtree = other.is_subtree;
         this->root       = const_cast<NodePtr>(other.root);
         return *this;
     }
 
+    /*   ---   METHODS   ---   */
     public:
     NodePtr get_prev_sibling(NodePtr node) const {
         NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_prev_sibling(node);

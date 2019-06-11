@@ -10,24 +10,22 @@ namespace md {
 template <typename NodePtr>
 class node_navigator : public navigator_base<node_navigator<NodePtr>, NodePtr> {
 
+    /*   ---   FRIENDS   ---   */
     template <typename>
     friend class node_navigator;
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
-    node_navigator() {
-    }
+    using navigator_base<node_navigator<NodePtr>, NodePtr>::navigator_base;
 
-    template <typename N, typename = std::enable_if_t<is_decay_pointed_same<N, NodePtr>>>
-    node_navigator(const node_navigator<N>& other) :
+    template <typename OtherNodePTr, typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePTr, NodePtr>>>
+    node_navigator(const node_navigator<OtherNodePTr>& other) :
             node_navigator(const_cast<NodePtr>(other.root), other.is_subtree) {
     }
 
-    node_navigator(NodePtr root, bool is_subtree = true) :
-            navigator_base<node_navigator<NodePtr>, NodePtr>(root, is_subtree) {
-    }
-
-    template <typename N, typename = std::enable_if_t<is_decay_pointed_same<N, NodePtr>>>
-    node_navigator& operator=(const node_navigator<N>& other) {
+    /*   ---   ASSIGNMENT   ---   */
+    template <typename OtherNodePtr, typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
+    node_navigator& operator=(const node_navigator<OtherNodePtr>& other) {
         this->is_subtree = other.is_subtree;
         this->root       = const_cast<NodePtr>(other.root);
     }

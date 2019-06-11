@@ -11,6 +11,7 @@ namespace md {
 template <typename T, typename... Children>
 class struct_node {
 
+    /*   ---   FRIENDS   ---   */
     template <typename, typename...>
     friend class struct_node;
 
