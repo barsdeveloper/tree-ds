@@ -1,35 +1,11 @@
 #pragma once
 
 #include <type_traits>
-#include <vector>
 
 #include <TreeDS/node/node_pred_navigator.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md {
-
-template <typename NodePtr>
-struct generative_node_wrapper {
-    using node_t      = std::remove_pointer_t<NodePtr>;
-    NodePtr generated = nullptr;
-    NodePtr referred;
-    generative_node_wrapper(NodePtr referred) :
-            referred(referred) {
-    }
-    generative_node_wrapper(NodePtr referred, NodePtr generated) :
-            generated(generated),
-            referred(referred) {
-    }
-    NodePtr operator->() const {
-        return this->referred;
-    }
-    bool operator==(NodePtr referred) const {
-        return this->referred == referred;
-    }
-    operator bool() const {
-        return this->referred != nullptr;
-    }
-};
 
 template <typename NodeAllocator, typename NodeWrap, typename Predicate>
 class generative_pred_navigator : public node_pred_navigator<NodeWrap, Predicate> {

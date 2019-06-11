@@ -99,7 +99,7 @@ class binary_node : public node<T, binary_node<T>> {
         attach_child();
     }
 
-    ~binary_node() {};
+    ~binary_node() {}
 
     private:
     template <typename... Nodes, typename Allocator>
@@ -191,15 +191,15 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     public:
-    bool is_last_child() const {
-        return this->parent
-            ? this->parent->get_last_child() == this
-            : false;
-    }
-
     bool is_first_child() const {
         return this->parent
             ? this->parent->get_first_child() == this
+            : false;
+    }
+
+    bool is_last_child() const {
+        return this->parent
+            ? this->parent->get_last_child() == this
             : false;
     }
 
