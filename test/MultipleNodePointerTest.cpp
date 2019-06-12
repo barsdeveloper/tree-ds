@@ -78,6 +78,17 @@ void MultipleNodePointerTest::binary() {
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
             pointer.get()));
+
+    QVERIFY(pointer);
+
+    pointer = pointer->get_prev_sibling();
+    QCOMPARE(
+        make_tuple(-1, -1, -1),
+        apply(
+            [](auto&&... pointer) { return make_tuple((pointer ? pointer->get_value() : -1)...); },
+            pointer.get()));
+
+    QVERIFY(!pointer);
 }
 
 void MultipleNodePointerTest::nary() {
@@ -92,6 +103,7 @@ void MultipleNodePointerTest::nary() {
                     n(-6)(
                         n(-9)))))};
     nary_node<int> nar2 {
+        // lacks -9
         n(-1)(
             n(-2)(
                 n(-3)(
@@ -132,12 +144,30 @@ void MultipleNodePointerTest::nary() {
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
             pointer.get()));
 
-    /* pointer = pointer->get_last_child();
+    pointer = pointer->get_last_child();
     QCOMPARE(
-        make_tuple(-9, nullptr, -6, -6),
+        make_tuple(-9, 0, -9, -9),
         apply(
-            [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : nullptr)...); },
-            pointer.get()));*/
+            [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
+            pointer.get()));
+
+    pointer = pointer->get_parent();
+    QCOMPARE(
+        make_tuple(-6, 0, -6, -6),
+        apply(
+            [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
+            pointer.get()));
+
+    QVERIFY(pointer);
+
+    pointer = pointer->get_next_sibling();
+    QCOMPARE(
+        make_tuple(0, 0, 0, 0),
+        apply(
+            [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
+            pointer.get()));
+
+    QVERIFY(!pointer);
 }
 
 QTEST_MAIN(MultipleNodePointerTest);

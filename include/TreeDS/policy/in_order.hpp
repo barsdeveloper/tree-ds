@@ -21,7 +21,7 @@ namespace detail {
         NodePtr,
         NodeNavigator,
         Allocator,
-        std::enable_if_t<is_same_template<std::decay_t<std::remove_pointer_t<NodePtr>>, binary_node<std::nullptr_t>>>>
+        std::enable_if_t<is_same_template<std::decay_t<std::remove_pointer_t<NodePtr>>, binary_node<void>>>>
         final
             : public policy_base<in_order_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 

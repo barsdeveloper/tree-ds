@@ -1,6 +1,5 @@
 #pragma once
 
-#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md::detail {

@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-#include <TreeDS/node/navigator_base.hpp>
+#include <TreeDS/node/navigator/navigator_base.hpp>
 #include <TreeDS/utility.hpp>
 
 namespace md {

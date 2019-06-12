@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>     // std::size_t, std::nullptr_t
+#include <cstddef>     // std::size_t
 #include <tuple>       // std::apply()
 #include <type_traits> // std::enable_if_t, std::decay_t, std::remove_pointer_t
 
@@ -49,7 +49,7 @@ struct multiple_node_pointer {
 
     template <
         typename N = std::decay_t<std::remove_pointer_t<MainPtr>>,
-        typename   = std::enable_if_t<is_same_template<N, binary_node<std::nullptr_t>>>>
+        typename   = std::enable_if_t<is_same_template<N, binary_node<void>>>>
     multiple_node_pointer get_left_child() const {
         return do_function([](auto& node) {
             return node.get_left_child();
@@ -58,7 +58,7 @@ struct multiple_node_pointer {
 
     template <
         typename N = std::decay_t<std::remove_pointer_t<MainPtr>>,
-        typename   = std::enable_if_t<is_same_template<N, binary_node<std::nullptr_t>>>>
+        typename   = std::enable_if_t<is_same_template<N, binary_node<void>>>>
     multiple_node_pointer get_right_child() const {
         return do_function([](auto& node) {
             return node.get_right_child();
@@ -96,7 +96,7 @@ struct multiple_node_pointer {
     }
 
     operator bool() const {
-        return this->referred != nullptr;
+        return std::get<0>(this->pointers) != nullptr;
     }
 };
 

@@ -28,7 +28,7 @@
 #include <memory>   // std::unique_ptr, std::allocator_traits
 #include <ostream>  // std::ostream
 
-#include <TreeDS/node/node_navigator.hpp>
+#include <TreeDS/node/navigator/node_navigator.hpp>
 #include <TreeDS/policy/breadth_first.hpp>
 #include <TreeDS/policy/fixed.hpp>
 #include <TreeDS/tree_iterator.hpp>

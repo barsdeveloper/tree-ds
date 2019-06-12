@@ -7,7 +7,6 @@
 #include <utility>     // std::move(), std::forward()
 
 #include <TreeDS/allocator_utility.hpp>
-#include <TreeDS/node/node_navigator.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/policy/pre_order.hpp>
