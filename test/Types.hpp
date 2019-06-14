@@ -39,6 +39,9 @@ struct Foo {
     bool operator!=(const Foo& other) const {
         return !this->operator==(other);
     }
+    operator std::string() const {
+        return std::string("Foo(") + std::to_string(a) + ", " + std::to_string(b) + ")";
+    }
 };
 
 struct Bar {

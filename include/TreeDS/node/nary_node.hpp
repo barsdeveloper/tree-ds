@@ -156,6 +156,7 @@ class nary_node : public node<T, nary_node<T>> {
         // Pointer to the considered child (which is itself a pointer to nary_node)
         nary_node* result         = nullptr;
         nary_node** prev_next_ptr = &result;
+        this->last_child          = nullptr; // Last child must be managed explicitly because it cannot be default set
         // Lambda that assigns one child at time
         auto assign_child = [&](auto* node) {
             node->following_siblings = --remaining;         // Assign siblings count
@@ -244,16 +245,18 @@ class nary_node : public node<T, nary_node<T>> {
 
     nary_node* prepend_child(nary_node* node) {
         if (node != nullptr) {
-            assert(node->parent);
-            assert(node->next_sibling);
+            assert(!node->parent);
+            assert(!node->prev_sibling);
+            assert(!node->next_sibling);
             node->parent       = this;
             node->next_sibling = this->first_child;
-            this->first_child  = node;
-            if (this->last_child) {
+            if (this->first_child) {
+                node->following_siblings         = this->first_child->get_following_siblings() + 1u;
                 node->next_sibling->prev_sibling = node;
             } else {
                 this->last_child = node;
             }
+            this->first_child = node;
             return this->first_child;
         }
         return nullptr;
@@ -263,17 +266,21 @@ class nary_node : public node<T, nary_node<T>> {
         if (node) {
             assert(node->parent == nullptr);
             assert(node->next_sibling == nullptr);
+            if (this->first_child) {
+                nary_node* current = this->first_child;
+                do {
+                    current->following_siblings += 1u;
+                    current = current->next_sibling;
+                } while (current != nullptr);
+            } else {
+                this->first_child = node;
+            }
             node->parent = this;
             if (this->last_child) {
                 this->last_child->next_sibling = node;
                 node->prev_sibling             = this->last_child;
             }
-            this->last_child   = node;
-            nary_node* current = this->first_child;
-            do {
-                current->following_siblings += 1u;
-                current = current->next_sibling;
-            } while (current != nullptr);
+            this->last_child = node;
         }
         return node;
     }

@@ -237,7 +237,11 @@ void code_like_print(std::ostream& stream, std::string_view c) {
 
 template <typename T>
 void code_like_print(std::ostream& stream, const T& c) {
-    stream << c;
+    if constexpr (is_printable<T>) {
+        stream << c;
+    } else if (std::is_convertible_v<T, std::string>) {
+        stream << static_cast<std::string>(c);
+    }
 }
 
 struct print_preferences {
