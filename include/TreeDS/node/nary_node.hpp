@@ -22,6 +22,9 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename, typename, typename>
     friend class tree;
 
+    template <typename, typename, typename, typename>
+    friend class generative_navigator;
+
     /*   ---   ATTRIBUTES   ---   */
     protected:
     std::size_t following_siblings = 0u;

@@ -18,6 +18,10 @@ struct multiple_node_pointer {
             pointers(main_ptr, pointers...) {
     }
 
+    multiple_node_pointer(std::nullptr_t) :
+            pointers() {
+    }
+
     private:
     template <typename Function>
     multiple_node_pointer do_function(Function&& call) const {
@@ -83,8 +87,16 @@ struct multiple_node_pointer {
         });
     }
 
-    std::tuple<MainPtr, OtherPtr...> get() const {
+    std::tuple<MainPtr, OtherPtr...> get_pointers() const {
         return this->pointers;
+    }
+
+    bool all_valid() const {
+        return std::apply(
+            [](auto&... ptrs) {
+                return (... && ptrs);
+            },
+            this->pointers);
     }
 
     bool operator==(MainPtr referred) const {
@@ -93,6 +105,10 @@ struct multiple_node_pointer {
 
     const multiple_node_pointer* operator->() const {
         return this;
+    }
+
+    MainPtr operator*() const {
+        return std::get<0>(this->pointers);
     }
 
     operator bool() const {

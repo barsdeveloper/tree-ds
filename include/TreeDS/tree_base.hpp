@@ -233,6 +233,11 @@ class tree_base {
         return this->arity_value;
     }
 
+    void update_size_arity() const {
+        this->size_value  = 0u;
+        this->arity_value = 0u;
+    }
+
     /**
      * @brief Returns the maximum possible number of elements the tree can hold.
      * @details Please note that this is not the real value because the size of the tree will be more likely limited by

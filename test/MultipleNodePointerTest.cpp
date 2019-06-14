@@ -35,49 +35,49 @@ void MultipleNodePointerTest::binary() {
         make_tuple(1, 1, 1),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_first_child();
     QCOMPARE(
         make_tuple(2, 2, 2),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_first_child();
     QCOMPARE(
         make_tuple(4, 4, 4),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_next_sibling();
     QCOMPARE(
         make_tuple(5, 5, 5),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_prev_sibling();
     QCOMPARE(
         make_tuple(4, 4, 4),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_parent()->get_next_sibling()->get_right_child();
     QCOMPARE(
         make_tuple(6, 6, 6),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_parent()->get_parent()->get_left_child();
     QCOMPARE(
         make_tuple(2, 2, 2),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     QVERIFY(pointer);
 
@@ -86,7 +86,7 @@ void MultipleNodePointerTest::binary() {
         make_tuple(-1, -1, -1),
         apply(
             [](auto&&... pointer) { return make_tuple((pointer ? pointer->get_value() : -1)...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     QVERIFY(!pointer);
 }
@@ -121,42 +121,42 @@ void MultipleNodePointerTest::nary() {
         make_tuple(-1, -1, -1, -1),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_child(0);
     QCOMPARE(
         make_tuple(-2, -2, -2, -2),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_first_child()->get_child(1);
     QCOMPARE(
         make_tuple(-5, -5, -5, -5),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_next_sibling();
     QCOMPARE(
         make_tuple(-6, -6, -6, -6),
         apply(
             [](auto&&... pointer) { return make_tuple(pointer->get_value()...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_last_child();
     QCOMPARE(
         make_tuple(-9, 0, -9, -9),
         apply(
             [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     pointer = pointer->get_parent();
     QCOMPARE(
         make_tuple(-6, 0, -6, -6),
         apply(
             [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     QVERIFY(pointer);
 
@@ -165,7 +165,7 @@ void MultipleNodePointerTest::nary() {
         make_tuple(0, 0, 0, 0),
         apply(
             [](auto&&... pointer) { return make_tuple((pointer != nullptr ? pointer->get_value() : 0)...); },
-            pointer.get()));
+            pointer.get_pointers()));
 
     QVERIFY(!pointer);
 }

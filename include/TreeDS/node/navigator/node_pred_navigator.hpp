@@ -81,7 +81,7 @@ class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, P
             : result;
     }
 
-    template <typename N = NodePtr, typename = std::enable_if_t<is_same_template<std::decay_t<std::remove_pointer_t<N>>, binary_node<void>>>>
+    template <typename N>
     NodePtr get_left_child(N node) const {
         NodePtr result = node.get_left_child();
         if (result && !this->predicate(*result)) {
@@ -90,7 +90,7 @@ class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, P
         return result;
     }
 
-    template <typename N = NodePtr, typename = std::enable_if_t<is_same_template<std::decay_t<std::remove_pointer_t<N>>, binary_node<void>>>>
+    template <typename N>
     NodePtr get_right_child(N node) const {
         NodePtr result = node.get_right_child();
         if (result && !this->predicate(*result)) {

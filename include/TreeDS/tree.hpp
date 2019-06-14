@@ -279,7 +279,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
     public:
     using super::get_root;
 
-    const_iterator<policy::fixed> get_root() {
+    iterator<policy::fixed> get_root() {
         return {policy::fixed(), *this, this->root};
     }
 
