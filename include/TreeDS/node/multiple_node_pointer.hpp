@@ -87,7 +87,11 @@ struct multiple_node_pointer {
         });
     }
 
-    std::tuple<MainPtr, OtherPtr...> get_pointers() const {
+    const std::tuple<MainPtr, OtherPtr...>& get_pointers() const {
+        return this->pointers;
+    }
+
+    std::tuple<MainPtr, OtherPtr...>& get_pointers() {
         return this->pointers;
     }
 
@@ -99,8 +103,8 @@ struct multiple_node_pointer {
             this->pointers);
     }
 
-    bool operator==(MainPtr referred) const {
-        return this->referred == referred;
+    bool operator==(multiple_node_pointer other) const {
+        return std::get<0>(this->pointers) == std::get<0>(other.pointers);
     }
 
     const multiple_node_pointer* operator->() const {

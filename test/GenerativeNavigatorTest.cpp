@@ -25,6 +25,7 @@ void GenerativeNavigatorTest::binary() {
             n(2)(
                 n(4),
                 n(5)(
+                    n(),
                     n(6))),
             n(3))};
     binary_tree<int> generated {n(1)};
@@ -37,9 +38,43 @@ void GenerativeNavigatorTest::binary() {
             return true;
         });
 
-    ptrs = nav.get_left_child(ptrs);
+    ptrs = nav.get_left_child(ptrs); // 2
     generated.update_size_arity();
     QCOMPARE(generated, n(1)(n(2)));
+
+    ptrs = nav.get_next_sibling(ptrs); // 3
+    generated.update_size_arity();
+    QCOMPARE(generated, n(1)(n(2), n(3)));
+
+    ptrs = nav.get_parent(ptrs); // 1
+    generated.update_size_arity();
+    QCOMPARE(generated, n(1)(n(2), n(3)));
+
+    ptrs = nav.get_first_child(ptrs); // 2
+    generated.update_size_arity();
+    QCOMPARE(generated, n(1)(n(2), n(3)));
+
+    ptrs = nav.get_last_child(ptrs); // 5
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n(1)(
+            n(2)(
+                n(),
+                n(5)),
+            n(3)));
+
+    ptrs = nav.get_first_child(ptrs); // 6
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n(1)(
+            n(2)(
+                n(),
+                n(5)(
+                    n(),
+                    n(6))),
+            n(3)));
 }
 
 void GenerativeNavigatorTest::nary() {

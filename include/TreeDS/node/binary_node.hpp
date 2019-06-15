@@ -25,6 +25,9 @@ class binary_node : public node<T, binary_node<T>> {
     template <typename, typename, typename>
     friend class tree;
 
+    template <typename, typename, typename, typename>
+    friend class generative_navigator;
+
     template <typename A>
     friend void deallocate(A&, allocator_value_type<A>*);
 
@@ -99,7 +102,8 @@ class binary_node : public node<T, binary_node<T>> {
         attach_child();
     }
 
-    ~binary_node() {}
+    ~binary_node() {
+    }
 
     private:
     template <typename... Nodes, typename Allocator>

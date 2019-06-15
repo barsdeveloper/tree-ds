@@ -20,6 +20,7 @@ class TreeTest : public QObject {
     void naryTree();
     void naryTree2();
     void binaryTree();
+    void binaryTree2();
     void nonCopyable();
     void forbiddenOperations();
 };
@@ -378,6 +379,13 @@ void TreeTest::binaryTree() {
     QCOMPARE(end_it, tree2.end(policy::post_order()));
 
     QVERIFY(tree2.empty());
+}
+
+void TreeTest::binaryTree2() {
+    binary_tree<int> tree {n(1)};
+
+    tree.insert_child_front(tree.get_root(), 2);
+    QCOMPARE(tree, n(1)(n(2)));
 }
 
 void TreeTest::nonCopyable() {

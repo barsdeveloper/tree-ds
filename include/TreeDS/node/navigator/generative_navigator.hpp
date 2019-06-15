@@ -19,6 +19,7 @@ class generative_navigator
     friend class node_navigator;
 
     using node_ptrs_t = multiple_node_pointer<TargetNodePtr, GeneratedNodePtr>;
+    using node_t      = std::remove_pointer_t<GeneratedNodePtr>;
 
     /*   ---   ATTRIBUTES   ---   */
     NodeAllocator& allocator;
@@ -54,75 +55,67 @@ class generative_navigator
     }
 
     /*   ---   METHODS   ---   */
-    public:
-    node_ptrs_t get_prev_sibling(node_ptrs_t node) const {
+    private:
+    template <typename NavigateF, typename AttachF>
+    node_ptrs_t reassign_generate(node_ptrs_t node, NavigateF&& navigate, AttachF&& attach_node) const {
         assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_prev_sibling(node));
+        node_ptrs_t result(navigate(this, node));
         auto&& [target, generated] = result.get_pointers();
         if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->get_parent()
-                ->prepend_child(allocate(this->allocator, target->get_value()).release());
+            auto* new_node = allocate(this->allocator, target->get_value()).release();
+            attach_node(std::get<1>(node.get_pointers()), new_node);
+            generated = new_node;
         }
         return result;
+    }
+
+    public:
+    node_ptrs_t get_prev_sibling(node_ptrs_t node) const {
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_prev_sibling),
+            [](auto* target, auto* new_node) {
+                target->get_parent()->prepend_child(new_node);
+            });
     }
 
     node_ptrs_t get_next_sibling(node_ptrs_t node) const {
-        assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_next_sibling(node));
-        auto&& [target, generated] = result.get_pointers();
-        if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->get_parent()
-                ->append_child(allocate(this->allocator, target->get_value()).release());
-        }
-        return result;
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_next_sibling),
+            [](auto* target, auto* new_node) {
+                target->get_parent()->append_child(new_node);
+            });
     }
 
     node_ptrs_t get_first_child(node_ptrs_t node) const {
-        assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_first_child(node));
-        auto&& [target, generated] = result.get_pointers();
-        if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->prepend_child(allocate(this->allocator, target->get_value()).release());
-        }
-        return result;
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_first_child),
+            std::mem_fn(&node_t::prepend_child));
     }
 
     node_ptrs_t get_last_child(node_ptrs_t node) const {
-        assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_last_child(node));
-        auto&& [target, generated] = result.get_pointers();
-        if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->prepend_child(allocate(this->allocator, target->get_value()).release());
-        }
-        return result;
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_last_child),
+            std::mem_fn(&node_t::append_child));
     }
 
     template <typename N = TargetNodePtr>
     node_ptrs_t get_left_child(N node) const {
-        assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_left_child(node));
-        auto&& [target, generated] = result.get_pointers();
-        if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->prepend_child(allocate(this->allocator, target->get_value()).release());
-        }
-        return result;
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_left_child<N>),
+            std::mem_fn(&node_t::prepend_child));
     }
 
     template <typename N = TargetNodePtr>
     node_ptrs_t get_right_child(N node) const {
-        assert(node.all_valid());
-        node_ptrs_t result(this->node_pred_navigator<node_ptrs_t, Predicate>::get_right_child(node));
-        auto&& [target, generated] = result.get_pointers();
-        if (target && !generated) {
-            std::get<1>(node.get_pointers())
-                ->append_child(allocate(this->allocator, target->get_value()).release());
-        }
-        return result;
+        return this->reassign_generate(
+            node,
+            std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_right_child<N>),
+            std::mem_fn(&node_t::append_child));
     }
 };
 

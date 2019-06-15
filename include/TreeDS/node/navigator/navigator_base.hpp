@@ -193,7 +193,7 @@ class navigator_base {
 
     public:
     bool is_root(NodePtr node) const {
-        return (this->is_subtree && node == this->root) || node->is_root();
+        return node == this->root;
     }
 
     bool is_first_child(NodePtr node) const {
