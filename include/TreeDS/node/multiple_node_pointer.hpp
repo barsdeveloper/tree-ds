@@ -14,6 +14,11 @@ struct multiple_node_pointer {
     static_assert((... && is_const_cast_equivalent<MainPtr, OtherPtr>), "The pointer must point to the same type");
 
     std::tuple<MainPtr, OtherPtr...> pointers;
+
+    multiple_node_pointer() :
+            multiple_node_pointer(nullptr) {
+    }
+
     multiple_node_pointer(MainPtr main_ptr, OtherPtr... pointers) :
             pointers(main_ptr, pointers...) {
     }
@@ -33,6 +38,10 @@ struct multiple_node_pointer {
     }
 
     public:
+    auto& get_value() const {
+        return std::get<0>(this->pointers)->get_value();
+    }
+
     multiple_node_pointer get_parent() const {
         return do_function([](auto& node) {
             return node.get_parent();
@@ -111,8 +120,8 @@ struct multiple_node_pointer {
         return this;
     }
 
-    MainPtr operator*() const {
-        return std::get<0>(this->pointers);
+    const multiple_node_pointer& operator*() const {
+        return *this;
     }
 
     operator bool() const {

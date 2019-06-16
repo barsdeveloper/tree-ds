@@ -98,7 +98,7 @@ template <typename Node, typename Call, typename Test, typename Result>
 Node keep_calling(Node from, Call&& call, Test&& test, Result&& result) {
     Node prev = from;
     Node next = call(prev);
-    while (next != nullptr) {
+    while (next) {
         if (test(prev, next)) {
             return result(prev, next);
         }

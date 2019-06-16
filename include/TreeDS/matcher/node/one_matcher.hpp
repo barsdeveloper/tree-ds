@@ -82,4 +82,8 @@ one_matcher<ValueMatcher> one(const ValueMatcher& value_matcher) {
     return {value_matcher};
 }
 
+one_matcher<true_matcher> one() {
+    return {true_matcher()};
+}
+
 } // namespace md

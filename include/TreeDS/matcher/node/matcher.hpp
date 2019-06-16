@@ -167,8 +167,8 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     template <std::size_t Index, typename NodeAllocator>
     unique_node_ptr<NodeAllocator> marked_result(capture_index<Index>, NodeAllocator& allocator) {
-        static_assert(Index < std::tuple_size_v<captures_t>, "There is no capture with the index requested.");
-        return std::get<Index>(this->captures).result(allocator);
+        static_assert(Index - 1 < std::tuple_size_v<captures_t>, "There is no capture with the index requested.");
+        return std::get<Index - 1>(this->captures).result(allocator);
     }
 
     template <char... Name, typename NodeAllocator>

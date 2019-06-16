@@ -105,7 +105,7 @@ class breadth_first_impl final
         }
         // Manage lower row, left elements
         node = this->navigator.get_same_row_leftmost(this->current);
-        while (node != nullptr && node != this->current) {
+        while (node && node != this->current) {
             process_child();
             node = this->navigator.get_right_branch(node);
         }

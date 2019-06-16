@@ -2,6 +2,7 @@
 
 #include <type_traits>
 
+#include <TreeDS/allocator_utility.hpp>
 #include <TreeDS/node/multiple_node_pointer.hpp>
 #include <TreeDS/node/navigator/node_pred_navigator.hpp>
 #include <TreeDS/utility.hpp>
@@ -75,8 +76,8 @@ class generative_navigator
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_prev_sibling),
-            [](auto* target, auto* new_node, const auto& reference_node) {
-                return target->get_parent()->assign_child_like(new_node, reference_node);
+            [](auto* target, unique_node_ptr<NodeAllocator> new_node, const auto& reference_node) {
+                return target->get_parent()->assign_child_like(std::move(new_node), reference_node);
             });
     }
 
@@ -84,7 +85,7 @@ class generative_navigator
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_next_sibling),
-            [](auto* target, auto new_node, const auto& reference_node) {
+            [](auto* target, unique_node_ptr<NodeAllocator> new_node, const auto& reference_node) {
                 return target->get_parent()->assign_child_like(std::move(new_node), reference_node);
             });
     }

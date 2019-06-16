@@ -19,7 +19,7 @@ class PatternTest : public QObject {
 };
 
 void PatternTest::construction() {
-    pattern p1(one(true_matcher()));
+    pattern p1(one());
     QCOMPARE(p1.size(), 0);
 
     pattern p2(
@@ -39,28 +39,28 @@ void PatternTest::construction() {
             one(string("alpha"))(
                 cpt(one(string("beta"))),
                 one(string("gamma")),
-                cpt(one(true_matcher())))));
+                cpt(one()))));
     QCOMPARE(p4.size(), 3);
 
     pattern p5(
         cpt(cpt(
-            star(true_matcher()))));
+            star())));
     QCOMPARE(p5.size(), 2);
 
     pattern p6(
-        one(true_matcher())(
-            cpt(star(true_matcher())(
-                star(true_matcher())(
+        one()(
+            cpt(star()(
+                star()(
                     cpt(capture_name<'a', 'n', ' ', 'a'>(), one('a'))),
                 cpt(one('b')(
-                    cpt(star(true_matcher()))))))));
+                    cpt(star())))))));
     QCOMPARE(p6.size(), 4);
 
     pattern p7(
         cpt(cpt(cpt(
             capture_name<'a'>(),
             star(string("string"))(
-                cpt(capture_name<'t'>(), cpt(one(true_matcher()))),
+                cpt(capture_name<'t'>(), cpt(one())),
                 cpt(one(string("b"))))))));
     QCOMPARE(p7.size(), 6);
 }
@@ -92,7 +92,7 @@ void PatternTest::simpleMatch() {
     }
     {
         pattern p(
-            one(true_matcher())(
+            one()(
                 one(2)));
         QVERIFY(p.match(tree1));
         p.assign_result(result);
@@ -121,17 +121,17 @@ void PatternTest::simpleMatch() {
         QVERIFY(p.match(tree1));
         p.assign_result(result);
         QCOMPARE(result, n(1)(n(2)));
-        p.assign_mark(capture_index<1>(), result);
+        p.assign_mark(capture_index<2>(), result);
         QCOMPARE(result, n(2));
-        p.assign_mark(capture_index<0>(), result);
+        p.assign_mark(capture_index<1>(), result);
         QCOMPARE(result, n(1)(n(2)));
         p.assign_mark(capture_name<'b'>(), result);
         QCOMPARE(result, n(2));
     }
     {
         pattern p {
-            one(true_matcher())(
-                one(true_matcher()),
+            one()(
+                one(),
                 one(3))};
         QVERIFY(p.match(tree1));
         p.assign_result(result);
@@ -145,7 +145,7 @@ void PatternTest::simpleMatch() {
         pattern p {
             one(1)(
                 one(2),
-                cpt(capture_name<'t'>(), star<quantifier::RELUCTANT>(true_matcher())))};
+                cpt(capture_name<'t'>(), star<quantifier::RELUCTANT>()))};
         QVERIFY(p.match(tree1));
         p.assign_result(result);
         QCOMPARE(result, n(1)(n(2)));
@@ -160,7 +160,7 @@ void PatternTest::simpleMatch() {
                 one(2),
                 cpt(
                     capture_name<'a'>(),
-                    star<quantifier::RELUCTANT>(true_matcher())(
+                    star<quantifier::RELUCTANT>()(
                         one(3))))};
         QVERIFY(p.match(tree1));
         p.assign_result(result);
@@ -179,6 +179,84 @@ void PatternTest::simpleMatch() {
 }
 
 void PatternTest::test1() {
+    binary_tree<char> tree {
+        n('x')(
+            n('a')(
+                n('a')(
+                    n(),
+                    n('a')(
+                        n('a')(
+                            n('a'),
+                            n('a')),
+                        n('a')(
+                            n('a')(
+                                n(),
+                                n('y')),
+                            n('a')))),
+                n('b')(
+                    n('b'),
+                    n('b')(
+                        n('y')))),
+            n('a'))};
+    binary_tree<char> result;
+
+    {
+        pattern p(one('x'));
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    }
+    {
+        pattern p(
+            one()(
+                star<quantifier::RELUCTANT>('a')(
+                    one('y'),
+                    one('b'))));
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(
+            result,
+            n('x')(
+                n('a')(
+                    n('a')(
+                        n(),
+                        n('a')(
+                            n(),
+                            n('a')(
+                                n('a')(
+                                    n(),
+                                    n('y'))))),
+                    n('b'))));
+    }
+    /*{
+        pattern p(
+            star()(
+                cpt(star('a')),
+                star('b')(
+                    star('y'))));
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(
+            result,
+            n('x')(
+                n('a')(
+                    n('a')(
+                        n(),
+                        n('a')(
+                            n('a')(
+                                n('a'),
+                                n('a')),
+                            n('a')(
+                                n('a')(
+                                    n(),
+                                    n('y')),
+                                n('a')))),
+                    n('b')(
+                        n('b'),
+                        n('b')(
+                            n('y')))),
+                n('a')));
+    }*/
 }
 
 QTEST_MAIN(PatternTest);

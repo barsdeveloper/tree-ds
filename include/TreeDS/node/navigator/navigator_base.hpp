@@ -197,11 +197,11 @@ class navigator_base {
     }
 
     bool is_first_child(NodePtr node) const {
-        return !static_cast<derived_this>(this)->is_root(node) && node->is_first_child();
+        return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_first_child();
     }
 
     bool is_last_child(NodePtr node) const {
-        return !static_cast<derived_this>(this)->is_root(node) && node->is_last_child();
+        return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_last_child();
     }
 
     template <
@@ -211,7 +211,7 @@ class navigator_base {
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
     bool is_left_child(N node) const {
-        return !static_cast<derived_this>(this)->is_root(node) && node->is_left_child();
+        return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_left_child();
     }
 
     template <
@@ -221,7 +221,7 @@ class navigator_base {
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
     bool is_right_child(N node) const {
-        return !static_cast<derived_this>(this)->is_root(node) && node->is_right_child();
+        return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_right_child();
     }
 
     NodePtr get_root() const {
