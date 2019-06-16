@@ -57,65 +57,66 @@ class generative_navigator
     /*   ---   METHODS   ---   */
     private:
     template <typename NavigateF, typename AttachF>
-    node_ptrs_t reassign_generate(node_ptrs_t node, NavigateF&& navigate, AttachF&& attach_node) const {
+    node_ptrs_t do_navigate_generate(node_ptrs_t node, NavigateF&& navigate, AttachF&& attach_node) const {
         assert(node.all_valid());
         node_ptrs_t result(navigate(this, node));
         auto&& [target, generated] = result.get_pointers();
         if (target && !generated) {
-            auto* new_node = allocate(this->allocator, target->get_value()).release();
-            attach_node(std::get<1>(node.get_pointers()), new_node);
-            generated = new_node;
+            generated = attach_node(
+                std::get<1>(node.get_pointers()),
+                allocate(this->allocator, target->get_value()),
+                *target);
         }
         return result;
     }
 
     public:
     node_ptrs_t get_prev_sibling(node_ptrs_t node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_prev_sibling),
-            [](auto* target, auto* new_node) {
-                target->get_parent()->prepend_child(new_node);
+            [](auto* target, auto* new_node, const auto& reference_node) {
+                return target->get_parent()->assign_child_like(new_node, reference_node);
             });
     }
 
     node_ptrs_t get_next_sibling(node_ptrs_t node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_next_sibling),
-            [](auto* target, auto* new_node) {
-                target->get_parent()->append_child(new_node);
+            [](auto* target, auto new_node, const auto& reference_node) {
+                return target->get_parent()->assign_child_like(std::move(new_node), reference_node);
             });
     }
 
     node_ptrs_t get_first_child(node_ptrs_t node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_first_child),
-            std::mem_fn(&node_t::prepend_child));
+            std::mem_fn(&node_t::template assign_child_like<NodeAllocator>));
     }
 
     node_ptrs_t get_last_child(node_ptrs_t node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_last_child),
-            std::mem_fn(&node_t::append_child));
+            std::mem_fn(&node_t::template assign_child_like<NodeAllocator>));
     }
 
     template <typename N = TargetNodePtr>
     node_ptrs_t get_left_child(N node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_left_child<N>),
-            std::mem_fn(&node_t::prepend_child));
+            std::mem_fn(&node_t::template assign_child_like<NodeAllocator>));
     }
 
     template <typename N = TargetNodePtr>
     node_ptrs_t get_right_child(N node) const {
-        return this->reassign_generate(
+        return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_right_child<N>),
-            std::mem_fn(&node_t::append_child));
+            std::mem_fn(&node_t::template assign_child_like<NodeAllocator>));
     }
 };
 

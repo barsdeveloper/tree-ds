@@ -1,11 +1,8 @@
 #pragma once
 
-#include <cassert>    // assert
-#include <cstddef>    // std::size_t
-#include <functional> // std::invoke()
-#include <iostream>   // std::cout
-#include <string>
-#include <string_view>
+#include <cassert>     // assert
+#include <cstddef>     // std::size_t
+#include <functional>  // std::invoke()
 #include <tuple>       // std::std::make_from_tuple
 #include <type_traits> // std::std::enable_if_t, std::is_invocable_v, std::void_t
 #include <utility>     // std::declval(), std::make_index_sequence
@@ -92,12 +89,6 @@ constexpr bool is_const_cast_equivalent
           std::bool_constant<std::is_pointer_v<A> == std::is_pointer_v<B>>,
           // They point to the same type (ignoring const/volatile)
           std::is_same<std::decay_t<std::remove_pointer_t<A>>, std::decay_t<std::remove_pointer_t<B>>>>;
-
-template <typename T, typename = void>
-constexpr bool is_printable = false;
-
-template <typename T>
-constexpr bool is_printable<T, std::void_t<decltype(std::declval<decltype(std::cout)>() << std::declval<T>())>> = true;
 
 namespace detail {
     struct empty_t {};
@@ -216,6 +207,21 @@ decltype(auto) apply_at_index(F&& f, Tuple&& tuple, std::size_t index) {
         index);
 }
 
+} // namespace md
+
+#ifndef NDEBUG
+#include <iostream>
+#include <string>
+#include <string_view>
+
+namespace md {
+
+template <typename T, typename = void>
+constexpr bool is_printable = false;
+
+template <typename T>
+constexpr bool is_printable<T, std::void_t<decltype(std::declval<decltype(std::cout)>() << std::declval<T>())>> = true;
+
 void code_like_print(std::ostream& stream) {
     stream << "n()";
 }
@@ -245,9 +251,17 @@ void code_like_print(std::ostream& stream, const T& c) {
     }
 }
 
+#ifndef MD_PRINT_TREE_MAX_NODES
+#define MD_PRINT_TREE_MAX_NODES 10
+#endif
+
+#ifndef MD_PRINT_TREE_INDENTATION
+#define MD_PRINT_TREE_INDENTATION 4
+#endif
+
 struct print_preferences {
-    unsigned indentation_increment = 4;
-    int limit                      = 10;
+    unsigned indentation_increment = MD_PRINT_TREE_INDENTATION;
+    int limit                      = MD_PRINT_TREE_MAX_NODES;
 };
 
 template <typename Node>
@@ -265,6 +279,11 @@ void print_node(
     const Node* current = node.get_first_child();
     if (current) {
         os << "(\n";
+        if constexpr (is_same_template<Node, binary_node<void>>) {
+            if (current->is_right_child()) {
+                os << std::string(indentation + preferences.indentation_increment, ' ') << "n(),\n";
+            }
+        }
         if (--preferences.limit > 0) {
             print_node(os, *current, indentation + preferences.indentation_increment, std::move(preferences));
             for (
@@ -287,3 +306,5 @@ void print_node(
 }
 
 } // namespace md
+
+#endif

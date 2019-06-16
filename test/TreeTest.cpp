@@ -1,6 +1,9 @@
 #include <QtTest/QtTest>
 #include <sstream> // std::stringstream
 
+#define MD_PRINT_TREE_MAX_NODES 10
+#define MD_PRINT_TREE_INDENTATION 4
+
 #include <TreeDS/tree>
 
 #include "Types.hpp"

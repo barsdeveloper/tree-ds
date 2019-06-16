@@ -171,7 +171,7 @@ class binary_node : public node<T, binary_node<T>> {
         return nullptr;
     }
 
-    binary_node* assign_child_like(binary_node* child, const binary_node& reference_child) {
+    binary_node* do_assign_child_like(binary_node* child, const binary_node& reference_child) {
         assert(child);
         binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
         assert(target == nullptr);
@@ -342,14 +342,14 @@ class binary_node : public node<T, binary_node<T>> {
 
     template <typename Allocator>
     binary_node* assign_child_like(unique_node_ptr<Allocator> child, const binary_node& reference_child) {
-        return this->assign_child_like(child.release(), reference_child);
+        return this->do_assign_child_like(child.release(), reference_child);
     }
 
     template <typename Allocator>
     unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const binary_node& reference_copy) {
         assert(!reference_copy.is_root());
         unique_node_ptr<Allocator> parent = allocate(allocator, reference_copy.get_parent()->get_value());
-        parent->assign_child_like(this, reference_copy);
+        parent->do_assign_child_like(this, reference_copy);
         return std::move(parent);
     }
 

@@ -75,6 +75,24 @@ void GenerativeNavigatorTest::binary() {
                     n(),
                     n(6))),
             n(3)));
+
+    ptrs = nav.get_parent(nav.get_parent(ptrs)); // 2
+    generated.erase(
+        std::find(
+            generated.begin(policy::post_order()),
+            generated.end(policy::post_order()),
+            5));
+    QCOMPARE(generated, n(1)(n(2), n(3)));
+
+    ptrs = nav.get_right_child(ptrs); // 5
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n(1)(
+            n(2)(
+                n(),
+                n(5)),
+            n(3)));
 }
 
 void GenerativeNavigatorTest::nary() {

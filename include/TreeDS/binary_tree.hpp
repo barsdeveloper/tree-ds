@@ -28,3 +28,23 @@ class binary_tree : public tree<binary_node<T>, Policy, Allocator> {
 };
 
 } // namespace md
+
+#if !defined NDEBUG && defined QT_VERSION && QT_VERSION >= 050500
+#include <QByteArray> // qstrdup()
+#include <sstream>    // std::stringstream
+#include <string>
+
+#include <TreeDS/utility.hpp>
+namespace md {
+template <
+    typename T,
+    typename Policy,
+    typename Allocator,
+    typename = std::enable_if<is_printable<T>>>
+char* toString(const binary_tree<T, Policy, Allocator>& tree) {
+    std::stringstream ss;
+    ss << tree;
+    return qstrdup((std::string("\n") + ss.str()).c_str());
+}
+} // namespace md
+#endif

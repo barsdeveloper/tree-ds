@@ -371,6 +371,7 @@ bool operator!=(const struct_node<detail::empty_t>& lhs, const tree_base<Node, P
     return !rhs.operator==(lhs);
 }
 
+#ifndef NDEBUG
 template <
     typename Node,
     typename Policy,
@@ -384,5 +385,6 @@ std::ostream& operator<<(std::ostream& os, const tree_base<Node, Policy, Allocat
     }
     return os;
 }
+#endif
 
 } // namespace md
