@@ -55,10 +55,6 @@ class tree : public tree_base<Node, Policy, Allocator> {
 
     /*   ---   CONSTRUCTORS   ---   */
     protected:
-    tree(node_type* root) :
-            super(root, 0u, 0u, navigator_type(root, false)) {
-    }
-
     tree(node_type* root, size_type size, size_type arity) :
             super(root, size, arity, navigator_type(root, false)) {
     }

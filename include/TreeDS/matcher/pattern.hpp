@@ -41,6 +41,10 @@ class pattern {
     }
 
     public:
+    std::size_t mark_count() const {
+        return this->pattern_tree.mark_count();
+    }
+
     template <typename Node, typename Policy, typename Allocator>
     bool match(tree_base<Node, Policy, Allocator>& tree) {
         return this->do_match(tree);
@@ -78,8 +82,8 @@ class pattern {
         tree = pattern_tree.marked_result(name, tree.allocator);
     }
 
-    std::size_t size() const {
-        return this->pattern_tree.mark_count();
+    const PatternTree& get_pattern() const {
+        return this->pattern_tree;
     }
 };
 

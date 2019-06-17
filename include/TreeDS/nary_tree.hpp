@@ -121,7 +121,7 @@ template <
     typename Policy,
     typename Allocator,
     typename = std::enable_if<is_printable<T>>>
-char* md::toString(const nary_tree<T, Policy, Allocator>& tree) {
+char* toString(const nary_tree<T, Policy, Allocator>& tree) {
     std::stringstream ss;
     ss << tree;
     return qstrdup((std::string("\n") + ss.str()).c_str());

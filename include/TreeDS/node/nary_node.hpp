@@ -260,9 +260,8 @@ class nary_node : public node<T, nary_node<T>> {
                 this->last_child = node;
             }
             this->first_child = node;
-            return this->first_child;
         }
-        return nullptr;
+        return node;
     }
 
     nary_node* append_child(nary_node* node) {

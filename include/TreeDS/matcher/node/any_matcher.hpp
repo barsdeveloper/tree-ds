@@ -64,6 +64,9 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     public:
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+        if (!this->match_value(node.get_value())) {
+            return false;
+        }
         using node_t = allocator_value_type<NodeAllocator>;
         node_pred_navigator navigator(
             &node,           // Navigate the subtree represented by node
@@ -164,30 +167,38 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                         this->children);
                 }
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
-                std::array<node_t*, any_matcher::children_count()> children_target;
-                auto search_start = children_target.begin();
-                auto search_end   = children_target.end();
+                std::array<node_t*, any_matcher::children_count()> childrens_nodes;
+                auto search_start = childrens_nodes.begin();
                 std::apply(
                     [&](auto&... child) {
-                        children_target = {child.get_node(allocator)...};
+                        childrens_nodes = {child.get_node(allocator)...};
                     },
                     this->children);
-                result = this->clone_node(allocator);
-                multiple_node_pointer multi_root(this->get_node(allocator), result.get());
-                generative_navigator nav(
-                    allocator,
-                    multi_root,
-                    [&](auto multi_node_ptr) {
-                        search_start = std::remove(
-                            search_start,
-                            search_end,
-                            std::get<0>(multi_node_ptr.get_pointers()));
-                        return search_start != search_end && this->match_value(multi_node_ptr->get_value());
-                    },
-                    true);
-                detail::breadth_first_impl<decltype(nav.get_root()), decltype(nav), NodeAllocator> iterator(
-                    multi_root,
-                    nav,
+                result            = this->clone_node(allocator);
+                auto check_target = [&](auto multi_node_ptr) {
+                    auto target_ptr    = std::get<0>(multi_node_ptr->get_pointers()); // Can't be nullptr
+                    auto generated_ptr = std::get<1>(multi_node_ptr->get_pointers()); // Can be nullptr
+                    auto position      = std::find(search_start, childrens_nodes.end(), target_ptr);
+                    if (position != childrens_nodes.end()) {
+                        // TODO resolve problem related to generative node impossible access
+                        int child_position = position - childrens_nodes.begin();
+                        generated_ptr->assign_child_like(
+                            apply_at_index(
+                                [&](auto& child) {
+                                    return child.result(allocator);
+                                },
+                                this->children,
+                                child_position),
+                            *childrens_nodes[child_position]);
+                        std::iter_swap(search_start, position);
+                        ++search_start;
+                    }
+                    return search_start != childrens_nodes.end() && this->match_value(multi_node_ptr->get_value());
+                };
+                auto iterator = create_breadth_first_generative_iterator(
+                    this->get_node(allocator),
+                    result.get(),
+                    check_target,
                     allocator);
                 while (iterator.get_current_node()) {
                     iterator.increment();

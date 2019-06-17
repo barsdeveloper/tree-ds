@@ -18,6 +18,7 @@ class GenerativeNavigatorTest : public QObject {
     void binary1();
     void binary2();
     void nary1();
+    void breadthFirstIterate();
 };
 
 void GenerativeNavigatorTest::binary1() {
@@ -164,6 +165,74 @@ void GenerativeNavigatorTest::binary2() {
 }
 
 void GenerativeNavigatorTest::nary1() {
+}
+
+void GenerativeNavigatorTest::breadthFirstIterate() {
+    binary_tree<char> target {
+        n('a')(
+            n('1')(
+                n(),
+                n('2')(
+                    n('3')(
+                        n('d'),
+                        n('5')),
+                    n('4')(
+                        n('6')(
+                            n('e'),
+                            n('f')),
+                        n('7')))),
+            n('b')(
+                n('c')))};
+    binary_tree<char> generated {n('1')};
+    std::allocator<binary_node<char>> al;
+
+    auto it = create_breadth_first_generative_iterator(
+        target.get_root().go_first_child().get_raw_node(),
+        generated.get_root().get_raw_node(),
+        [](auto multiplePointer) {
+            return multiplePointer->get_value() >= '1' && multiplePointer->get_value() <= '9';
+        },
+        std::allocator<binary_node<char>>());
+
+    generated.update_size_arity();
+    QCOMPARE(generated, n('1')(n(), n('2')));
+
+    it.increment();
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n('1')(
+            n(),
+            n('2')(
+                n('3'))));
+
+    it.increment();
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n('1')(
+            n(),
+            n('2')(
+                n('3')(
+                    n(),
+                    n('5')),
+                n('4'))));
+
+    do {
+        it.increment();
+    } while (it.get_current_node());
+    generated.update_size_arity();
+    QCOMPARE(
+        generated,
+        n('1')(
+            n(),
+            n('2')(
+                n('3')(
+                    n(),
+                    n('5')),
+                n('4')(
+                    n('6'),
+                    n('7')))));
 }
 
 QTEST_MAIN(GenerativeNavigatorTest);

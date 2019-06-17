@@ -4,7 +4,7 @@
 #include <cstddef>     // std::size_t
 #include <functional>  // std::invoke()
 #include <tuple>       // std::std::make_from_tuple
-#include <type_traits> // std::std::enable_if_t, std::is_invocable_v, std::void_t
+#include <type_traits> // std::decay_t, std::std::enable_if_t, std::is_invocable_v, std::void_t
 #include <utility>     // std::declval(), std::make_index_sequence
 
 namespace md {
@@ -21,6 +21,14 @@ class node_navigator;
 
 template <typename, typename, typename, typename>
 class generative_navigator;
+
+template <typename, typename...>
+class multiple_node_pointer;
+
+namespace detail {
+    template <typename, typename, typename>
+    class breadth_first_impl;
+}
 
 template <
     typename T,
@@ -162,6 +170,21 @@ std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
         child = child->get_next_sibling();
     }
     return arity;
+}
+
+template <typename TargetPtr, typename GeneratedPtr, typename Predicate, typename NodeAllocator>
+auto create_breadth_first_generative_iterator(
+    TargetPtr target,
+    GeneratedPtr generated,
+    Predicate&& predicate,
+    NodeAllocator&& allocator) {
+    multiple_node_pointer roots(target, generated);
+    generative_navigator nav(allocator, roots, predicate, true);
+    detail::breadth_first_impl<decltype(roots), decltype(nav), std::decay_t<NodeAllocator>> it(
+        roots,
+        nav,
+        allocator);
+    return it;
 }
 
 namespace detail {

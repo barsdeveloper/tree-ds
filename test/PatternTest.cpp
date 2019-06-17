@@ -20,19 +20,19 @@ class PatternTest : public QObject {
 
 void PatternTest::construction() {
     pattern p1(one());
-    QCOMPARE(p1.size(), 0);
+    QCOMPARE(p1.mark_count(), 0);
 
     pattern p2(
         one(1)(
             one(2),
             one(3)));
-    QCOMPARE(p2.size(), 0);
+    QCOMPARE(p2.mark_count(), 0);
 
     pattern p3(
         one('a')(
             cpt(one('b')),
             one('c')));
-    QCOMPARE(p3.size(), 1);
+    QCOMPARE(p3.mark_count(), 1);
 
     pattern p4(
         cpt(
@@ -40,12 +40,12 @@ void PatternTest::construction() {
                 cpt(one(string("beta"))),
                 one(string("gamma")),
                 cpt(one()))));
-    QCOMPARE(p4.size(), 3);
+    QCOMPARE(p4.mark_count(), 3);
 
     pattern p5(
         cpt(cpt(
             star())));
-    QCOMPARE(p5.size(), 2);
+    QCOMPARE(p5.mark_count(), 2);
 
     pattern p6(
         one()(
@@ -54,7 +54,7 @@ void PatternTest::construction() {
                     cpt(capture_name<'a', 'n', ' ', 'a'>(), one('a'))),
                 cpt(one('b')(
                     cpt(star())))))));
-    QCOMPARE(p6.size(), 4);
+    QCOMPARE(p6.mark_count(), 4);
 
     pattern p7(
         cpt(cpt(cpt(
@@ -62,7 +62,7 @@ void PatternTest::construction() {
             star(string("string"))(
                 cpt(capture_name<'t'>(), cpt(one())),
                 cpt(one(string("b"))))))));
-    QCOMPARE(p7.size(), 6);
+    QCOMPARE(p7.mark_count(), 6);
 }
 
 void PatternTest::simpleMatch() {
@@ -228,13 +228,21 @@ void PatternTest::test1() {
                                     n('y'))))),
                     n('b'))));
     }
-    /*{
+    {
         pattern p(
             star()(
-                cpt(star('a')),
+                cpt(star('a')(
+                    one('a')(
+                        one('a'),
+                        one('a')))),
                 star('b')(
                     star('y'))));
         QVERIFY(p.match(tree));
+        std::allocator<binary_node<char>> al;
+        auto v   = p.get_pattern().get_node(al)->get_value();
+        auto sla = std::get<0>(std::get<0>(p.get_pattern().get_children()).get_children()).get_node(al)->get_value();
+        auto srb = std::get<1>(p.get_pattern().get_children()).get_node(al)->get_value();
+        auto sby = std::get<0>(std::get<1>(p.get_pattern().get_children()).get_children()).get_node(al)->get_value();
         p.assign_result(result);
         QCOMPARE(
             result,
@@ -245,18 +253,13 @@ void PatternTest::test1() {
                         n('a')(
                             n('a')(
                                 n('a'),
-                                n('a')),
-                            n('a')(
-                                n('a')(
-                                    n(),
-                                    n('y')),
                                 n('a')))),
                     n('b')(
                         n('b'),
                         n('b')(
                             n('y')))),
                 n('a')));
-    }*/
+    }
 }
 
 QTEST_MAIN(PatternTest);
