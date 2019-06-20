@@ -201,10 +201,22 @@ void PatternTest::test1() {
     binary_tree<char> result;
 
     {
-        pattern p(one('x'));
+        pattern p(
+            star()(
+                one('a'),
+                star('b')(
+                    one('y'))));
         QVERIFY(p.match(tree));
         p.assign_result(result);
-        QCOMPARE(result, n('x'));
+        QCOMPARE(
+            result,
+            n('x')(
+                n('a')(
+                    n('a'),
+                    n('b')(
+                        n('b')(
+                            n('y')),
+                        n('b')))));
     }
     {
         pattern p(
@@ -231,18 +243,21 @@ void PatternTest::test1() {
     {
         pattern p(
             star()(
-                cpt(star('a')(
-                    one('a')(
-                        one('a'),
-                        one('a')))),
-                star('b')(
-                    star('y'))));
+                cpt(capture_name<'P'>(),
+                    star('a')(
+                        one('a')(
+                            one('a'),
+                            one('a')))),
+                cpt(capture_name<'b'>(),
+                    star('b')(
+                        cpt(capture_name<'y'>(),
+                            star('y'))))));
         QVERIFY(p.match(tree));
         std::allocator<binary_node<char>> al;
-        auto v   = p.get_pattern().get_node(al)->get_value();
-        auto sla = std::get<0>(std::get<0>(p.get_pattern().get_children()).get_children()).get_node(al)->get_value();
-        auto srb = std::get<1>(p.get_pattern().get_children()).get_node(al)->get_value();
-        auto sby = std::get<0>(std::get<1>(p.get_pattern().get_children()).get_children()).get_node(al)->get_value();
+        auto v   = p.get_pattern().get_node(al);
+        auto sla = std::get<0>(std::get<0>(p.get_pattern().get_children()).get_children()).get_node(al);
+        auto srb = std::get<1>(p.get_pattern().get_children()).get_node(al);
+        auto sby = std::get<0>(std::get<1>(p.get_pattern().get_children()).get_children()).get_node(al);
         p.assign_result(result);
         QCOMPARE(
             result,

@@ -7,7 +7,7 @@
 
 namespace md {
 
-template <typename Derived, typename NodePtr>
+template <typename Derived, typename NodePtr, bool Dynamic = false>
 class navigator_base {
 
     /*   ---   FRIENDS   ---   */
@@ -15,12 +15,15 @@ class navigator_base {
     friend class node_navigator;
 
     /*   ---   TYPES   ---   */
-    using derived_this = const Derived*;
+    using derived_this = Derived*;
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
     bool is_subtree = false;
     NodePtr root    = nullptr;
+
+    public:
+    constexpr static bool IS_DYNAMIC = Dynamic;
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -35,7 +38,7 @@ class navigator_base {
     /*   ---   METHODS   ---   */
     protected:
     template <bool Left>
-    NodePtr get_other_branch(NodePtr node) const {
+    NodePtr get_other_branch(NodePtr node) {
         int relative_level    = 0;
         NodePtr deepest_child = node;
         NodePtr crossed;
@@ -94,7 +97,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_row_extremum(NodePtr from) const {
+    NodePtr get_row_extremum(NodePtr from) {
         if (from == this->root) {
             return from;
         }
@@ -147,7 +150,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_highest_leaf() const {
+    NodePtr get_highest_leaf() {
         return keep_calling(
             this->root,
             [this](NodePtr node) {
@@ -158,7 +161,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_deepest_extremum_child() const {
+    NodePtr get_deepest_extremum_child() {
         int current_level    = 0;
         int deepest_level    = 0;
         NodePtr current_node = this->root;
@@ -192,15 +195,15 @@ class navigator_base {
     }
 
     public:
-    bool is_root(NodePtr node) const {
+    bool is_root(NodePtr node) {
         return node == this->root;
     }
 
-    bool is_first_child(NodePtr node) const {
+    bool is_first_child(NodePtr node) {
         return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_first_child();
     }
 
-    bool is_last_child(NodePtr node) const {
+    bool is_last_child(NodePtr node) {
         return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_last_child();
     }
 
@@ -210,7 +213,7 @@ class navigator_base {
             is_same_template<
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
-    bool is_left_child(N node) const {
+    bool is_left_child(N node) {
         return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_left_child();
     }
 
@@ -220,35 +223,35 @@ class navigator_base {
             is_same_template<
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
-    bool is_right_child(N node) const {
+    bool is_right_child(N node) {
         return !static_cast<derived_this>(this)->is_root(node) && node == node->get_parent()->get_right_child();
     }
 
-    NodePtr get_root() const {
+    NodePtr get_root() {
         return this->root;
     }
 
-    NodePtr get_parent(NodePtr node) const {
+    NodePtr get_parent(NodePtr node) {
         return !static_cast<derived_this>(this)->is_root(node) ? node->get_parent() : nullptr;
     }
 
-    NodePtr get_prev_sibling(NodePtr node) const {
+    NodePtr get_prev_sibling(NodePtr node) {
         return !static_cast<derived_this>(this)->is_root(node) ? node->get_prev_sibling() : nullptr;
     }
 
-    NodePtr get_next_sibling(NodePtr node) const {
+    NodePtr get_next_sibling(NodePtr node) {
         return !static_cast<derived_this>(this)->is_root(node) ? node->get_next_sibling() : nullptr;
     }
 
-    NodePtr get_first_child(NodePtr node) const {
+    NodePtr get_first_child(NodePtr node) {
         return node->get_first_child();
     }
 
-    NodePtr get_last_child(NodePtr node) const {
+    NodePtr get_last_child(NodePtr node) {
         return node->get_last_child();
     }
 
-    NodePtr get_child(NodePtr node, std::size_t index) const {
+    NodePtr get_child(NodePtr node, std::size_t index) {
         return node->get_child(index);
     }
 
@@ -258,7 +261,7 @@ class navigator_base {
             is_same_template<
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
-    NodePtr get_left_child(N node) const {
+    NodePtr get_left_child(N node) {
         return node->get_left_child();
     }
 
@@ -268,40 +271,44 @@ class navigator_base {
             is_same_template<
                 std::decay_t<std::remove_pointer_t<N>>,
                 binary_node<void>>>>
-    NodePtr get_right_child(N node) const {
+    NodePtr get_right_child(N node) {
         return node->get_right_child();
     }
 
-    NodePtr get_left_branch(NodePtr node) const {
+    NodePtr get_left_branch(NodePtr node) {
         return static_cast<derived_this>(this)->template get_other_branch<true>(node);
     }
 
-    NodePtr get_right_branch(NodePtr node) const {
+    NodePtr get_right_branch(NodePtr node) {
         return static_cast<derived_this>(this)->template get_other_branch<false>(node);
     }
 
-    NodePtr get_same_row_leftmost(NodePtr from) const {
+    NodePtr get_same_row_leftmost(NodePtr from) {
         return static_cast<derived_this>(this)->template get_row_extremum<true>(from);
     }
 
-    NodePtr get_same_row_rightmost(NodePtr from) const {
+    NodePtr get_same_row_rightmost(NodePtr from) {
         return static_cast<derived_this>(this)->template get_row_extremum<false>(from);
     }
 
-    NodePtr get_highest_left_leaf() const {
+    NodePtr get_highest_left_leaf() {
         return static_cast<derived_this>(this)->template get_highest_leaf<true>();
     }
 
-    NodePtr get_highest_right_leaf() const {
+    NodePtr get_highest_right_leaf() {
         return static_cast<derived_this>(this)->template get_highest_leaf<false>();
     }
 
-    NodePtr get_deepest_leftmost_leaf() const {
+    NodePtr get_deepest_leftmost_leaf() {
         return static_cast<derived_this>(this)->template get_deepest_extremum_child<true>();
     }
 
-    NodePtr get_deepest_rightmost_leaf() const {
+    NodePtr get_deepest_rightmost_leaf() {
         return static_cast<derived_this>(this)->template get_deepest_extremum_child<false>();
+    }
+
+    bool is_valid(NodePtr) {
+        return true;
     }
 };
 

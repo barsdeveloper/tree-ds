@@ -67,17 +67,15 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         if (!this->match_value(node.get_value())) {
             return false;
         }
-        using node_t = allocator_value_type<NodeAllocator>;
-        node_pred_navigator navigator(
-            &node,           // Navigate the subtree represented by node
-            [&](node_t& n) { // Stop when finding a non-matching node
-                return
-                    // Node matches
-                    this->match_value(n.get_value())
-                    // It is a child of some node that matches
-                    || (&n != &node && this->match_value(n.get_parent()->get_value()));
-            },
-            true);
+        using node_t        = allocator_value_type<NodeAllocator>;
+        node_t* subtree_cut = nullptr;
+        auto predicate      = [&](node_t& n) { // Stop when finding a non-matching node
+            if (!n.get_parent()) {
+                return this->match_value(n.get_value());
+            }
+            return n.get_parent() != subtree_cut && this->match_value(n.get_parent()->get_value());
+        };
+        node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
         std::array<node_t*, any_matcher::children_count() + 1> match_attempt_begin = {nullptr};
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
@@ -88,15 +86,21 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 return child.info.matches_null;
             }
             while (current) {
-                target_it.increment();
                 if (child.match_node(current, allocator)) {
+                    subtree_cut = current;
+                    target_it.increment();
                     return true;
                 }
+                target_it.increment();
                 current = target_it.get_current_node();
             }
             return false;
         };
         auto do_rematch = [&](auto& child) -> bool {
+            subtree_cut = nullptr;
+            if (!child.get_node(allocator)) {
+                return false;
+            }
             target_it
                 = policy::pre_order()
                       .get_instance(child.get_node(allocator), navigator, allocator)
@@ -105,6 +109,8 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             if (target_it.get_current_node() == nullptr) {
                 // This child failed to rematch so as to leave the next child with a potentially positive attempt
                 return false;
+            } else {
+                subtree_cut = target_it.get_current_node();
             }
             return do_match(child);
         };
@@ -174,32 +180,34 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                         childrens_nodes = {child.get_node(allocator)...};
                     },
                     this->children);
-                result            = this->clone_node(allocator);
-                auto check_target = [&](auto multi_node_ptr) {
-                    auto target_ptr    = std::get<0>(multi_node_ptr->get_pointers()); // Can't be nullptr
-                    auto generated_ptr = std::get<1>(multi_node_ptr->get_pointers()); // Can be nullptr
-                    auto position      = std::find(search_start, childrens_nodes.end(), target_ptr);
+                result = this->clone_node(allocator);
+                // Flag that acknowledges generitve_navigator that we assigned a node that must be linked to the tree
+                bool generated_assigned = false;
+                multiple_node_pointer roots(this->get_node(allocator), result.get());
+                // The iterator will use this predicate to traverse the tree. return false => node is not cloned
+                auto check_target = [&](auto& multi_node_ptr) {
+                    auto target_ptr     = std::get<0>(multi_node_ptr->get_pointers()); // Can't be nullptr
+                    auto& generated_ptr = std::get<1>(multi_node_ptr->get_pointers()); // Always nullptr
+                    auto position       = std::find(search_start, childrens_nodes.end(), target_ptr);
+                    bool valid_node     = false;
                     if (position != childrens_nodes.end()) {
-                        // TODO resolve problem related to generative node impossible access
+                        // If we reached a node that is matched by one of the children
                         int child_position = position - childrens_nodes.begin();
-                        generated_ptr->assign_child_like(
-                            apply_at_index(
-                                [&](auto& child) {
-                                    return child.result(allocator);
-                                },
-                                this->children,
-                                child_position),
-                            *childrens_nodes[child_position]);
+                        generated_assigned = true;
+                        generated_ptr      = apply_at_index(
+                            [&](auto& child) {
+                                return child.result(allocator).release();
+                            },
+                            this->children,
+                            child_position);
                         std::iter_swap(search_start, position);
                         ++search_start;
+                        valid_node = true;
                     }
-                    return search_start != childrens_nodes.end() && this->match_value(multi_node_ptr->get_value());
+                    return valid_node || this->match_value(multi_node_ptr->get_value());
                 };
-                auto iterator = create_breadth_first_generative_iterator(
-                    this->get_node(allocator),
-                    result.get(),
-                    check_target,
-                    allocator);
+                generative_navigator nav(allocator, roots, check_target, true, &generated_assigned);
+                detail::breadth_first_impl iterator(policy::breadth_first().get_instance(roots, nav, allocator));
                 while (iterator.get_current_node()) {
                     iterator.increment();
                 }

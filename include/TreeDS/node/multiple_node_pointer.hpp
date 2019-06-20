@@ -9,12 +9,13 @@
 namespace md {
 
 template <typename MainPtr, typename... OtherPtr>
-struct multiple_node_pointer {
+class multiple_node_pointer {
 
     static_assert((... && is_const_cast_equivalent<MainPtr, OtherPtr>), "The pointer must point to the same type");
 
     std::tuple<MainPtr, OtherPtr...> pointers;
 
+    public:
     multiple_node_pointer() :
             multiple_node_pointer(nullptr) {
     }
@@ -96,10 +97,6 @@ struct multiple_node_pointer {
         });
     }
 
-    const std::tuple<MainPtr, OtherPtr...>& get_pointers() const {
-        return this->pointers;
-    }
-
     std::tuple<MainPtr, OtherPtr...>& get_pointers() {
         return this->pointers;
     }
@@ -124,7 +121,15 @@ struct multiple_node_pointer {
         return this;
     }
 
+    multiple_node_pointer* operator->() {
+        return this;
+    }
+
     const multiple_node_pointer& operator*() const {
+        return *this;
+    }
+
+    multiple_node_pointer& operator*() {
         return *this;
     }
 

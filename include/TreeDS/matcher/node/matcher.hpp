@@ -87,7 +87,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(MatchFunction& do_match, RematchFunction do_rematch = nullptr) {
+    bool match_children(MatchFunction&& do_match, RematchFunction&& do_rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
             auto check_prefers_null = [&](auto& child) -> bool {
                 return child.info.matches_null && child.info.reluctant;
@@ -101,12 +101,15 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
                         return false;
                     } else {
-                        while (current_child > 0) {
+                        while (current_child >= 0) {
                             if (apply_at_index(do_rematch, this->children, current_child)) {
                                 break; // We found a child that could rematch and leave the other children new nodes
                             }
                             --current_child;
                         }
+                    }
+                    if (current_child < 0) {
+                        return false;
                     }
                 }
             }

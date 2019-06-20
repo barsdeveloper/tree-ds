@@ -33,7 +33,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         }
         auto target = node.get_first_child();
         // Match children of the pattern
-        auto do_match_child = [&](auto& child) mutable {
+        auto do_match_child = [&](auto& child) -> bool {
             auto* current = target;
             if (child.match_node(current, allocator)) {
                 if (current) {
