@@ -8,19 +8,30 @@
 
 namespace md {
 
-template <typename MainPtr, typename... OtherPtr>
+template <typename MasterPtr, typename... SlavePtrs>
 class multiple_node_pointer {
 
-    static_assert((... && is_const_cast_equivalent<MainPtr, OtherPtr>), "The pointer must point to the same type");
+    /*   ---   VALIDATION   ---   */
+    static_assert(std::is_pointer_v<MasterPtr> && (... && std::is_pointer_v<SlavePtrs>), "Type types must be pointers");
+    static_assert((... && is_const_cast_equivalent<MasterPtr, SlavePtrs>), "The pointers must point to the same type");
 
-    std::tuple<MainPtr, OtherPtr...> pointers;
+    /*   ---   ATTRIBUTES   ---   */
+    protected:
+    std::tuple<MasterPtr, SlavePtrs...> pointers;
+    std::array<bool, 1 + sizeof...(SlavePtrs)> assigned_ptrs {false};
 
+    /*   ---   CONSTRUCTORS   ---   */
     public:
     multiple_node_pointer() :
             multiple_node_pointer(nullptr) {
     }
 
-    multiple_node_pointer(MainPtr main_ptr, OtherPtr... pointers) :
+    multiple_node_pointer(const multiple_node_pointer& other) :
+            pointers(other.pointers),
+            assigned_ptrs {other.assigned_ptrs} {
+    }
+
+    multiple_node_pointer(MasterPtr main_ptr, SlavePtrs... pointers) :
             pointers(main_ptr, pointers...) {
     }
 
@@ -28,6 +39,13 @@ class multiple_node_pointer {
             pointers() {
     }
 
+    multiple_node_pointer& operator=(const multiple_node_pointer& other) {
+        this->pointers      = other.pointers;
+        this->assigned_ptrs = other.assigned_ptrs;
+        return *this;
+    }
+
+    /*   ---   METHODS   ---   */
     private:
     template <typename Function>
     multiple_node_pointer do_function(Function&& call) const {
@@ -62,7 +80,7 @@ class multiple_node_pointer {
     }
 
     template <
-        typename N = std::decay_t<std::remove_pointer_t<MainPtr>>,
+        typename N = std::decay_t<std::remove_pointer_t<MasterPtr>>,
         typename   = std::enable_if_t<is_same_template<N, binary_node<void>>>>
     multiple_node_pointer get_left_child() const {
         return do_function([](auto& node) {
@@ -71,7 +89,7 @@ class multiple_node_pointer {
     }
 
     template <
-        typename N = std::decay_t<std::remove_pointer_t<MainPtr>>,
+        typename N = std::decay_t<std::remove_pointer_t<MasterPtr>>,
         typename   = std::enable_if_t<is_same_template<N, binary_node<void>>>>
     multiple_node_pointer get_right_child() const {
         return do_function([](auto& node) {
@@ -97,11 +115,11 @@ class multiple_node_pointer {
         });
     }
 
-    std::tuple<MainPtr, OtherPtr...>& get_pointers() {
+    std::tuple<MasterPtr, SlavePtrs...>& get_pointers() {
         return this->pointers;
     }
 
-    MainPtr& get_main_pointer() {
+    MasterPtr& get_main_pointer() {
         return std::get<0>(this->pointers);
     }
 
@@ -113,8 +131,35 @@ class multiple_node_pointer {
             this->pointers);
     }
 
-    bool operator==(multiple_node_pointer other) const {
-        return std::get<0>(this->pointers) == std::get<0>(other.pointers);
+    template <typename PtrT>
+    void assign_pointer(std::size_t index, PtrT value) {
+        this->assigned_ptrs[index] = true;
+        apply_at_index(
+            [&](auto& node_ptr) {
+                node_ptr = value;
+            },
+            this->pointers,
+            index);
+    }
+
+    void reset_assignment_flags() {
+        std::apply(
+            [&](auto&&... flags) {
+                (..., (flags = false));
+            },
+            this->pointers);
+    }
+
+    bool is_pointer_assigned(std::size_t index) const {
+        return this->assigned_ptrs[index];
+    }
+
+    MasterPtr get_master_ptr() const {
+        return std::get<0>(this->pointers);
+    }
+
+    operator bool() const {
+        return std::get<0>(this->pointers) != nullptr;
     }
 
     const multiple_node_pointer* operator->() const {
@@ -133,8 +178,8 @@ class multiple_node_pointer {
         return *this;
     }
 
-    operator bool() const {
-        return std::get<0>(this->pointers) != nullptr;
+    bool operator==(multiple_node_pointer other) const {
+        return std::get<0>(this->pointers) == std::get<0>(other.pointers);
     }
 };
 

@@ -214,9 +214,10 @@ void PatternTest::test1() {
                 n('a')(
                     n('a'),
                     n('b')(
+                        n('b'),
                         n('b')(
-                            n('y')),
-                        n('b')))));
+                            n('y')))),
+                n('a')));
     }
     {
         pattern p(
@@ -266,9 +267,8 @@ void PatternTest::test1() {
                     n('a')(
                         n(),
                         n('a')(
-                            n('a')(
-                                n('a'),
-                                n('a')))),
+                            n('a'),
+                            n('a'))),
                     n('b')(
                         n('b'),
                         n('b')(

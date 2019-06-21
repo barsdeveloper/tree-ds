@@ -24,11 +24,6 @@ class generative_navigator
 
     /*   ---   ATTRIBUTES   ---   */
     NodeAllocator& allocator;
-    /**
-     * @brief Flag to acknowledge the navigator that the pointer referred to generated tree's node is already assigned.
-     * The assignment happens in the predicate function.
-     */
-    mutable bool* generated_node_assigned = nullptr;
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -47,38 +42,37 @@ class generative_navigator
         NodeAllocator& allocator,
         multiple_node_pointer<TargetNodePtr, GeneratedNodePtr> root,
         Predicate predicate,
-        bool is_subtree               = true,
-        bool* generated_assigned_flag = nullptr) :
+        bool is_subtree = true) :
             node_pred_navigator<node_ptrs_t, Predicate>(root, predicate, is_subtree),
-            allocator(allocator),
-            generated_node_assigned(generated_assigned_flag) {
+            allocator(allocator) {
     }
 
     /*   ---   ASSIGNMENT   ---   */
     template <typename OtherNodePtr, typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, TargetNodePtr>>>
     generative_navigator& operator=(
         const generative_navigator<NodeAllocator, Predicate, OtherNodePtr, GeneratedNodePtr>& other) {
-        this->is_subtree              = other.is_subtree;
-        this->root                    = static_cast<node_ptrs_t>(other.root);
-        this->generated_node_assigned = other.generated_node_assigned;
+        this->is_subtree = other.is_subtree;
+        this->root       = static_cast<node_ptrs_t>(other.root);
     }
 
     /*   ---   METHODS   ---   */
     private:
     template <typename NavigateF, typename AttachF>
-    node_ptrs_t do_navigate_generate(node_ptrs_t node, NavigateF&& navigate, AttachF&& attach_node) {
+    node_ptrs_t do_navigate_generate(node_ptrs_t& node, NavigateF&& navigate, AttachF&& attach_node) {
         assert(node.all_valid());
         node_ptrs_t result(navigate(this, node));
         auto&& [reference_node, generated] = result.get_pointers();
-        if (reference_node && (!generated || (generated_node_assigned && *generated_node_assigned))) {
-            unique_node_ptr<NodeAllocator> new_child {
-                this->generated_node_assigned
-                    ? generated
-                    : allocate(this->allocator, reference_node->get_value()).release()};
-            generated = attach_node(std::get<1>(node.get_pointers()), std::move(new_child), *reference_node);
-        }
-        if (this->generated_node_assigned) {
-            *this->generated_node_assigned = false;
+        unique_node_ptr<NodeAllocator> assigned_child;
+        if (reference_node) {
+            if (!generated) {
+                result.assign_pointer(1, allocate(this->allocator, reference_node->get_value()).release());
+            }
+            if (result.is_pointer_assigned(1)) {
+                attach_node(
+                    std::get<1>(node.get_pointers()),
+                    unique_node_ptr<NodeAllocator>(generated),
+                    *reference_node);
+            }
         }
         return result;
     }
@@ -130,10 +124,6 @@ class generative_navigator
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_right_child<N>),
             std::mem_fn(&node_t::template assign_child_like<NodeAllocator>));
-    }
-
-    void acknowledge_generated_node_assigned() {
-        this->generated_node_assigned = true;
     }
 };
 
