@@ -290,6 +290,16 @@ void PatternTest::test1() {
         p.assign_result(result);
         QCOMPARE(result, n('x'));
     };
+    {
+        pattern p {
+            star()(
+                star(),
+                one('x'),
+                star())};
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    };
 }
 
 QTEST_MAIN(PatternTest);

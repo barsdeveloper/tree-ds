@@ -95,10 +95,12 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         std::array<node_t*, any_matcher::children_count() + 1> match_attempt_begin = {nullptr};
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
         auto do_match = [&](auto& child) -> bool {
-            node_t* current                        = target_it.get_current_node();
-            match_attempt_begin[child.get_index()] = current;
+            node_t* current = target_it.get_current_node();
             if (current == nullptr) {
                 return child.info.matches_null;
+            }
+            if (!match_attempt_begin[child.get_index()]) {
+                match_attempt_begin[child.get_index()] = current;
             }
             while (current) {
                 if (child.match_node(current, allocator)) {
@@ -120,9 +122,17 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 = policy::pre_order()
                       .get_instance(child.get_node(allocator), navigator, allocator)
                       .go_depth_first_ramification();
-            // If the successive target node is the one where the next child started (and failed) its match attempt
+            // If we can't advance in depth in the tree as to leave the next node with a previously unseen match
             if (target_it.get_current_node() == nullptr) {
-                // This child failed to rematch so as to leave the next child with a potentially positive attempt
+                // If child can renounce to its match
+                if (child.info.matches_null && child.get_node(allocator) != nullptr) {
+                    // Then leave the next child with the target matched by child
+                    target_it = policy::pre_order().get_instance(
+                        match_attempt_begin[child.get_index()], // Leave child's initial node to another node
+                        navigator,
+                        allocator);
+                    return true;
+                }
                 return false;
             } else {
                 subtree_cut = target_it.get_current_node();
@@ -189,43 +199,41 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 }
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
                 std::array<node_t*, any_matcher::children_count()> childrens_nodes;
-                std::apply(
-                    [&](auto&... child) {
-                        childrens_nodes = {child.get_node(allocator)...};
-                    },
-                    this->children);
-                if constexpr (any_matcher::CHILDREN_MAY_STEAL_TARGET) {
-                    if (std::apply(
-                            [&](auto&... children) {
-                                /*
-                                 * Returns true if one of the children matched this target. Invariants guarantee that
-                                 * either:
-                                 *   1) Just one child matched the target of this node and all the the other children
-                                 *      matched nullptr.
-                                 *   2) Two or more children matched nodes which are descendats of this target.
-                                 */
-                                return (... || [&](auto& child) -> bool {
-                                    if (child.get_node(allocator) == this->get_node(allocator)) {
-                                        result = child.result(allocator);
+                unsigned not_null_count = 0;
+                if (std::apply(
+                        [&](auto&... children) -> bool {
+                            unsigned i = 0;
+                            for (node_t* target : {children.get_node(allocator)...}) {
+                                childrens_nodes[i++] = target;
+                                if (target) {
+                                    ++not_null_count;
+                                    if (any_matcher::CHILDREN_MAY_STEAL_TARGET && target == this->get_node(allocator)) {
+                                        apply_at_index(
+                                            [&](auto& child) {
+                                                result = child.result(allocator);
+                                            },
+                                            this->children,
+                                            i - 1);
                                         return true;
                                     }
-                                    return false;
-                                }(children));
-                            },
-                            this->children)) {
-                        return std::move(result); // Result is assigned above
-                    }
+                                }
+                            }
+                            return false;
+                        },
+                        this->children)) {
+                    return std::move(result);
                 }
                 auto search_start = childrens_nodes.begin();
                 result            = this->clone_node(allocator);
                 multiple_node_pointer roots(this->get_node(allocator), result.get());
                 // The iterator will use this predicate to traverse the tree. return false => node is not cloned
                 auto check_target = [&](auto& multi_node_ptr) {
-                    if (search_start == childrens_nodes.end()) {
+                    if (not_null_count == 0) {
                         return false;
                     }
                     auto position = std::find(search_start, childrens_nodes.end(), multi_node_ptr.get_master_ptr());
                     if (position != childrens_nodes.end()) {
+                        --not_null_count;
                         // If we reached a node that is matched by one of the children
                         apply_at_index(
                             [&](auto& child) {
