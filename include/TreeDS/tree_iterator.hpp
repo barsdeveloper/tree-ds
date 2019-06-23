@@ -139,6 +139,14 @@ class tree_iterator {
         return this->policy.get_current_node();
     }
 
+    const actual_policy_type& get_raw_policy() const {
+        return this->policy;
+    }
+
+    actual_policy_type& get_raw_policy() {
+        return this->policy;
+    }
+
     value_type& operator*() {
         return this->policy.get_current_node()->value;
     }

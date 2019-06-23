@@ -37,6 +37,21 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         (... && Children::info.matches_null),
         // It is reluctant if it has that quantifier
         Quantifier == quantifier::RELUCTANT};
+    // True if no more than one children requires a node in order to match
+    static constexpr bool CHILDREN_MAY_STEAL_TARGET
+        = (std::tuple_size_v<
+              decltype(std::tuple_cat(
+                  std::declval<
+                      /*
+                       * We count the number of children that require a node to match by creating a new tuple type and
+                       * getting the size of that tuple. To create that tuple we progressively append the elements of a
+                       * new tuple which is a std::tuple<int> (dummy integer element) or an empty tuple.
+                       */
+                      std::conditional_t<
+                          !Children::info.matches_null,
+                          std::tuple<int>,
+                          std::tuple<>>>()...))>)
+        <= 1;
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
@@ -174,13 +189,35 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 }
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
                 std::array<node_t*, any_matcher::children_count()> childrens_nodes;
-                auto search_start = childrens_nodes.begin();
                 std::apply(
                     [&](auto&... child) {
                         childrens_nodes = {child.get_node(allocator)...};
                     },
                     this->children);
-                result = this->clone_node(allocator);
+                if constexpr (any_matcher::CHILDREN_MAY_STEAL_TARGET) {
+                    if (std::apply(
+                            [&](auto&... children) {
+                                /*
+                                 * Returns true if one of the children matched this target. Invariants guarantee that
+                                 * either:
+                                 *   1) Just one child matched the target of this node and all the the other children
+                                 *      matched nullptr.
+                                 *   2) Two or more children matched nodes which are descendats of this target.
+                                 */
+                                return (... || [&](auto& child) -> bool {
+                                    if (child.get_node(allocator) == this->get_node(allocator)) {
+                                        result = child.result(allocator);
+                                        return true;
+                                    }
+                                    return false;
+                                }(children));
+                            },
+                            this->children)) {
+                        return std::move(result); // Result is assigned above
+                    }
+                }
+                auto search_start = childrens_nodes.begin();
+                result            = this->clone_node(allocator);
                 multiple_node_pointer roots(this->get_node(allocator), result.get());
                 // The iterator will use this predicate to traverse the tree. return false => node is not cloned
                 auto check_target = [&](auto& multi_node_ptr) {

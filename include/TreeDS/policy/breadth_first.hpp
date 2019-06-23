@@ -83,35 +83,34 @@ class breadth_first_impl final
         if (this->current == nullptr) {
             return result;
         }
-        NodePtr node;
-        auto process_child = [&]() {
+        auto process_child = [&](NodePtr node) {
             NodePtr first_child = this->navigator.get_first_child(node);
             if (first_child) {
                 result.push_back(first_child);
             }
         };
         // Manage next_sibling insertion
-        NodePtr next = this->navigator.get_next_sibling(this->current);
-        if (next) {
-            result.push_back(next);
+        NodePtr node = this->navigator.get_next_sibling(this->current);
+        if (node) {
+            result.push_back(node);
         }
         // Manage right elements
         node = this->navigator.is_root(this->current)
             ? nullptr
             : this->navigator.get_right_branch(this->navigator.get_parent(this->current));
         while (node) {
-            process_child();
+            process_child(node);
             node = this->navigator.get_right_branch(node);
         }
         // Manage lower row, left elements
         node = this->navigator.get_same_row_leftmost(this->current);
         while (node && node != this->current) {
-            process_child();
+            process_child(node);
             node = this->navigator.get_right_branch(node);
         }
         // Manage current node child
         node = this->current;
-        process_child();
+        process_child(node);
         return std::move(result);
     }
 

@@ -254,11 +254,6 @@ void PatternTest::test1() {
                         cpt(capture_name<'y'>(),
                             star('y'))))));
         QVERIFY(p.match(tree));
-        std::allocator<binary_node<char>> al;
-        auto v   = p.get_pattern().get_node(al);
-        auto sla = std::get<0>(std::get<0>(p.get_pattern().get_children()).get_children()).get_node(al);
-        auto srb = std::get<1>(p.get_pattern().get_children()).get_node(al);
-        auto sby = std::get<0>(std::get<1>(p.get_pattern().get_children()).get_children()).get_node(al);
         p.assign_result(result);
         QCOMPARE(
             result,
@@ -274,7 +269,27 @@ void PatternTest::test1() {
                         n('b')(
                             n('y')))),
                 n('a')));
+        p.assign_mark(capture_name<'P'>(), result);
+        QCOMPARE(
+            result,
+            n('a')(
+                n(),
+                n('a')(
+                    n('a'),
+                    n('a'))));
+        p.assign_mark(capture_name<'y'>(), result);
+        QCOMPARE(result, n('y'));
     }
+    {
+        pattern p {
+            star()(
+                star(),
+                star(),
+                star())};
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    };
 }
 
 QTEST_MAIN(PatternTest);
