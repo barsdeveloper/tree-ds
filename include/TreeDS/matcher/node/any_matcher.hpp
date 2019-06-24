@@ -38,7 +38,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         // It is reluctant if it has that quantifier
         Quantifier == quantifier::RELUCTANT};
     // True if no more than one children requires a node in order to match
-    static constexpr bool CHILDREN_MAY_STEAL_TARGET
+    static constexpr bool child_may_steal_target
         = (std::tuple_size_v<
               decltype(std::tuple_cat(
                   std::declval<
@@ -52,12 +52,18 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                           std::tuple<int>,
                           std::tuple<>>>()...))>)
         <= 1;
+    std::array<void*, sizeof...(Children)> child_match_attempt_begin {};
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, Children...>::matcher;
 
     /*   ---   METHODS   ---   */
     private:
+    template <typename NodeAllocator>
+    allocator_value_type<NodeAllocator>* get_child_match_attempt_begin(std::size_t index, const NodeAllocator&) const {
+        return static_cast<allocator_value_type<NodeAllocator>*>(this->child_match_attempt_begin[index]);
+    }
+
     template <typename NodeAllocator, typename CheckNode>
     static void keep_assigning_children(
         allocator_value_type<NodeAllocator>& target,
@@ -92,15 +98,14 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         };
         node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
-        std::array<node_t*, any_matcher::children_count() + 1> match_attempt_begin = {nullptr};
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
         auto do_match = [&](auto& child) -> bool {
             node_t* current = target_it.get_current_node();
             if (current == nullptr) {
                 return child.info.matches_null;
             }
-            if (!match_attempt_begin[child.get_index()]) {
-                match_attempt_begin[child.get_index()] = current;
+            if (!this->child_match_attempt_begin[child.get_index()]) {
+                this->child_match_attempt_begin[child.get_index()] = current;
             }
             while (current) {
                 if (child.match_node(current, allocator)) {
@@ -128,7 +133,8 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 if (child.info.matches_null && child.get_node(allocator) != nullptr) {
                     // Then leave the next child with the target matched by child
                     target_it = policy::pre_order().get_instance(
-                        match_attempt_begin[child.get_index()], // Leave child's initial node to another node
+                        // Leave child's initial node to another node
+                        this->get_child_match_attempt_begin(child.get_index(), allocator),
                         navigator,
                         allocator);
                     return true;
@@ -146,7 +152,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
         using node_t = allocator_value_type<NodeAllocator>;
         unique_node_ptr<NodeAllocator> result;
-        if constexpr (any_matcher::children_count() == 0) {
+        if constexpr (sizeof...(Children) == 0) {
             // Doesn't have children
             switch (Quantifier) {
             case quantifier::RELUCTANT:
@@ -198,7 +204,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                         this->children);
                 }
             } else if constexpr (Quantifier == quantifier::DEFAULT) {
-                std::array<node_t*, any_matcher::children_count()> childrens_nodes;
+                std::array<node_t*, sizeof...(Children)> childrens_nodes;
                 unsigned not_null_count = 0;
                 if (std::apply(
                         [&](auto&... children) -> bool {
@@ -207,7 +213,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                                 childrens_nodes[i++] = target;
                                 if (target) {
                                     ++not_null_count;
-                                    if (any_matcher::CHILDREN_MAY_STEAL_TARGET && target == this->get_node(allocator)) {
+                                    if (any_matcher::child_may_steal_target && target == this->get_node(allocator)) {
                                         apply_at_index(
                                             [&](auto& child) {
                                                 result = child.result(allocator);
