@@ -289,7 +289,7 @@ void PatternTest::test1() {
         QVERIFY(p.match(tree));
         p.assign_result(result);
         QCOMPARE(result, n('x'));
-    };
+    }
     {
         pattern p {
             star()(
@@ -299,7 +299,46 @@ void PatternTest::test1() {
         QVERIFY(p.match(tree));
         p.assign_result(result);
         QCOMPARE(result, n('x'));
-    };
+    }
+    {
+        pattern p {
+            star<quantifier::RELUCTANT>()(
+                star(),
+                one('x'),
+                star())};
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    }
+    /*{
+        pattern p {
+            star()(
+                star(),
+                star<quantifier::RELUCTANT>()(
+                    star(),
+                    one('x'),
+                    star()))};
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    }
+    {
+        pattern p {
+            star()(
+                star(),
+                star<quantifier::RELUCTANT>()(
+                    star(),
+                    one('x')(
+                        star<quantifier::RELUCTANT>(),
+                        star<quantifier::RELUCTANT>(),
+                        star<quantifier::RELUCTANT>(),
+                        star<quantifier::RELUCTANT>(),
+                        star<quantifier::RELUCTANT>()),
+                    star()))};
+        QVERIFY(p.match(tree));
+        p.assign_result(result);
+        QCOMPARE(result, n('x'));
+    }*/
 }
 
 QTEST_MAIN(PatternTest);

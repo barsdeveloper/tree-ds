@@ -64,6 +64,26 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         return static_cast<allocator_value_type<NodeAllocator>*>(this->child_match_attempt_begin[index]);
     }
 
+    template <typename NodeAllocator>
+    bool child_stole_target(unique_node_ptr<NodeAllocator>& result, NodeAllocator& allocator) {
+        if constexpr (any_matcher::child_may_steal_target) {
+            unique_node_ptr<NodeAllocator> ptr;
+            std::apply(
+                [&](auto&... children) {
+                    ((children.get_node(allocator) == this->get_node(allocator)
+                          ? ptr = children.result(allocator)
+                          : ptr),
+                     ...);
+                },
+                this->children);
+            if (ptr != nullptr) {
+                result = std::move(ptr);
+                return true;
+            }
+        }
+        return false;
+    }
+
     template <typename NodeAllocator, typename CheckNode>
     static void keep_assigning_children(
         allocator_value_type<NodeAllocator>& target,
@@ -150,8 +170,8 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        using node_t = allocator_value_type<NodeAllocator>;
-        unique_node_ptr<NodeAllocator> result;
+        using node_t                          = allocator_value_type<NodeAllocator>;
+        unique_node_ptr<NodeAllocator> result = nullptr;
         if constexpr (sizeof...(Children) == 0) {
             // Doesn't have children
             switch (Quantifier) {
@@ -176,59 +196,51 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         } else {
             // Has children
             if constexpr (Quantifier == quantifier::RELUCTANT) {
-                auto& first_child = std::get<0>(this->children);
-                if (sizeof...(Children) == 1 && first_child.get_node(allocator) == this->get_node(allocator)) {
-                    result = first_child.clone_node(allocator);
-                } else {
-                    result = this->clone_node(allocator);
-                    std::unordered_map<node_t*, node_t*> cloned_nodes;
-                    cloned_nodes.insert({this->get_node(allocator), result.get()});
-                    auto attach_child = [&](auto& child) {
-                        std::pair<node_t*, unique_node_ptr<NodeAllocator>> child_head(
-                            child.get_node(allocator),    // same target
-                            child.clone_node(allocator)); // cloned target
-                        auto it = cloned_nodes.find(child_head.first->get_parent());
-                        while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
-                            cloned_nodes.insert({child_head.first, child_head.second.get()});
-                            child_head = {
-                                child_head.first->get_parent(),
-                                child_head.second.release()->allocate_assign_parent(allocator, *child_head.first)};
-                            it = cloned_nodes.find(child_head.first->get_parent());
-                        }
-                        it->second->assign_child_like(std::move(child_head.second), *child_head.first);
-                    };
-                    std::apply(
-                        [&](auto&... child) {
-                            (..., attach_child(child));
-                        },
-                        this->children);
-                }
-            } else if constexpr (Quantifier == quantifier::DEFAULT) {
-                std::array<node_t*, sizeof...(Children)> childrens_nodes;
-                unsigned not_null_count = 0;
-                if (std::apply(
-                        [&](auto&... children) -> bool {
-                            unsigned i = 0;
-                            for (node_t* target : {children.get_node(allocator)...}) {
-                                childrens_nodes[i++] = target;
-                                if (target) {
-                                    ++not_null_count;
-                                    if (any_matcher::child_may_steal_target && target == this->get_node(allocator)) {
-                                        apply_at_index(
-                                            [&](auto& child) {
-                                                result = child.result(allocator);
-                                            },
-                                            this->children,
-                                            i - 1);
-                                        return true;
-                                    }
-                                }
-                            }
-                            return false;
-                        },
-                        this->children)) {
+                if (this->child_stole_target(result, allocator)) {
                     return std::move(result);
                 }
+                result = this->clone_node(allocator);
+                std::unordered_map<node_t*, node_t*> cloned_nodes;
+                cloned_nodes.insert({this->get_node(allocator), result.get()});
+                auto attach_child = [&](auto& child) {
+                    std::pair<node_t*, unique_node_ptr<NodeAllocator>> child_head(
+                        child.get_node(allocator),    // same target
+                        child.clone_node(allocator)); // cloned target
+                    auto it = cloned_nodes.find(child_head.first->get_parent());
+                    while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
+                        cloned_nodes.insert({child_head.first, child_head.second.get()});
+                        child_head = {
+                            child_head.first->get_parent(),
+                            child_head.second.release()->allocate_assign_parent(allocator, *child_head.first)};
+                        it = cloned_nodes.find(child_head.first->get_parent());
+                    }
+                    it->second->assign_child_like(std::move(child_head.second), *child_head.first);
+                };
+                std::apply(
+                    [&](auto&... child) {
+                        (..., attach_child(child));
+                    },
+                    this->children);
+
+            } else if constexpr (Quantifier == quantifier::DEFAULT) {
+                // If a children stole the target
+                if (this->child_stole_target(result, allocator)) {
+                    return std::move(result);
+                }
+                unsigned not_null_count = 0;
+                std::array<node_t*, sizeof...(Children)> childrens_nodes;
+                std::apply(
+                    [&](auto&... children) {
+                        childrens_nodes = {
+                            (children.get_node(allocator) == nullptr
+                                 ? nullptr
+                                 : (
+                                     // Increment the count
+                                     ++not_null_count,
+                                     // Give the node matched by the child (comma operator returns the last expression)
+                                     children.get_node(allocator)))...};
+                    },
+                    this->children);
                 auto search_start = childrens_nodes.begin();
                 result            = this->clone_node(allocator);
                 multiple_node_pointer roots(this->get_node(allocator), result.get());
