@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef NDEBUG
+#include <TreeDS/node/navigator/node_navigator.hpp>
+#include <TreeDS/policy/breadth_first.hpp>
+#endif
+
 #include <tuple>
 #include <utility> // std::forward()
 
@@ -75,6 +80,47 @@ class node {
         return static_cast<const Node*>(this)->is_first_child()
             && static_cast<const Node*>(this)->is_last_child();
     }
+
+    Node* get_prev_sibling() const {
+        return static_cast<const Node*>(this)->get_prev_sibling();
+    }
+
+    Node* get_next_sibling() const {
+        return static_cast<const Node*>(this)->get_next_sibling();
+    }
+
+    Node* get_first_child() const {
+        return static_cast<const Node*>(this)->get_first_child();
+    }
+
+    Node* get_last_child() const {
+        return static_cast<const Node*>(this)->get_first_child();
+    }
+
+#ifndef NDEBUG
+    const Node* get_root() const {
+        const Node* root    = static_cast<const Node*>(this);
+        const Node* current = this->get_parent();
+        while (current) {
+            root    = current;
+            current = current->get_parent();
+        }
+        return root;
+    }
+
+    std::size_t get_breadth_first_node_index() const {
+        std::size_t index = 0;
+        auto iterator     = policy::breadth_first().get_instance(
+            this->get_root(),
+            node_navigator<const Node*>(this->get_root()),
+            std::allocator<Node>());
+        while (iterator.get_current_node() && iterator.get_current_node() != this) {
+            iterator.increment();
+            ++index;
+        }
+        return index;
+    }
+#endif
 };
 
 } // namespace md

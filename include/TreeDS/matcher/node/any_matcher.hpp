@@ -140,7 +140,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         };
         auto do_rematch = [&](auto& child) -> bool {
             subtree_cut = nullptr;
-            if (!child.get_node(allocator)) {
+            if (child.empty()) {
                 return false;
             }
             target_it
@@ -150,13 +150,15 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             // If we can't advance in depth in the tree as to leave the next node with a previously unseen match
             if (target_it.get_current_node() == nullptr) {
                 // If child can renounce to its match
-                if (child.info.matches_null && child.get_node(allocator) != nullptr) {
+                if (child.info.matches_null && !child.empty()) {
                     // Then leave the next child with the target matched by child
                     target_it = policy::pre_order().get_instance(
                         // Leave child's initial node to another node
                         this->get_child_match_attempt_begin(child.get_index(), allocator),
                         navigator,
                         allocator);
+                    this->child_match_attempt_begin[child.get_index()] = nullptr;
+                    child.drop_target();
                     return true;
                 }
                 return false;
@@ -232,7 +234,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 std::apply(
                     [&](auto&... children) {
                         childrens_nodes = {
-                            (children.get_node(allocator) == nullptr
+                            (children.empty()
                                  ? nullptr
                                  : (
                                      // Increment the count

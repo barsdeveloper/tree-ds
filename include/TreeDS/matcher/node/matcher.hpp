@@ -135,6 +135,10 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         return allocate(allocator, this->get_node(allocator)->get_value());
     }
 
+    void drop_target() {
+        this->target_node = nullptr;
+    }
+
     void reset() {
         this->target_node = nullptr;
         std::apply(

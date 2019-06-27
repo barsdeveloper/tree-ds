@@ -310,7 +310,7 @@ void PatternTest::test1() {
         p.assign_result(result);
         QCOMPARE(result, n('x'));
     }
-    /*{
+    {
         pattern p {
             star()(
                 star(),
@@ -323,22 +323,36 @@ void PatternTest::test1() {
         QCOMPARE(result, n('x'));
     }
     {
+        // The only relevant node is one('x')
         pattern p {
             star()(
+                star(),
+                star(),
+                star(),
+                star(),
+                star(),
+                star(),
                 star(),
                 star<quantifier::RELUCTANT>()(
                     star(),
                     one('x')(
+                        star<quantifier::RELUCTANT>()(
+                            star<quantifier::RELUCTANT>()),
                         star<quantifier::RELUCTANT>(),
                         star<quantifier::RELUCTANT>(),
-                        star<quantifier::RELUCTANT>(),
-                        star<quantifier::RELUCTANT>(),
+                        star<quantifier::RELUCTANT>()(
+                            star<quantifier::RELUCTANT>(),
+                            star<quantifier::RELUCTANT>()),
                         star<quantifier::RELUCTANT>()),
-                    star()))};
+                    star()),
+                star(),
+                star(),
+                star(),
+                star())};
         QVERIFY(p.match(tree));
         p.assign_result(result);
         QCOMPARE(result, n('x'));
-    }*/
+    }
 }
 
 QTEST_MAIN(PatternTest);
