@@ -41,7 +41,7 @@ class navigator_base {
     NodePtr get_other_branch(NodePtr node) {
         int relative_level    = 0;
         NodePtr deepest_child = node;
-        NodePtr crossed;
+        NodePtr crossed       = nullptr;
         do {
             // Climb up the tree until a node with a sibling is found, then return that sibling
             crossed = keep_calling(
@@ -101,8 +101,8 @@ class navigator_base {
         if (from == this->root) {
             return from;
         }
-        int relative_level = 0;
-        NodePtr deepest_extremum_child;
+        int relative_level             = 0;
+        NodePtr deepest_extremum_child = nullptr;
         // Climb the tree up to the root
         NodePtr breanch_crossed = keep_calling(
             // From

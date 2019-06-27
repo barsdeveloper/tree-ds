@@ -65,7 +65,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     }
 
     template <typename NodeAllocator>
-    bool child_stole_target(unique_node_ptr<NodeAllocator>& result, NodeAllocator& allocator) {
+    bool did_child_steal_target(unique_node_ptr<NodeAllocator>& result, NodeAllocator& allocator) {
         if constexpr (any_matcher::child_may_steal_target) {
             unique_node_ptr<NodeAllocator> ptr;
             std::apply(
@@ -198,7 +198,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         } else {
             // Has children
             if constexpr (Quantifier == quantifier::RELUCTANT) {
-                if (this->child_stole_target(result, allocator)) {
+                if (this->did_child_steal_target(result, allocator)) {
                     return std::move(result);
                 }
                 result = this->clone_node(allocator);
@@ -224,9 +224,9 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                     },
                     this->children);
 
-            } else if constexpr (Quantifier == quantifier::DEFAULT) {
+            } else if constexpr (Quantifier == quantifier::DEFAULT || Quantifier == quantifier::GREEDY) {
                 // If a children stole the target
-                if (this->child_stole_target(result, allocator)) {
+                if (this->did_child_steal_target(result, allocator)) {
                     return std::move(result);
                 }
                 unsigned not_null_count = 0;
@@ -246,9 +246,10 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 auto search_start = childrens_nodes.begin();
                 result            = this->clone_node(allocator);
                 multiple_node_pointer roots(this->get_node(allocator), result.get());
-                // The iterator will use this predicate to traverse the tree. return false => node is not cloned
+                // The iterator will use this predicate to traverse the tree
                 auto check_target = [&](auto& multi_node_ptr) {
-                    if (not_null_count == 0) {
+                    if (Quantifier == quantifier::DEFAULT && not_null_count == 0) {
+                        // When the quantifier is the default one, stop iterating as soon as the last target is reached
                         return false;
                     }
                     auto position = std::find(search_start, childrens_nodes.end(), multi_node_ptr.get_master_ptr());
@@ -273,7 +274,6 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 while (iterator.get_current_node()) {
                     iterator.increment();
                 }
-            } else {
             }
         }
         return std::move(result);

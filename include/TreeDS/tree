@@ -5,6 +5,7 @@
 #include <TreeDS/policy/breadth_first.hpp>
 #include <TreeDS/policy/fixed.hpp>
 #include <TreeDS/policy/in_order.hpp>
+#include <TreeDS/policy/leaves.hpp>
 #include <TreeDS/policy/post_order.hpp>
 #include <TreeDS/policy/pre_order.hpp>
 #include <TreeDS/policy/siblings.hpp>

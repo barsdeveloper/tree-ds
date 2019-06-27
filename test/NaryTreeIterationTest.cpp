@@ -27,6 +27,7 @@ void NaryTreeIterationTest::iteration() {
     QFETCH(vector<char>, expectedPreOrder);
     QFETCH(vector<char>, expectedPostOrder);
     QFETCH(vector<char>, expectedBreadthFirst);
+    QFETCH(vector<char>, expectedLeaves);
     int actualSize  = static_cast<int>(t.size());
     int actualArity = static_cast<int>(t.arity());
 
@@ -38,23 +39,28 @@ void NaryTreeIterationTest::iteration() {
     vector<char> actualPreOrder(t.begin(policy::pre_order()), t.end(policy::pre_order()));
     vector<char> actualPostOrder(t.begin(policy::post_order()), t.end(policy::post_order()));
     vector<char> actualBreadthFirst(t.begin(policy::breadth_first()), t.end(policy::breadth_first()));
+    vector<char> actualLeaves(t.begin(policy::leaves()), t.end(policy::leaves()));
 
     QCOMPARE(actualPreOrder, expectedPreOrder);
     QCOMPARE(actualPostOrder, expectedPostOrder);
     QCOMPARE(actualBreadthFirst, expectedBreadthFirst);
+    QCOMPARE(actualLeaves, expectedLeaves);
 
     /*   ---   Backward order test   ---   */
     vector<char> actualReversePreOrder(t.rbegin(policy::pre_order()), t.rend(policy::pre_order()));
     vector<char> actualReversePostOrder(t.rbegin(policy::post_order()), t.rend(policy::post_order()));
     vector<char> actualReverseBreadthFirst(t.rbegin(policy::breadth_first()), t.rend(policy::breadth_first()));
+    vector<char> actualReverseLeaves(t.rbegin(policy::leaves()), t.rend(policy::leaves()));
 
     vector<char> expectedReversePreOrder(expectedPreOrder.rbegin(), expectedPreOrder.rend());
     vector<char> expectedReversePostOrder(expectedPostOrder.rbegin(), expectedPostOrder.rend());
     vector<char> expectedReverseBreadthFirst(expectedBreadthFirst.rbegin(), expectedBreadthFirst.rend());
+    vector<char> expectedReverseLeaves(expectedLeaves.rbegin(), expectedLeaves.rend());
 
     QCOMPARE(actualReversePreOrder, expectedReversePreOrder);
     QCOMPARE(actualReversePostOrder, expectedReversePostOrder);
     QCOMPARE(actualReverseBreadthFirst, expectedReverseBreadthFirst);
+    QCOMPARE(actualReverseLeaves, expectedReverseLeaves);
 }
 
 void NaryTreeIterationTest::iteration_data() {
@@ -64,6 +70,7 @@ void NaryTreeIterationTest::iteration_data() {
     QTest::addColumn<vector<char>>("expectedPreOrder");
     QTest::addColumn<vector<char>>("expectedPostOrder");
     QTest::addColumn<vector<char>>("expectedBreadthFirst");
+    QTest::addColumn<vector<char>>("expectedLeaves");
 
     /******************************************************************************************************************/
     QTest::newRow("Bottom wide")
@@ -84,7 +91,8 @@ void NaryTreeIterationTest::iteration_data() {
         << 7
         << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'}
         << vector {'f', 'g', 'h', 'i', 'j', 'k', 'l', 'e', 'd', 'c', 'b', 'a'}
-        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'};
+        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'}
+        << vector {'f', 'g', 'h', 'i', 'j', 'k', 'l'};
 
     /******************************************************************************************************************/
     QTest::newRow("Triangular")
@@ -111,7 +119,8 @@ void NaryTreeIterationTest::iteration_data() {
         << 7
         << vector {'a', 'b', 'i', 'c', 'd', 'j', 'm', 'e', 'f', 'k', 'n', 'p', 'g', 'h', 'l', 'o', 'q', 'r'}
         << vector {'i', 'b', 'c', 'm', 'j', 'd', 'e', 'p', 'n', 'k', 'f', 'g', 'r', 'q', 'o', 'l', 'h', 'a'}
-        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'};
+        << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'}
+        << vector {'i', 'c', 'm', 'e', 'p', 'g', 'r'};
 
     /******************************************************************************************************************/
     QTest::newRow("Increasingly wide")
@@ -156,7 +165,9 @@ void NaryTreeIterationTest::iteration_data() {
         << vector {'j', 'k', 'l', 'm', 'd', 'n', 'o', 'p', 'q', 'e', 'r', 's', 't', 'u', 'f', 'b', 'v', 'x', 'y', 'z',
                    'g', '0', '1', '2', '3', 'h', '4', '5', '6', '7', 'i', 'c', 'a'}
         << vector {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-                   'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7'};
+                   'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7'}
+        << vector {'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3',
+                   '4', '5', '6', '7'};
 }
 
 QTEST_MAIN(NaryTreeIterationTest);
