@@ -27,12 +27,12 @@ class pattern {
     private:
     template <typename Tree>
     bool do_match(Tree& tree) {
-        std::type_index tree_type(typeid(tree.root));
-        if (matched_tree != nullptr && matched_tree == tree.root) {
+        std::type_index tree_type(typeid(tree.raw_root_node()));
+        if (matched_tree != nullptr && matched_tree == tree.raw_root_node()) {
             return true;
         }
         pattern_tree.reset();
-        if (this->pattern_tree.match_node(tree.root, tree.get_node_allocator())) {
+        if (this->pattern_tree.match_node(tree.raw_root_node(), tree.get_node_allocator())) {
             this->node_type    = tree_type;
             this->matched_tree = &tree;
             return true;
@@ -57,7 +57,7 @@ class pattern {
 
     template <typename Node, typename Policy, typename Allocator>
     void assign_result(tree<Node, Policy, Allocator>& tree) {
-        if (this->node_type != typeid(tree.root)) {
+        if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }
@@ -66,7 +66,7 @@ class pattern {
 
     template <std::size_t Index, typename Node, typename Policy, typename Allocator>
     void assign_mark(capture_index<Index> index, tree<Node, Policy, Allocator>& tree) {
-        if (this->node_type != typeid(tree.root)) {
+        if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }
@@ -75,7 +75,7 @@ class pattern {
 
     template <char... Name, typename Node, typename Policy, typename Allocator>
     void assign_mark(capture_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
-        if (this->node_type != typeid(tree.root)) {
+        if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
         }

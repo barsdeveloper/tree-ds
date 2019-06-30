@@ -22,11 +22,11 @@
     template <typename P>                                                                                     \
     using const_reverse_iterator = typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::template const_reverse_iterator<P>;
 
-#include <cstddef>
-#include <iterator> // std::make_reverse_iterator
-#include <limits>   // std::numeric_limits
-#include <memory>   // std::unique_ptr, std::allocator_traits
-#include <ostream>  // std::ostream
+#include <cstddef>     // std::size_t
+#include <iterator>    // std::make_reverse_iterator
+#include <limits>      // std::numeric_limits
+#include <memory>      // std::allocator_traits
+#include <type_traits> // std::remove_reference_t
 
 #include <TreeDS/node/navigator/node_navigator.hpp>
 #include <TreeDS/policy/breadth_first.hpp>
@@ -54,9 +54,6 @@ class tree_base {
 
     template <typename, typename, typename>
     friend class tree_view;
-
-    template <typename, typename, bool>
-    friend class tree_iterator;
 
     template <typename>
     friend class pattern;
@@ -95,13 +92,13 @@ class tree_base {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     /// @brief Owning pointer to the root node.
-    node_type* root = nullptr;
+    node_type* root_node = nullptr;
     /// @brief The number of nodes in the tree.
     mutable size_type size_value = 0u;
     /// @brief Maximum number of children a node can have.
     mutable size_type arity_value = 0u;
     /// @brief An object used to navigate the nodes.
-    navigator_type navigator {this->root, this->root ? this->root->is_root() : false};
+    navigator_type navigator {this->root_node, this->root_node ? this->root_node->is_root() : false};
     /// @brief Allocator object used to allocate the nodes.
     node_allocator_type allocator {};
     /// @brief Allocator object used by the method get_allocator to return the allocator supplied.
@@ -113,7 +110,7 @@ class tree_base {
     }
 
     tree_base(node_type* root, size_type size, size_type arity, navigator_type navigator) :
-            root(root),
+            root_node(root),
             size_value(size),
             arity_value(arity),
             navigator(navigator) {
@@ -121,7 +118,7 @@ class tree_base {
 
     template <typename Alloc>
     tree_base(node_type* root, size_type size, size_type arity, navigator_type navigator, Alloc&& allocator) :
-            root(root),
+            root_node(root),
             size_value(size),
             arity_value(arity),
             navigator(navigator),
@@ -208,7 +205,7 @@ class tree_base {
      * @return true if the tree is empty
      */
     bool empty() const {
-        return this->root == nullptr;
+        return this->root_node == nullptr;
     }
 
     /**
@@ -217,15 +214,15 @@ class tree_base {
      */
     size_type size() const {
         if (!this->empty() && this->size_value == 0u) {
-            this->size_value = calculate_size(*this->root);
+            this->size_value = calculate_size(*this->root_node);
         }
         return this->size_value;
     }
 
     size_type arity() const {
-        if (!this->empty() && this->arity_value == 0u && this->root->has_children()) {
+        if (!this->empty() && this->arity_value == 0u && this->root_node->has_children()) {
             this->arity_value = calculate_arity(
-                *this->root,
+                *this->root_node,
                 std::is_same_v<std::decay_t<Node>, binary_node<value_type>>
                     ? 2u
                     : std::numeric_limits<std::size_t>::max());
@@ -249,16 +246,20 @@ class tree_base {
     }
 
     /*   ---   GETTER METHODS   ---   */
-    node_type* get_raw_root() const {
-        return this->root;
+    node_type* raw_root_node() const {
+        return this->root_node;
     }
 
-    node_type* get_raw_root() {
-        return this->root;
+    node_type* raw_root_node() {
+        return this->root_node;
     }
 
-    const_iterator<policy::fixed> get_root() const {
-        return {policy::fixed(), *this, this->root};
+    const_iterator<policy::fixed> root() const {
+        return {policy::fixed(), *this, this->root_node};
+    }
+
+    const_iterator<policy::fixed> croot() const {
+        return {policy::fixed(), *this, this->root_node};
     }
 
     node_navigator<const node_type*> get_node_navigator() const {
@@ -290,7 +291,7 @@ class tree_base {
             return false;
         }
         // At the end is either null (both) or same as the other
-        return (this->root == nullptr && other.root == nullptr) || this->root->operator==(*other.root);
+        return (this->root_node == nullptr && other.root_node == nullptr) || this->root_node->operator==(*other.root_node);
     }
 
     template <
@@ -304,7 +305,7 @@ class tree_base {
             return false;
         }
         // Deep test for equality
-        return this->root != nullptr && this->root->operator==(other);
+        return this->root_node != nullptr && this->root_node->operator==(other);
     }
 
     bool operator==(const struct_node<detail::empty_t>&) const {
@@ -372,14 +373,15 @@ bool operator!=(const struct_node<detail::empty_t>& lhs, const tree_base<Node, P
 }
 
 #ifndef NDEBUG
+#include <ostream> // std::ostream
 template <
     typename Node,
     typename Policy,
     typename Allocator,
     typename = std::enable_if<is_printable<decltype(std::declval<Node>().get_value())>>>
 std::ostream& operator<<(std::ostream& os, const tree_base<Node, Policy, Allocator>& tree) {
-    if (tree.get_raw_root()) {
-        print_node(os, *tree.get_raw_root(), 0u);
+    if (tree.raw_root_node()) {
+        print_node(os, *tree.raw_root_node(), 0u);
     } else {
         code_like_print(os);
     }

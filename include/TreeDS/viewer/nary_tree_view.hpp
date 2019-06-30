@@ -30,7 +30,7 @@ class nary_tree_view : public tree_view<const nary_node<T>, Policy, Allocator> {
             return false;
         }
         // At the end is either null (both) or same as the other
-        return this->root == nullptr || *this->root == *other.get_raw_root();
+        return this->root_node == nullptr || *this->root_node == *other.raw_root_node();
     }
 };
 

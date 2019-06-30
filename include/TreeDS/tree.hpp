@@ -83,8 +83,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
      */
     explicit tree(const tree& other) :
             tree(
-                other.root
-                    ? allocate(this->allocator, *other.root, this->allocator).release()
+                other.root_node
+                    ? allocate(this->allocator, *other.root_node, this->allocator).release()
                     : nullptr,
                 other.size_value,
                 other.arity_value) {
@@ -96,8 +96,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
     template <typename OtherPolicy>
     explicit tree(const tree<Node, OtherPolicy, Allocator>& other) :
             tree(
-                other.root
-                    ? allocate(this->allocator, *other.root, this->allocator).release()
+                other.root_node
+                    ? allocate(this->allocator, *other.root_node, this->allocator).release()
                     : nullptr,
                 other.size_value,
                 other.arity_value,
@@ -108,7 +108,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     tree(tree&& other) :
-            tree(other.root, other.size_value, other.arity_value, std::move(other.allocator)) {
+            tree(other.root_node, other.size_value, other.arity_value, std::move(other.allocator)) {
         other.nullify();
     }
 
@@ -119,7 +119,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
      */
     template <typename OtherPolicy>
     tree(tree<Node, OtherPolicy, Allocator>&& other) :
-            tree(other.root, other.size_value, other.arity_value, std::move(other.allocator)) {
+            tree(other.root_node, other.size_value, other.arity_value, std::move(other.allocator)) {
         other.nullify();
     }
 
@@ -176,7 +176,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
             "Tried to COPY ASSIGN a tree containing a non copyable type.");
         this->assign(
             !other.empty()
-                ? allocate(this->allocator, *other.root, this->allocator).release()
+                ? allocate(this->allocator, *other.root_node, this->allocator).release()
                 : nullptr,
             other.size_value,
             other.arity_value);
@@ -193,7 +193,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
     template <typename OtherPolicy>
     tree& operator=(tree<Node, OtherPolicy, Allocator>&& other) {
         this->allocator = std::move(other.allocator);
-        this->assign(other.root, other.size_value, other.arity_value);
+        this->assign(other.root_node, other.size_value, other.arity_value);
         other.nullify();
         return *this;
     }
@@ -273,10 +273,10 @@ class tree : public tree_base<Node, Policy, Allocator> {
 
     //   ---   GETTERS   ---
     public:
-    using super::get_root;
+    using super::root;
 
-    iterator<policy::fixed> get_root() {
-        return {policy::fixed(), *this, this->root};
+    iterator<policy::fixed> root() {
+        return {policy::fixed(), *this, this->root_node};
     }
 
     //   ---   MODIFIERS   ---
@@ -287,9 +287,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
         size_type replacement_size,
         size_type replacement_arity) {
         if (replaced != nullptr) {
-            assert(this->root != nullptr);
+            assert(this->root_node != nullptr);
             replaced->replace_with(replacement);
-            if (replaced == this->root) {
+            if (replaced == this->root_node) {
                 this->size_value  = replacement_size;
                 this->arity_value = replacement_arity;
             } else if (!replaced->has_children()) {
@@ -322,14 +322,14 @@ class tree : public tree_base<Node, Policy, Allocator> {
          */
         node_type* target = const_cast<node_type*>(position.get_raw_node());
         if (target != nullptr) { // If iterator points to valid node
-            assert(this->root != nullptr);
+            assert(this->root_node != nullptr);
             position.update(*target, replacement);
-            if (target == this->root) {
+            if (target == this->root_node) {
                 this->assign(replacement, replacement_size, replacement_arity);
             } else {
                 this->replace_node(target, replacement, replacement_size, replacement_arity);
             }
-        } else if (this->root == nullptr) {
+        } else if (this->root_node == nullptr) {
             this->assign(replacement, replacement_size, replacement_arity);
         } else {
             throw std::logic_error("The iterator points to a non valid position (end).");
@@ -391,30 +391,30 @@ class tree : public tree_base<Node, Policy, Allocator> {
          */
         node_type* target = const_cast<node_type*>(position.get_raw_node());
         if (target != nullptr) { // If iterator points to valid node
-            assert(this->root != nullptr);
+            assert(this->root_node != nullptr);
             position.update(*target, nullptr);
-            if (target == this->root) {
+            if (target == this->root_node) {
                 this->clear();
             } else {
                 this->replace_node(target, nullptr, 0u, 0u);
             }
-        } else if (this->root != nullptr) {
+        } else if (this->root_node != nullptr) {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
     }
 
     void assign(node_type* root, size_type size, size_type arity) {
-        if (this->root != nullptr) {
-            deallocate(this->allocator, this->root);
+        if (this->root_node != nullptr) {
+            deallocate(this->allocator, this->root_node);
         }
-        this->root        = root;
+        this->root_node   = root;
         this->size_value  = size;
         this->arity_value = arity;
-        this->navigator   = navigator_type(this->root, false);
+        this->navigator   = navigator_type(this->root_node, false);
     }
 
     void nullify() {
-        this->root        = nullptr; // Weallocation was already node somewhere else
+        this->root_node   = nullptr; // Weallocation was already node somewhere else
         this->size_value  = 0u;
         this->arity_value = 0u;
         this->navigator   = navigator_type(nullptr, false);
@@ -441,7 +441,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
     void swap(tree<Node, OtherPolicy, Allocator>& other) {
         // I want unqualified name lookup in order to let invoking an user-defined swap function outside std namespace
         using namespace std;
-        std::swap(this->root, other.root);
+        std::swap(this->root_node, other.root_node);
         std::swap(this->size_value, other.size_value);
         std::swap(this->arity_value, other.arity_value);
         std::swap(this->navigator, other.navigator);
@@ -504,7 +504,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             !other.empty()
-                ? allocate(this->allocator, *other.root, this->allocator)
+                ? allocate(this->allocator, *other.root_node, this->allocator)
                 : nullptr,
             other.size(),
             other.arity());
@@ -521,7 +521,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         }
         iterator<P> result = this->modify_subtree(
             position,
-            other.replace_node(other.root, nullptr, 0u, 0u),
+            other.replace_node(other.root_node, nullptr, 0u, 0u),
             other.size(),
             other.arity());
         other.nullify();
@@ -595,7 +595,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return this->add_child<true>(
             position,
             !other.empty()
-                ? allocate(this->allocator, *other.root, this->allocator)
+                ? allocate(this->allocator, *other.root_node, this->allocator)
                 : nullptr,
             1u,
             0u);
@@ -612,7 +612,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         }
         iterator<P> result = this->add_child<true>(
             position,
-            other.replace_node(other.root, nullptr, 0u, 0u),
+            other.replace_node(other.root_node, nullptr, 0u, 0u),
             1u,
             0u);
         other.nullify();
@@ -658,7 +658,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return this->add_child<false>(
             position,
             !other.empty()
-                ? allocate(this->allocator, *other.root)
+                ? allocate(this->allocator, *other.root_node)
                 : nullptr,
             1u,
             0u);
@@ -675,7 +675,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         }
         iterator<P> result = this->add_child<false>(
             position,
-            other.replace_node(other.root, nullptr, 0u, 0u),
+            other.replace_node(other.root_node, nullptr, 0u, 0u),
             1u,
             0u);
         other.nullify();

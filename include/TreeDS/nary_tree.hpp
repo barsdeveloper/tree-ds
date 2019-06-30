@@ -31,8 +31,8 @@ class nary_tree : public tree<nary_node<T>, Policy, Allocator> {
     template <typename OtherPolicy>
     nary_tree(const binary_tree<T, OtherPolicy, Allocator>& other) :
             tree<nary_node<T>, Policy, Allocator>(
-                other.get_raw_root()
-                    ? allocate(this->allocator, *other.get_raw_root(), this->allocator).release()
+                other.raw_root_node()
+                    ? allocate(this->allocator, *other.raw_root_node(), this->allocator).release()
                     : nullptr,
                 other.size(),
                 other.arity()) {
@@ -50,8 +50,8 @@ class nary_tree : public tree<nary_node<T>, Policy, Allocator> {
             std::is_copy_assignable_v<T>,
             "Tried to assign to an nary_tree a binary_tree containing a non copyable type.");
         this->assign(
-            other.get_raw_root() != nullptr
-                ? allocate(this->allocator, *other.get_raw_root(), this->allocator).release()
+            other.raw_root_node() != nullptr
+                ? allocate(this->allocator, *other.raw_root_node(), this->allocator).release()
                 : nullptr,
             other.size(),
             other.arity());
@@ -70,7 +70,7 @@ class nary_tree : public tree<nary_node<T>, Policy, Allocator> {
             return false;
         }
         // At the end is either null (both) or same as the other
-        return this->root == nullptr || *this->root == *other.get_raw_root();
+        return this->root_node == nullptr || *this->root_node == *other.raw_root_node();
     }
 };
 

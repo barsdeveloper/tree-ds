@@ -202,7 +202,7 @@ class tree_iterator {
     tree_iterator& operator++() {
         if (this->policy.get_current_node() != nullptr) {
             this->policy.increment();
-        } else if (this->pointed_tree != nullptr && this->pointed_tree->root != nullptr) {
+        } else if (this->pointed_tree != nullptr && this->pointed_tree->raw_root_node() != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => incremented from end() => go to its first element (rewind)
@@ -223,7 +223,7 @@ class tree_iterator {
     tree_iterator& operator--() {
         if (this->policy.get_current_node() != nullptr) {
             this->policy.decrement();
-        } else if (this->pointed_tree != nullptr && this->pointed_tree->root != nullptr) {
+        } else if (this->pointed_tree != nullptr && this->pointed_tree->raw_root_node() != nullptr) {
             /*
              * If iterator is at the end():
              *     normal iterator  => decremented from end() => go to its last element (before end())

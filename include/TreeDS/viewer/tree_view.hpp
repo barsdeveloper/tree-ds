@@ -27,7 +27,7 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
 
     template <typename TreeNode, typename TreePolicy>
     tree_view(const tree_base<TreeNode, TreePolicy, Allocator>& tree) :
-            super(tree.root, tree.size_value, tree.arity_value, tree.navigator) {
+            super(tree.root_node, tree.size_value, tree.arity_value, tree.navigator) {
         static_assert(
             std::is_convertible_v<std::add_pointer_t<TreeNode>, std::add_pointer_t<Node>>,
             "The view must refer to the same type of tree/view: either nary or binary.");

@@ -35,16 +35,16 @@ void TreeViewTest::naryTreeView() {
     nary_tree_view<string> view1(nary, find(nary.begin(), nary.end(), "four"));
     QCOMPARE(view1.size(), 8);
     QCOMPARE(view1.arity(), 4);
-    QCOMPARE(*view1.get_root(), "four");
-    QCOMPARE(view1.get_root().go_parent().get_raw_node(), nullptr); // Cannot go upper than the root using the iterator
+    QCOMPARE(*view1.root(), "four");
+    QCOMPARE(view1.root().go_parent().get_raw_node(), nullptr); // Cannot go upper than the root using the iterator
 
     nary_tree_view<string> view2;
     view2 = nary;
     QCOMPARE(view2.size(), 12);
     QCOMPARE(view2.arity(), 4);
-    QCOMPARE(*view2.get_root(), "one");
+    QCOMPARE(*view2.root(), "one");
 
-    view2 = nary_tree_view<string> {view2, view2.get_root().go_first_child().go_first_child()};
+    view2 = nary_tree_view<string> {view2, view2.root().go_first_child().go_first_child()};
 }
 
 QTEST_MAIN(TreeViewTest);

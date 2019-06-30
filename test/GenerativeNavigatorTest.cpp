@@ -31,7 +31,7 @@ void GenerativeNavigatorTest::binary1() {
                     n(6))),
             n(3))};
     binary_tree<int> generated {n(1)};
-    multiple_node_pointer ptrs(target.get_root().get_raw_node(), generated.get_root().get_raw_node());
+    multiple_node_pointer ptrs(target.root().get_raw_node(), generated.root().get_raw_node());
     std::allocator<binary_node<int>> alloc;
     generative_navigator nav(
         alloc,
@@ -113,7 +113,7 @@ void GenerativeNavigatorTest::binary2() {
                             n(-12)))),
                 n(6)))};
     binary_tree<int> generated {n(3)};
-    multiple_node_pointer ptrs(target.get_root().go_last_child().get_raw_node(), generated.get_root().get_raw_node());
+    multiple_node_pointer ptrs(target.root().go_last_child().get_raw_node(), generated.root().get_raw_node());
     std::allocator<binary_node<int>> alloc;
     generative_navigator nav(
         alloc,
@@ -187,8 +187,8 @@ void GenerativeNavigatorTest::breadthFirstIterate() {
     std::allocator<binary_node<char>> al;
 
     auto it = create_breadth_first_generative_iterator(
-        target.get_root().go_first_child().get_raw_node(),
-        generated.get_root().get_raw_node(),
+        target.root().go_first_child().get_raw_node(),
+        generated.root().get_raw_node(),
         [](auto multiplePointer) {
             return multiplePointer->get_value() >= '1' && multiplePointer->get_value() <= '9';
         },
