@@ -10,6 +10,13 @@
 
 namespace md {
 
+enum class quantifier {
+    DEFAULT,
+    RELUCTANT,
+    GREEDY,
+    POSSESSIVE
+};
+
 template <typename Derived, typename ValueMatcher, typename... Children>
 class matcher : public struct_node<ValueMatcher, Children...> {
 
@@ -68,6 +75,63 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     /*   ---   METHODS   ---   */
     protected:
+    static constexpr std::size_t child_steal_index() {
+        if constexpr (matcher::child_may_steal_target()) {
+            std::size_t result = 0;
+            std::size_t i      = 0;
+            (..., (!Children::info.matches_null ? result = i++ : i++));
+            return result;
+        } else {
+            return sizeof...(Children);
+        }
+    }
+
+    // True if no more than one children requires a node in order to match
+    static constexpr bool child_may_steal_target() {
+        if constexpr (Derived::info.shallow_matches_null) {
+            std::size_t requires_match = 0;
+            (..., (requires_match += !Children::info.matches_null ? 1u : 0u));
+            return requires_match == 1;
+        } else {
+            return false;
+        }
+    }
+
+    template <typename NodeAllocator>
+    bool let_child_steal(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+        if constexpr (matcher::child_may_steal_target()) {
+            // Children will steal this node because it cannot be matched using this matcher
+            return apply_at_index(
+                [&](auto& child) -> bool {
+                    return child.match_node(&node, allocator);
+                },
+                this->children,
+                matcher::child_steal_index());
+        } else {
+            return false;
+        }
+    }
+
+    template <typename NodeAllocator>
+    bool did_child_steal_target(unique_node_ptr<NodeAllocator>& result, NodeAllocator& allocator) {
+        if constexpr (matcher::child_may_steal_target()) {
+            unique_node_ptr<NodeAllocator> ptr;
+            std::apply(
+                [&](auto&... children) {
+                    ((children.get_node(allocator) == this->get_node(allocator)
+                          ? ptr = children.result(allocator)
+                          : ptr),
+                     ...);
+                },
+                this->children);
+            if (ptr != nullptr) {
+                result = std::move(ptr);
+                return true;
+            }
+        }
+        return false;
+    }
+
     template <typename Node>
     static auto get_children_supplier(Node& target) {
         return [node = target.get_first_child()]() mutable -> Node* {

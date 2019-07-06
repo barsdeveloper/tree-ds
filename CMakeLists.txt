@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "--coverage -g3 -O0 -Wall")
 
 include(CTest)
-enable_testing(true)
+enable_testing()
 
 include_directories("./include")
 find_package(Qt5Test REQUIRED)

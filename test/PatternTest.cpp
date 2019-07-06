@@ -45,14 +45,6 @@ class PatternTest : public QObject {
     binary_tree<char> binary_char_result;
 
     private slots:
-    void construction();
-    void simple1();
-    void simple2();
-    void simple3();
-    void simple4();
-    void simple5();
-    void simple6();
-    void simple7();
     void test1();
     void test2();
     void test3();
@@ -61,160 +53,8 @@ class PatternTest : public QObject {
     void test6();
     void test7();
     void test8();
+    void test9();
 };
-
-void PatternTest::construction() {
-    pattern p1(one());
-    QCOMPARE(p1.mark_count(), 0);
-
-    pattern p2(
-        one(1)(
-            one(2),
-            one(3)));
-    QCOMPARE(p2.mark_count(), 0);
-
-    pattern p3(
-        one('a')(
-            cpt(one('b')),
-            one('c')));
-    QCOMPARE(p3.mark_count(), 1);
-
-    pattern p4(
-        cpt(
-            one(string("alpha"))(
-                cpt(one(string("beta"))),
-                one(string("gamma")),
-                cpt(one()))));
-    QCOMPARE(p4.mark_count(), 3);
-
-    pattern p5(
-        cpt(cpt(
-            star())));
-    QCOMPARE(p5.mark_count(), 2);
-
-    pattern p6(
-        one()(
-            cpt(star()(
-                star()(
-                    cpt(capture_name<'a', 'n', ' ', 'a'>(), one('a'))),
-                cpt(one('b')(
-                    cpt(star())))))));
-    QCOMPARE(p6.mark_count(), 4);
-
-    pattern p7(
-        cpt(cpt(cpt(
-            capture_name<'a'>(),
-            star(string("string"))(
-                cpt(capture_name<'t'>(), cpt(one())),
-                cpt(one(string("b"))))))));
-    QCOMPARE(p7.mark_count(), 6);
-}
-
-void PatternTest::simple1() {
-    pattern p(one(1));
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1));
-
-    nary_tree<int> nary_int_result;
-    QVERIFY_EXCEPTION_THROWN(p.assign_result(nary_int_result), std::invalid_argument);
-
-    QVERIFY(p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1));
-}
-
-void PatternTest::simple2() {
-    pattern p(
-        one()(
-            one(2)));
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-
-    QVERIFY(p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-}
-
-void PatternTest::simple3() {
-    pattern p {
-        one(1)(
-            one(3))};
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(), n(3)));
-
-    QVERIFY(!p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n());
-}
-
-void PatternTest::simple4() {
-    pattern p {
-        cpt(one(1)(
-            cpt(capture_name<'b'>(), one(2))))};
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-    p.assign_mark(capture_index<2>(), binary_int_result);
-    QCOMPARE(binary_int_result, n(2));
-    p.assign_mark(capture_index<1>(), binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-    p.assign_mark(capture_name<'b'>(), binary_int_result);
-    QCOMPARE(binary_int_result, n(2));
-}
-
-void PatternTest::simple5() {
-    pattern p {
-        one()(
-            one(),
-            one(3))};
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2), n(3)));
-
-    QVERIFY(!p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n());
-}
-
-void PatternTest::simple6() {
-    pattern p {
-        one(1)(
-            one(2),
-            cpt(capture_name<'t'>(), star<quantifier::RELUCTANT>()))};
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-
-    QVERIFY(p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2)));
-}
-
-void PatternTest::simple7() {
-    pattern p {
-        one(1)(
-            one(2),
-            cpt(
-                capture_name<'a'>(),
-                star<quantifier::RELUCTANT>()(
-                    one(3))))};
-    QVERIFY(p.match(tree1));
-    p.assign_result(binary_int_result);
-    QCOMPARE(binary_int_result, n(1)(n(2), n(3)));
-
-    QVERIFY(p.match(tree2));
-    p.assign_result(binary_int_result);
-    QCOMPARE(
-        binary_int_result,
-        n(1)(
-            n(2),
-            n(1)(
-                n(),
-                n(3))));
-}
 
 void PatternTest::test1() {
     pattern p(
@@ -270,7 +110,7 @@ void PatternTest::test3() {
             cpt(capture_name<'b'>(),
                 star('b')(
                     cpt(capture_name<'y'>(),
-                        star('y'))))));
+                        one('y'))))));
     QVERIFY(p.match(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
@@ -307,7 +147,7 @@ void PatternTest::test4() {
             star())};
     QVERIFY(p.match(tree3));
     p.assign_result(binary_char_result);
-    QCOMPARE(binary_char_result, n('x'));
+    QCOMPARE(binary_char_result, n('x')(n('a'), n('a')));
 }
 
 void PatternTest::test5() {
@@ -375,6 +215,15 @@ void PatternTest::test8() {
     QVERIFY(p.match(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x'));
+}
+
+void PatternTest::test9() {
+    pattern p {
+        star('#')( // Not existing symbol
+            one('x')(
+                one('a'),
+                one('a')))};
+    QVERIFY(p.match(tree3));
 }
 
 QTEST_MAIN(PatternTest);

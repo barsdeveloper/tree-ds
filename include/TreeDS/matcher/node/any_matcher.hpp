@@ -13,13 +13,6 @@
 
 namespace md {
 
-enum class quantifier {
-    DEFAULT,
-    RELUCTANT,
-    GREEDY,
-    POSSESSIVE
-};
-
 template <quantifier Quantifier, typename ValueMatcher, typename... Children>
 class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Children...>, ValueMatcher, Children...> {
 
@@ -35,23 +28,10 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     static constexpr matcher_info_t info {
         // It matches null only if all its children do so
         (... && Children::info.matches_null),
+        // This node could match null
+        true,
         // It is reluctant if it has that quantifier
         Quantifier == quantifier::RELUCTANT};
-    // True if no more than one children requires a node in order to match
-    static constexpr bool child_may_steal_target
-        = (std::tuple_size_v<
-              decltype(std::tuple_cat(
-                  std::declval<
-                      /*
-                       * We count the number of children that require a node to match by creating a new tuple type and
-                       * getting the size of that tuple. To create that tuple we progressively append the elements of a
-                       * new tuple which is a std::tuple<int> (dummy integer element) or an empty tuple.
-                       */
-                      std::conditional_t<
-                          !Children::info.matches_null,
-                          std::tuple<int>,
-                          std::tuple<>>>()...))>)
-        <= 1;
     std::array<void*, sizeof...(Children)> child_match_attempt_begin {};
 
     /*   ---   CONSTRUCTORS   ---   */
@@ -62,26 +42,6 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     template <typename NodeAllocator>
     allocator_value_type<NodeAllocator>* get_child_match_attempt_begin(std::size_t index, const NodeAllocator&) const {
         return static_cast<allocator_value_type<NodeAllocator>*>(this->child_match_attempt_begin[index]);
-    }
-
-    template <typename NodeAllocator>
-    bool did_child_steal_target(unique_node_ptr<NodeAllocator>& result, NodeAllocator& allocator) {
-        if constexpr (any_matcher::child_may_steal_target) {
-            unique_node_ptr<NodeAllocator> ptr;
-            std::apply(
-                [&](auto&... children) {
-                    ((children.get_node(allocator) == this->get_node(allocator)
-                          ? ptr = children.result(allocator)
-                          : ptr),
-                     ...);
-                },
-                this->children);
-            if (ptr != nullptr) {
-                result = std::move(ptr);
-                return true;
-            }
-        }
-        return false;
     }
 
     template <typename NodeAllocator, typename CheckNode>
@@ -106,7 +66,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if (!this->match_value(node.get_value())) {
-            return false;
+            return this->let_child_steal(node, allocator);
         }
         using node_t        = allocator_value_type<NodeAllocator>;
         node_t* subtree_cut = nullptr;
@@ -119,6 +79,10 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
+        if constexpr (Quantifier != quantifier::RELUCTANT) {
+            // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
+            target_it.increment();
+        }
         auto do_match = [&](auto& child) -> bool {
             node_t* current = target_it.get_current_node();
             if (current == nullptr) {
@@ -167,7 +131,13 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             }
             return do_match(child);
         };
-        return this->match_children(do_match, do_rematch);
+        bool result = this->match_children(do_match, do_rematch);
+        if constexpr (any_matcher::child_may_steal_target()) {
+            if (!result) {
+                return this->let_child_steal(node, allocator);
+            }
+        }
+        return result;
     }
 
     template <typename NodeAllocator>

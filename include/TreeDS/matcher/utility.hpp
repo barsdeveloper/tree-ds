@@ -16,9 +16,11 @@ class capture_node;
 /*   ---   CLASSES DEINITIONS   ---   */
 struct matcher_info_t {
     bool matches_null;
+    bool shallow_matches_null;
     bool reluctant;
-    constexpr matcher_info_t(bool matches_null, bool reluctant) :
+    constexpr matcher_info_t(bool matches_null, bool shallow_matches_null, bool reluctant) :
             matches_null(matches_null),
+            shallow_matches_null(shallow_matches_null),
             reluctant(reluctant) {
     }
 };
