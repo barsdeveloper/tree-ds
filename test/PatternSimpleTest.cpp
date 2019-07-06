@@ -34,6 +34,7 @@ class PatternSimpleTest : public QObject {
     void test6();
     void test7();
     void test8();
+    void test9();
 };
 
 void PatternSimpleTest::construction() {
@@ -193,11 +194,20 @@ void PatternSimpleTest::test8() {
     pattern p {
         opt(1)(
             one(2),
-            opt(3))};
-
+            opt(1))};
     QVERIFY(p.match(tree2));
-    //p.assign_result(result);
-    //QCOMPARE(result, n(1)(n(2), n(3)));
+    p.assign_result(result);
+    QCOMPARE(result, n(1)(n(2), n(1)));
+}
+
+void PatternSimpleTest::test9() {
+    pattern p {
+        opt(1)(
+            opt<quantifier::RELUCTANT>(2),
+            one(3))};
+    QVERIFY(p.match(tree1));
+    p.assign_result(result);
+    QCOMPARE(result, n(1)(n(), n(3)));
 }
 
 QTEST_MAIN(PatternSimpleTest);

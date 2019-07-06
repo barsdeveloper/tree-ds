@@ -66,23 +66,18 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if (!this->match_value(node.get_value())) {
+            // If this matcher does not accepth the node, there is just one possibility: a single child can match it
             return this->let_child_steal(node, allocator);
         }
         using node_t        = allocator_value_type<NodeAllocator>;
         node_t* subtree_cut = nullptr;
-        auto predicate      = [&](node_t& n) { // Stop when finding a non-matching node
-            if (!n.get_parent()) {
-                return this->match_value(n.get_value());
-            }
+        auto predicate      = [&](node_t& n) {
+            // Parent always present (because we start matching from the child of node)
             return n.get_parent() != subtree_cut && this->match_value(n.get_parent()->get_value());
         };
         node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
-        if constexpr (Quantifier != quantifier::RELUCTANT) {
-            // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
-            target_it.increment();
-        }
         auto do_match = [&](auto& child) -> bool {
             node_t* current = target_it.get_current_node();
             if (current == nullptr) {
@@ -131,8 +126,13 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             }
             return do_match(child);
         };
+        if constexpr (Quantifier != quantifier::RELUCTANT) {
+            // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
+            target_it.increment();
+        }
         bool result = this->match_children(do_match, do_rematch);
-        if constexpr (any_matcher::child_may_steal_target()) {
+        if constexpr (Quantifier != quantifier::RELUCTANT && any_matcher::child_may_steal_target()) {
+            // Every other match failed, we try the discarded possibility: one of the children matches this node
             if (!result) {
                 return this->let_child_steal(node, allocator);
             }
