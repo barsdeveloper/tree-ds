@@ -31,25 +31,15 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         if (!this->match_value(node.get_value())) {
             return false;
         }
-        auto target = node.get_first_child();
+        auto target = policy::siblings().get_instance(
+            node.get_first_child(),
+            node_navigator<allocator_value_type<NodeAllocator>*>(),
+            allocator);
         // Match children of the pattern
-        auto do_match_child = [&](auto& child) -> bool {
-            auto* current = target;
-            if (child.match_node(current, allocator)) {
-                if (current) {
-                    target = current->get_next_sibling();
-                }
-                return true;
-            }
-            while (current != nullptr) {
-                current = current->get_next_sibling();
-                if (child.match_node(current, allocator)) {
-                    return true;
-                }
-            }
-            return child.info.matches_null;
+        auto do_match_child = [&](auto& it, auto& child) -> bool {
+            return child.match_node(it.get_current_node(), allocator);
         };
-        return this->match_children(do_match_child);
+        return this->match_children(target, do_match_child);
     }
 
     template <typename NodeAllocator>

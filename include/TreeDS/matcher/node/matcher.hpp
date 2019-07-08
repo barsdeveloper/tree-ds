@@ -74,6 +74,24 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     /*   ---   METHODS   ---   */
+    private:
+    template <typename Iterator, typename MatchFunction>
+    bool try_match(Iterator& it, MatchFunction&& match, std::size_t index) {
+        while (it) {
+            if (apply_at_index(
+                    [&](auto& child) {
+                        return match(it, child);
+                    },
+                    this->children,
+                    index)) {
+                it.increment();
+                return true;
+            }
+            it.increment();
+        }
+        return false;
+    }
+
     protected:
     static constexpr std::size_t child_steal_index() {
         if constexpr (matcher::child_may_steal_target()) {
@@ -150,32 +168,39 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         }
     }
 
-    template <typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(MatchFunction&& do_match, RematchFunction&& do_rematch = nullptr) {
+    template <typename Iterator, typename MatchFunction, typename RematchFunction = std::nullptr_t>
+    bool match_children(Iterator it, MatchFunction&& match, RematchFunction&& rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
-                if (apply_at_index(
-                        [](auto& child) -> bool {
-                            return child.info.matches_null && child.info.reluctant;
-                        },
-                        this->children,
-                        current_child)) {
+                const matcher_info_t& info = apply_at_index(
+                    [](auto& child) -> const matcher_info_t& {
+                        return child.info;
+                    },
+                    this->children,
+                    current_child);
+                if (info.matches_null && (info.reluctant || !it)) {
+                    // If current chiuld prefers to not match anything
                     continue;
                 }
-                if (!apply_at_index(do_match, this->children, current_child)) {
+                if (!this->try_match(it, match, current_child)) {
                     if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
                         return false;
                     } else {
                         while (current_child >= 0) {
-                            if (apply_at_index(do_rematch, this->children, current_child)) {
+                            if (apply_at_index(
+                                    [&](auto& child) -> bool {
+                                        return rematch(it, child);
+                                    },
+                                    this->children,
+                                    current_child)) {
                                 break; // We found a child that could rematch and leave the other children new nodes
                             }
                             --current_child;
                         }
-                    }
-                    if (current_child < 0) {
-                        return false;
+                        if (current_child < 0) {
+                            return false;
+                        }
                     }
                 }
             }

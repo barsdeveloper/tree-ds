@@ -78,40 +78,31 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
         // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
         detail::pre_order_impl target_it(policy::pre_order().get_instance(&node, navigator, allocator));
-        auto do_match = [&](auto& child) -> bool {
-            node_t* current = target_it.get_current_node();
-            if (current == nullptr) {
-                return child.info.matches_null;
-            }
+        auto do_match = [&](auto& it, auto& child) -> bool {
+            node_t* current = it.get_current_node();
             if (!this->child_match_attempt_begin[child.get_index()]) {
                 this->child_match_attempt_begin[child.get_index()] = current;
             }
-            while (current) {
-                if (child.match_node(current, allocator)) {
-                    subtree_cut = current;
-                    target_it.increment();
-                    return true;
-                }
-                target_it.increment();
-                current = target_it.get_current_node();
+            if (child.match_node(current, allocator)) {
+                subtree_cut = current;
+                return true;
             }
             return false;
         };
-        auto do_rematch = [&](auto& child) -> bool {
+        auto do_rematch = [&](auto& it, auto& child) -> bool {
             subtree_cut = nullptr;
             if (child.empty()) {
                 return false;
             }
-            target_it
-                = policy::pre_order()
-                      .get_instance(child.get_node(allocator), navigator, allocator)
-                      .go_depth_first_ramification();
+            it = policy::pre_order()
+                     .get_instance(child.get_node(allocator), navigator, allocator)
+                     .go_depth_first_ramification();
             // If we can't advance in depth in the tree as to leave the next node with a previously unseen match
-            if (target_it.get_current_node() == nullptr) {
+            if (it.get_current_node() == nullptr) {
                 // If child can renounce to its match
                 if (child.info.matches_null && !child.empty()) {
                     // Then leave the next child with the target matched by child
-                    target_it = policy::pre_order().get_instance(
+                    it = policy::pre_order().get_instance(
                         // Leave child's initial node to another node
                         this->get_child_match_attempt_begin(child.get_index(), allocator),
                         navigator,
@@ -122,15 +113,19 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 }
                 return false;
             } else {
-                subtree_cut = target_it.get_current_node();
+                subtree_cut = it.get_current_node();
+                if (do_match(it, child)) {
+                    it.increment();
+                    return true;
+                }
             }
-            return do_match(child);
+            return false;
         };
         if constexpr (Quantifier != quantifier::RELUCTANT) {
             // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
             target_it.increment();
         }
-        bool result = this->match_children(do_match, do_rematch);
+        bool result = this->match_children(target_it, do_match, do_rematch);
         if constexpr (Quantifier != quantifier::RELUCTANT && any_matcher::child_may_steal_target()) {
             // Every other match failed, we try the discarded possibility: one of the children matches this node
             if (!result) {
