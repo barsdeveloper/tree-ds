@@ -173,10 +173,10 @@ class binary_node : public node<T, binary_node<T>> {
 
     binary_node* do_assign_child_like(binary_node* child, const binary_node& reference_child) {
         assert(child);
-        binary_node*& target = reference_child.is_left_child() ? this->left : this->right;
-        assert(target == nullptr);
-        target = child;
-        return this->attach_child(target);
+        binary_node*& target_position = reference_child.is_left_child() ? this->left : this->right;
+        assert(target_position == nullptr);
+        target_position = child;
+        return this->attach_child(target_position);
     }
 
     binary_node* attach_child(binary_node* node) {

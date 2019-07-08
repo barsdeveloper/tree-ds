@@ -282,9 +282,19 @@ void code_like_print(std::ostream& stream, const T& c) {
 #define MD_PRINT_TREE_INDENTATION 4
 #endif
 
+#ifndef MD_PRINT_TREE_ADDRESS
+#define MD_PRINT_TREE_ADDRESS false
+#endif
+
+#ifndef MD_PRINT_TREE_ADDRESS_DIGITS
+#define MD_PRINT_TREE_ADDRESS_DIGITS 4
+#endif
+
 struct print_preferences {
     unsigned indentation_increment = MD_PRINT_TREE_INDENTATION;
     int limit                      = MD_PRINT_TREE_MAX_NODES;
+    bool address                   = static_cast<bool>(MD_PRINT_TREE_ADDRESS);
+    unsigned address_digits        = MD_PRINT_TREE_ADDRESS_DIGITS;
 };
 
 template <typename Node>
@@ -298,6 +308,9 @@ void print_node(
     }
     os << std::string(indentation, ' ') << "n(";
     code_like_print(os, node.get_value());
+    if (preferences.address) {
+        os << " @" << std::hex << (reinterpret_cast<std::size_t>(&node) % (std::size_t(1u) << 4u * preferences.address_digits));
+    }
     os << ')';
     const Node* current = node.get_first_child();
     if (current) {
@@ -325,6 +338,18 @@ void print_node(
             os << std::string(indentation + 4, ' ') << "...";
         }
         os << ")";
+    }
+}
+
+template <typename Tree>
+void print_tree(
+    std::ostream& os,
+    const Tree& tree,
+    print_preferences&& preferences = {}) {
+    if (!tree.empty()) {
+        print_node(os, *tree.raw_root_node(), 0u, std::move(preferences));
+    } else {
+        code_like_print(os);
     }
 }
 

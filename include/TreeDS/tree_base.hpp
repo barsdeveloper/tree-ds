@@ -380,11 +380,7 @@ template <
     typename Allocator,
     typename = std::enable_if<is_printable<decltype(std::declval<Node>().get_value())>>>
 std::ostream& operator<<(std::ostream& os, const tree_base<Node, Policy, Allocator>& tree) {
-    if (tree.raw_root_node()) {
-        print_node(os, *tree.raw_root_node(), 0u);
-    } else {
-        code_like_print(os);
-    }
+    print_tree(os, tree);
     return os;
 }
 #endif

@@ -104,6 +104,10 @@ class policy_base {
         }
         return *static_cast<ActualPolicy*>(this);
     }
+
+    operator bool() const {
+        return static_cast<bool>(this->current);
+    }
 };
 
 /*
