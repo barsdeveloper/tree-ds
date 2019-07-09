@@ -34,6 +34,11 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+        if constexpr (Quantifier == quantifier::RELUCTANT && opt_matcher::child_may_steal_target()) {
+            if (this->let_child_steal(node, allocator)) {
+                return true;
+            }
+        }
         if (!this->match_value(node.get_value())) {
             return this->let_child_steal(node, allocator);
         }
@@ -45,7 +50,11 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
         auto do_match_child = [&](auto& it, auto& child) -> bool {
             return child.match_node(it.get_current_node(), allocator);
         };
-        return this->match_children(target, do_match_child);
+        bool result = this->match_children(std::move(target), do_match_child);
+        if (opt_matcher::child_may_steal_target() && !result) {
+            return this->let_child_steal(node, allocator);
+        }
+        return result;
     }
 
     template <typename NodeAllocator>

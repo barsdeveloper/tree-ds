@@ -76,7 +76,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   METHODS   ---   */
     private:
     template <typename Iterator, typename MatchFunction>
-    bool try_match(Iterator& it, MatchFunction&& match, std::size_t index) {
+    bool try_match(Iterator& it, const MatchFunction& match, std::size_t index) {
         while (it) {
             if (apply_at_index(
                     [&](auto& child) {
@@ -169,7 +169,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename Iterator, typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(Iterator it, MatchFunction&& match, RematchFunction&& rematch = nullptr) {
+    bool match_children(Iterator it, const MatchFunction& match, const RematchFunction& rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
