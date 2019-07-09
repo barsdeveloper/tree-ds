@@ -16,7 +16,7 @@ Please hit a star and open issues for any question you might have.
 * Tree pattern matching (conceptually similar to regex). Still a work in progress.
 
 ## Design goals
-This library is designed with **performance** in mind. It will avoid expensive features like virtual member functions, memory allocations and type erarsure whenever possible, in general it follows the style of the standard library that prefers template parameters over runtime entities. Consider that I have a decently good understanding of C++ mechanics yet I'm far from being an expert.
+This library is designed to achieve performance without over-engineering the code. The implementation is rather simple and uses a per-node memory allocation. Depending on the allocator it may achieve sub optimal performance due to cache misses. More sophisticated tree types may be implemented in the future. Concerning micro optimizations, expensive features like virtual member functions, unnecessary memory allocations and type erarsure will be avoided whenever possible, in general it follows the style of the standard library that prefers template parameters over runtime entities.
 
 To sum up this library is pretty interesting in what it can do, maybe more complex that the average tree library but it offers a stupid simple and intuitive interface.
 
