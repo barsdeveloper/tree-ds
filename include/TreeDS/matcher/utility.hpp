@@ -18,10 +18,12 @@ struct matcher_info_t {
     bool matches_null;
     bool shallow_matches_null;
     bool reluctant;
-    constexpr matcher_info_t(bool matches_null, bool shallow_matches_null, bool reluctant) :
+    bool possessive;
+    constexpr matcher_info_t(bool matches_null, bool shallow_matches_null, bool reluctant, bool possessive) :
             matches_null(matches_null),
             shallow_matches_null(shallow_matches_null),
-            reluctant(reluctant) {
+            reluctant(reluctant),
+            possessive(possessive) {
     }
 };
 

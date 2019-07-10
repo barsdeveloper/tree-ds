@@ -26,7 +26,8 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
         // It matches null if we consider just this node
         true,
         // Reluctant behavior
-        Quantifier == quantifier::RELUCTANT};
+        Quantifier == quantifier::RELUCTANT,
+        Quantifier == quantifier::POSSESSIVE};
 
     /*   ---   CONSTRUCTOR   ---   */
     using matcher<opt_matcher, ValueMatcher, Children...>::matcher;
@@ -34,13 +35,17 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        if constexpr (Quantifier == quantifier::RELUCTANT && opt_matcher::child_may_steal_target()) {
+        if constexpr (opt_matcher::info.reluctant && opt_matcher::child_may_steal_target()) {
             if (this->let_child_steal(node, allocator)) {
                 return true;
             }
         }
         if (!this->match_value(node.get_value())) {
-            return this->let_child_steal(node, allocator);
+            if constexpr (opt_matcher::info.possessive) {
+                return false;
+            } else {
+                return this->let_child_steal(node, allocator);
+            }
         }
         auto target = policy::siblings().get_instance(
             node.get_first_child(),
@@ -50,17 +55,23 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
         auto do_match_child = [&](auto& it, auto& child) -> bool {
             return child.match_node(it.get_current_node(), allocator);
         };
-        bool result = this->match_children(std::move(target), do_match_child);
-        if (opt_matcher::child_may_steal_target() && !result) {
+        bool children_matched = this->match_children(allocator, std::move(target), do_match_child);
+        if (!opt_matcher::info.possessive && opt_matcher::child_may_steal_target() && !children_matched) {
             return this->let_child_steal(node, allocator);
         }
-        return result;
+        return children_matched;
     }
 
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        unique_node_ptr<NodeAllocator> result = this->clone_node(allocator);
-        auto attach_child                     = [&](auto& child) {
+        unique_node_ptr<NodeAllocator> result;
+        if constexpr (!opt_matcher::info.possessive) {
+            if (this->did_child_steal_target(result, allocator)) {
+                return std::move(result);
+            }
+        }
+        result            = this->clone_node(allocator);
+        auto attach_child = [&](auto& child) {
             if (!child.empty()) {
                 result->assign_child_like(
                     child.result(allocator),

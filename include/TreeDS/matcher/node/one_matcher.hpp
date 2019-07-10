@@ -20,7 +20,15 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {false, false, true};
+    static constexpr matcher_info_t info {
+        // Matches null
+        false,
+        // Shallow matches null
+        false,
+        // Reluctant
+        false,
+        // Possessive
+        true};
 
     /*   ---   CONSTRUCTOR   ---   */
     using matcher<one_matcher, ValueMatcher, Children...>::matcher;
@@ -39,7 +47,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         auto do_match_child = [&](auto& it, auto& child) -> bool {
             return child.match_node(it.get_current_node(), allocator);
         };
-        return this->match_children(std::move(target), do_match_child);
+        return this->match_children(allocator, std::move(target), do_match_child);
     }
 
     template <typename NodeAllocator>

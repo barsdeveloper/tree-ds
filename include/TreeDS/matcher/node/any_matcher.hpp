@@ -32,8 +32,8 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         // This node could match null
         true,
         // It is reluctant if it has that quantifier
-        Quantifier == quantifier::RELUCTANT};
-    std::array<void*, sizeof...(Children)> child_match_attempt_begin {};
+        Quantifier == quantifier::RELUCTANT,
+        Quantifier == quantifier::POSSESSIVE};
     void* subtree_cut = nullptr;
 
     /*   ---   CONSTRUCTORS   ---   */
@@ -51,7 +51,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         using node_t   = allocator_value_type<NodeAllocator>;
         auto predicate = [this](node_t& n) {
             // Parent always present (because we start matching from the child of node)
-            if constexpr (Quantifier == quantifier::POSSESSIVE) {
+            if constexpr (any_matcher::info.possessive) {
                 return this->match_value(n.get_parent()->get_value());
             } else {
 
@@ -59,7 +59,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             }
         };
         node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
-        if constexpr (Quantifier == quantifier::POSSESSIVE) {
+        if constexpr (any_matcher::info.possessive) {
             return policy::leaves().get_instance(static_cast<node_t*>(nullptr), navigator, allocator).go_first();
         } else {
             return policy::pre_order().get_instance(&node, navigator, allocator);
@@ -71,9 +71,6 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         return [&](auto& it, auto& child) -> bool {
             using node_t    = allocator_value_type<NodeAllocator>;
             node_t* current = it.get_current_node();
-            if (!this->child_match_attempt_begin[child.get_index()]) {
-                this->child_match_attempt_begin[child.get_index()] = current;
-            }
             if (child.match_node(current, allocator)) {
                 subtree_cut = current;
                 return true;
@@ -84,7 +81,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     template <typename MatchFunction, typename NodeAllocator>
     auto get_rematch_funcion(MatchFunction& do_match, allocator_value_type<NodeAllocator>&, NodeAllocator& allocator) {
-        if constexpr (Quantifier == quantifier::POSSESSIVE) {
+        if constexpr (any_matcher::info.possessive) {
             /*
              * Possessive any_matcher matches any node it can then tries to match its children just on leaf nodes. It
              * cannot rematch in case of children bad match (a match that leaves the other children without a match)
@@ -100,20 +97,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 using it_t = std::decay_t<decltype(it)>;
                 it         = it_t(it, child.get_node(allocator)).go_depth_first_ramification();
                 // If we can't advance in depth in the tree as to leave the next node with a previously unseen match
-                if (it.get_current_node() == nullptr) {
-                    // If child can renounce to its match
-                    if (child.info.matches_null && !child.empty()) {
-                        // Then leave the next child with the target matched by child
-                        it = it_t(
-                            it,
-                            // Leave child's initial node to another node
-                            this->get_child_match_attempt_begin(child.get_index(), allocator));
-                        this->child_match_attempt_begin[child.get_index()] = nullptr;
-                        child.drop_target();
-                        return true;
-                    }
-                    return false;
-                } else {
+                if (it.get_current_node()) {
                     this->subtree_cut = it.get_current_node();
                     if (do_match(it, child)) {
                         it.increment();
@@ -164,12 +148,12 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         auto target_it(this->get_match_iterator(node, allocator));
         auto do_match   = this->get_match_funcion(node, allocator);
         auto do_rematch = this->get_rematch_funcion(do_match, node, allocator);
-        if constexpr (Quantifier != quantifier::RELUCTANT && Quantifier != quantifier::POSSESSIVE) {
+        if constexpr (!any_matcher::info.reluctant && !any_matcher::info.possessive) {
             // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
             target_it.increment();
         }
-        bool result = this->match_children(std::move(target_it), do_match, do_rematch);
-        if constexpr (Quantifier != quantifier::RELUCTANT && any_matcher::child_may_steal_target()) {
+        bool result = this->match_children(allocator, std::move(target_it), do_match, do_rematch);
+        if constexpr (!any_matcher::info.reluctant && any_matcher::child_may_steal_target()) {
             // Every other match failed, we try the discarded possibility: one of the children matches this node
             if (!result) {
                 return this->let_child_steal(node, allocator);

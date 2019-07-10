@@ -58,6 +58,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                 return std::tuple_cat(child.captures...);
             },
             this->children));
+    std::array<void*, sizeof...(Children)> child_match_attempt_begin {};
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -76,7 +77,10 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     /*   ---   METHODS   ---   */
     private:
     template <typename Iterator, typename MatchFunction>
-    bool try_match(Iterator& it, const MatchFunction& match, std::size_t index) {
+    bool try_match(Iterator& it, const MatchFunction& match, std::size_t index, const matcher_info_t& info) {
+        if (!this->child_match_attempt_begin[index]) {
+            this->child_match_attempt_begin[index] = it.get_current_node();
+        }
         while (it) {
             if (apply_at_index(
                     [&](auto& child) {
@@ -89,10 +93,23 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             }
             it.increment();
         }
+        if (info.matches_null && this->child_match_attempt_begin[index]) {
+            it = Iterator(it, static_cast<decltype(it.get_current_node())>(this->child_match_attempt_begin[index]));
+            return true;
+        }
         return false;
     }
 
     protected:
+    template <typename Node>
+    static auto get_children_supplier(Node& target) {
+        return [node = target.get_first_child()]() mutable -> Node* {
+            Node* result = node;
+            node         = node->get_next_sibling();
+            return result;
+        };
+    }
+
     static constexpr std::size_t child_steal_index() {
         if constexpr (matcher::child_may_steal_target()) {
             std::size_t result = 0;
@@ -113,6 +130,13 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         } else {
             return false;
         }
+    }
+
+    const matcher_info_t& get_child_info(std::size_t index) const {
+        return apply_at_index(
+            [](auto& child) -> const matcher_info_t& { return child.info; },
+            this->children,
+            index);
     }
 
     template <typename NodeAllocator>
@@ -150,13 +174,9 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         return false;
     }
 
-    template <typename Node>
-    static auto get_children_supplier(Node& target) {
-        return [node = target.get_first_child()]() mutable -> Node* {
-            Node* result = node;
-            node         = node->get_next_sibling();
-            return result;
-        };
+    template <typename NodeAllocator>
+    allocator_value_type<NodeAllocator>* get_child_match_attempt_begin(std::size_t index, const NodeAllocator&) const {
+        return static_cast<allocator_value_type<NodeAllocator>*>(this->child_match_attempt_begin[index]);
     }
 
     template <typename Value>
@@ -168,32 +188,39 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         }
     }
 
-    template <typename Iterator, typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(Iterator it, const MatchFunction& match, const RematchFunction& rematch = nullptr) {
+    template <typename Allocator, typename Iterator, typename MatchFunction, typename RematchFunction = std::nullptr_t>
+    bool match_children(
+        Allocator& allocator,
+        Iterator it,
+        const MatchFunction& match,
+        const RematchFunction& rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
-                const matcher_info_t& info = apply_at_index(
-                    [](auto& child) -> const matcher_info_t& {
-                        return child.info;
-                    },
-                    this->children,
-                    current_child);
+                const matcher_info_t& info = this->get_child_info(current_child);
                 if (info.matches_null && (info.reluctant || !it)) {
                     // If current chiuld prefers to not match anything
                     continue;
                 }
-                if (!this->try_match(it, match, current_child)) {
+                if (!this->try_match(it, match, current_child, info)) {
                     if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
+                        // There isn't any rematch function
                         return false;
                     } else {
+                        auto do_rematch = [&](auto& child) -> bool {
+                            if (rematch(it, child)) {
+                                return true;
+                            } else if (child.info.matches_null && !child.empty()) {
+                                it = Iterator(it, this->get_child_match_attempt_begin(current_child, allocator));
+                                child.drop_target();
+                                this->child_match_attempt_begin[child.get_index()] = nullptr;
+                                return true;
+                            }
+                            return false;
+                        };
+                        // There is a rematch function
                         while (current_child >= 0) {
-                            if (apply_at_index(
-                                    [&](auto& child) -> bool {
-                                        return rematch(it, child);
-                                    },
-                                    this->children,
-                                    current_child)) {
+                            if (apply_at_index(do_rematch, this->children, current_child)) {
                                 break; // We found a child that could rematch and leave the other children new nodes
                             }
                             --current_child;
@@ -289,6 +316,6 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     auto operator()(Nodes&&... nodes) const {
         return static_cast<const Derived*>(this)->replace_children(nodes...);
     }
-};
+}; // namespace md
 
 } // namespace md

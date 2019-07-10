@@ -237,6 +237,22 @@ void PatternTest::test10() {
                 star<quantifier::POSSESSIVE>('a')(
                     one('y'))))};
     QVERIFY(p.match(tree3));
+    p.assign_result(binary_char_result);
+    QCOMPARE(
+        binary_char_result,
+        n('x')(
+            n('a')(
+                n('a')(
+                    n(),
+                    n('a')(
+                        n('a')(
+                            n('a'),
+                            n('a')),
+                        n('a')(
+                            n('a')(
+                                n(),
+                                n('y')),
+                            n('a')))))));
 }
 
 QTEST_MAIN(PatternTest);
