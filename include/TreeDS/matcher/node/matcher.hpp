@@ -195,6 +195,23 @@ class matcher : public struct_node<ValueMatcher, Children...> {
         const MatchFunction& match,
         const RematchFunction& rematch = nullptr) {
         if constexpr (matcher::children_count() > 0) {
+            auto do_rematch = [&](auto& child) -> bool {
+                if constexpr (!std::is_same_v<RematchFunction, std::nullptr_t>) {
+                    // If a proper rematch function was provided
+                    if (rematch(it, child)) {
+                        return true;
+                    }
+                }
+                // If the rematch function was not provided or failed to rematch
+                if (child.info.matches_null && !child.empty()) {
+                    // Here we ask children to renonunce to its match (if it can)
+                    it = Iterator(it, this->get_child_match_attempt_begin(child.get_index(), allocator));
+                    child.reset();
+                    this->child_match_attempt_begin[child.get_index()] = nullptr;
+                    return true;
+                }
+                return false;
+            };
             int current_child;
             for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
                 const matcher_info_t& info = this->get_child_info(current_child);
@@ -203,31 +220,15 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     continue;
                 }
                 if (!this->try_match(it, match, current_child, info)) {
-                    if constexpr (std::is_same_v<RematchFunction, std::nullptr_t>) {
-                        // There isn't any rematch function
+                    // There is a rematch function
+                    while (current_child >= 0) {
+                        if (apply_at_index(do_rematch, this->children, current_child)) {
+                            break; // We found a child that could rematch and leave the other children new nodes
+                        }
+                        --current_child;
+                    }
+                    if (current_child < 0) {
                         return false;
-                    } else {
-                        auto do_rematch = [&](auto& child) -> bool {
-                            if (rematch(it, child)) {
-                                return true;
-                            } else if (child.info.matches_null && !child.empty()) {
-                                it = Iterator(it, this->get_child_match_attempt_begin(current_child, allocator));
-                                child.drop_target();
-                                this->child_match_attempt_begin[child.get_index()] = nullptr;
-                                return true;
-                            }
-                            return false;
-                        };
-                        // There is a rematch function
-                        while (current_child >= 0) {
-                            if (apply_at_index(do_rematch, this->children, current_child)) {
-                                break; // We found a child that could rematch and leave the other children new nodes
-                            }
-                            --current_child;
-                        }
-                        if (current_child < 0) {
-                            return false;
-                        }
                     }
                 }
             }
@@ -249,10 +250,6 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     template <typename NodeAllocator>
     unique_node_ptr<NodeAllocator> clone_node(NodeAllocator& allocator) const {
         return allocate(allocator, this->get_node(allocator)->get_value());
-    }
-
-    void drop_target() {
-        this->target_node = nullptr;
     }
 
     void reset() {

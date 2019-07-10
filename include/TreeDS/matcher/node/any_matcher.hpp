@@ -42,11 +42,6 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     /*   ---   METHODS   ---   */
     private:
     template <typename NodeAllocator>
-    allocator_value_type<NodeAllocator>* get_child_match_attempt_begin(std::size_t index, const NodeAllocator&) const {
-        return static_cast<allocator_value_type<NodeAllocator>*>(this->child_match_attempt_begin[index]);
-    }
-
-    template <typename NodeAllocator>
     auto get_match_iterator(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         using node_t   = allocator_value_type<NodeAllocator>;
         auto predicate = [this](node_t& n) {
@@ -173,6 +168,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 result = nullptr;
                 break;
             case quantifier::GREEDY:
+            case quantifier::POSSESSIVE:
                 result = this->clone_node(allocator);
                 any_matcher::keep_assigning_children(
                     *result,
@@ -182,8 +178,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                         return this->match_value(check.get_value());
                     });
                 break;
-            case quantifier::POSSESSIVE:
-                break;
+            case quantifier::DEFAULT:
             default:
                 result = this->clone_node(allocator);
             }

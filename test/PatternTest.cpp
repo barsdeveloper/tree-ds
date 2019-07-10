@@ -55,6 +55,7 @@ class PatternTest : public QObject {
     void test8();
     void test9();
     void test10();
+    void test11();
 };
 
 void PatternTest::test1() {
@@ -112,8 +113,6 @@ void PatternTest::test3() {
                 star('b')(
                     cpt(capture_name<'y'>(),
                         one('y'))))));
-    print_tree(std::cout, tree3, {2, 100, true});
-    std::cout << std::endl;
     QVERIFY(p.match(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
@@ -253,6 +252,37 @@ void PatternTest::test10() {
                                 n(),
                                 n('y')),
                             n('a')))))));
+}
+
+void PatternTest::test11() {
+    pattern p {
+        one('x')(
+            opt<quantifier::GREEDY>('a'),
+            star<quantifier::GREEDY>('a'),
+            star<quantifier::POSSESSIVE>('a')(
+                opt<quantifier::POSSESSIVE>('b')(
+                    opt<quantifier::RELUCTANT>('b'),
+                    opt('b')(
+                        one('y')))))};
+    QVERIFY(p.match(tree3));
+    p.assign_result(binary_char_result);
+    QCOMPARE(
+        binary_char_result,
+        n('x')(
+            n('a')(
+                n('a')(
+                    n(),
+                    n('a')(
+                        n('a')(
+                            n('a'),
+                            n('a')),
+                        n('a')(
+                            n('a'),
+                            n('a')))),
+                n('b')(
+                    n(),
+                    n('b')(
+                        n('y'))))));
 }
 
 QTEST_MAIN(PatternTest);
