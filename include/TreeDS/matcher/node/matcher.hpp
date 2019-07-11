@@ -203,7 +203,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     }
                 }
                 // If the rematch function was not provided or failed to rematch
-                if (child.info.matches_null && !child.empty()) {
+                if (!child.info.reluctant && child.info.matches_null && !child.empty()) {
                     // Here we ask children to renonunce to its match (if it can)
                     it = Iterator(it, this->get_child_match_attempt_begin(child.get_index(), allocator));
                     child.reset();

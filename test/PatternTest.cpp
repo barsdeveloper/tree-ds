@@ -56,6 +56,8 @@ class PatternTest : public QObject {
     void test9();
     void test10();
     void test11();
+    void test12();
+    void test13();
 };
 
 void PatternTest::test1() {
@@ -283,6 +285,31 @@ void PatternTest::test11() {
                     n(),
                     n('b')(
                         n('y'))))));
+}
+
+void PatternTest::test12() {
+    pattern p {
+        one()(
+            star<quantifier::POSSESSIVE>('a')(
+                // Can't be matched because the parent possessive matcher will get every possible 'a', leaving no one
+                one('a')))};
+    QVERIFY(!p.match(tree3));
+}
+
+void PatternTest::test13() {
+    pattern p {
+        one()(
+            star<quantifier::GREEDY>('a')(
+                one('a')))};
+    QVERIFY(p.match(tree3));
+    print_tree(std::cout, tree3, {4, 100, true});
+    std::cout << std::endl;
+    p.assign_result(binary_char_result);
+    QCOMPARE(
+        binary_char_result,
+        n('x')(
+            n('a')(
+                n('a'))));
 }
 
 QTEST_MAIN(PatternTest);

@@ -66,6 +66,11 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         return [&](auto& it, auto& child) -> bool {
             using node_t    = allocator_value_type<NodeAllocator>;
             node_t* current = it.get_current_node();
+            if constexpr (any_matcher::info.possessive) {
+                if (current && this->match_value(current->get_value())) {
+                    return false;
+                }
+            }
             if (child.match_node(current, allocator)) {
                 subtree_cut = current;
                 return true;
@@ -123,15 +128,6 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     }
 
     public:
-    template <typename Value>
-    bool match_value(const Value& value) {
-        if constexpr (std::is_same_v<ValueMatcher, true_matcher>) {
-            return true;
-        } else {
-            return this->value == value;
-        }
-    }
-
     template <typename NodeAllocator>
     bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if (!this->match_value(node.get_value())) {
@@ -148,7 +144,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
             target_it.increment();
         }
         bool result = this->match_children(allocator, std::move(target_it), do_match, do_rematch);
-        if constexpr (!any_matcher::info.reluctant && any_matcher::child_may_steal_target()) {
+        if constexpr (!any_matcher::info.reluctant && !any_matcher::info.possessive && any_matcher::child_may_steal_target()) {
             // Every other match failed, we try the discarded possibility: one of the children matches this node
             if (!result) {
                 return this->let_child_steal(node, allocator);
@@ -240,6 +236,14 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                 auto check_target = [&](auto& multi_node_ptr) {
                     if (Quantifier == quantifier::DEFAULT && not_null_count == 0) {
                         // When the quantifier is the default one, stop iterating as soon as the last target is reached
+                        return false;
+                    }
+                    if (std::find(
+                            childrens_nodes.begin(),
+                            search_start, // We don't have to check the children that are not yet met
+                            multi_node_ptr.get_master_ptr()->get_parent())
+                        != search_start) {
+                        // When we find a node that is matched by a children
                         return false;
                     }
                     auto position = std::find(search_start, childrens_nodes.end(), multi_node_ptr.get_master_ptr());
