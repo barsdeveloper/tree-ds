@@ -35,7 +35,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
 
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
-    bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if (!this->match_value(node.get_value())) {
             return false;
         }
@@ -43,11 +43,11 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
             node.get_first_child(),
             node_navigator<allocator_value_type<NodeAllocator>*>(),
             allocator);
-        // Match children of the pattern
-        auto do_match_child = [&](auto& it, auto& child) -> bool {
-            return child.match_node(it.get_current_node(), allocator);
+        // Pattern search children of the pattern
+        auto do_search_child = [&](auto& it, auto& child) -> bool {
+            return child.search_node(it.get_current_node(), allocator);
         };
-        return this->match_children(allocator, std::move(target), do_match_child);
+        return this->search_children(allocator, std::move(target), do_search_child);
     }
 
     template <typename NodeAllocator>

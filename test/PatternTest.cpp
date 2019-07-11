@@ -66,7 +66,7 @@ void PatternTest::test1() {
             one('a'),
             star('b')(
                 one('y'))));
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
@@ -86,7 +86,7 @@ void PatternTest::test2() {
             star<quantifier::RELUCTANT>('a')(
                 one('y'),
                 one('b'))));
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
@@ -115,7 +115,7 @@ void PatternTest::test3() {
                 star('b')(
                     cpt(capture_name<'y'>(),
                         one('y'))))));
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
@@ -149,7 +149,7 @@ void PatternTest::test4() {
             star(),
             star(),
             star())};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x')(n('a'), n('a')));
 }
@@ -160,7 +160,7 @@ void PatternTest::test5() {
             star(),
             one('x'),
             star())};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x'));
 }
@@ -171,7 +171,7 @@ void PatternTest::test6() {
             star(),
             one('x'),
             star())};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x'));
 }
@@ -184,7 +184,7 @@ void PatternTest::test7() {
                 star(),
                 one('x'),
                 star()))};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x'));
 }
@@ -216,7 +216,7 @@ void PatternTest::test8() {
             star<quantifier::GREEDY>(),
             star(),
             star<quantifier::DEFAULT>())};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(binary_char_result, n('x'));
 }
@@ -227,7 +227,7 @@ void PatternTest::test9() {
             one('x')(
                 one('a'),
                 one('a')))};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
 }
 
 void PatternTest::test10() {
@@ -237,7 +237,7 @@ void PatternTest::test10() {
             star('x')(
                 star<quantifier::POSSESSIVE>('a')(
                     one('y'))))};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
@@ -266,7 +266,7 @@ void PatternTest::test11() {
                     opt<quantifier::RELUCTANT>('b'),
                     opt('b')(
                         one('y')))))};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
@@ -293,7 +293,7 @@ void PatternTest::test12() {
             star<quantifier::POSSESSIVE>('a')(
                 // Can't be matched because the parent possessive matcher will get every possible 'a', leaving no one
                 one('a')))};
-    QVERIFY(!p.match(tree3));
+    QVERIFY(!p.search(tree3));
 }
 
 void PatternTest::test13() {
@@ -301,7 +301,7 @@ void PatternTest::test13() {
         one()(
             star<quantifier::GREEDY>('a')(
                 one('a')))};
-    QVERIFY(p.match(tree3));
+    QVERIFY(p.search(tree3));
     print_tree(std::cout, tree3, {4, 100, true});
     std::cout << std::endl;
     p.assign_result(binary_char_result);

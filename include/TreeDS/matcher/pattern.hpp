@@ -26,13 +26,13 @@ class pattern {
 
     private:
     template <typename Tree>
-    bool do_match(Tree& tree) {
+    bool do_search(Tree& tree) {
         std::type_index tree_type(typeid(tree.raw_root_node()));
         if (matched_tree != nullptr && matched_tree == tree.raw_root_node()) {
             return true;
         }
         pattern_tree.reset();
-        if (this->pattern_tree.match_node(tree.raw_root_node(), tree.get_node_allocator())) {
+        if (this->pattern_tree.search_node(tree.raw_root_node(), tree.get_node_allocator())) {
             this->node_type    = tree_type;
             this->matched_tree = &tree;
             return true;
@@ -46,13 +46,13 @@ class pattern {
     }
 
     template <typename Node, typename Policy, typename Allocator>
-    bool match(tree_base<Node, Policy, Allocator>& tree) {
-        return this->do_match(tree);
+    bool search(tree_base<Node, Policy, Allocator>& tree) {
+        return this->do_search(tree);
     }
 
     template <typename Node, typename Policy, typename Allocator>
-    bool match(const tree_base<Node, Policy, Allocator>& tree) {
-        return this->do_match(tree);
+    bool search(const tree_base<Node, Policy, Allocator>& tree) {
+        return this->do_search(tree);
     }
 
     template <typename Node, typename Policy, typename Allocator>

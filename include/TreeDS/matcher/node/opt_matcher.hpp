@@ -34,7 +34,7 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
 
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
-    bool match_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
+    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
         if constexpr (opt_matcher::info.reluctant && opt_matcher::child_may_steal_target()) {
             if (this->let_child_steal(node, allocator)) {
                 return true;
@@ -52,10 +52,10 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
             node_navigator<allocator_value_type<NodeAllocator>*>(),
             allocator);
         // Match children of the pattern
-        auto do_match_child = [&](auto& it, auto& child) -> bool {
-            return child.match_node(it.get_current_node(), allocator);
+        auto do_search_child = [&](auto& it, auto& child) -> bool {
+            return child.search_node(it.get_current_node(), allocator);
         };
-        bool children_matched = this->match_children(allocator, std::move(target), do_match_child);
+        bool children_matched = this->search_children(allocator, std::move(target), do_search_child);
         if (!opt_matcher::info.possessive && opt_matcher::child_may_steal_target() && !children_matched) {
             return this->let_child_steal(node, allocator);
         }

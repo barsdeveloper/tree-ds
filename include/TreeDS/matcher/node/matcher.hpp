@@ -145,7 +145,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             // Children will steal this node because it cannot be matched using this matcher
             return apply_at_index(
                 [&](auto& child) -> bool {
-                    return child.match_node(&node, allocator);
+                    return child.search_node(&node, allocator);
                 },
                 this->children,
                 matcher::child_steal_index());
@@ -189,16 +189,16 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename Allocator, typename Iterator, typename MatchFunction, typename RematchFunction = std::nullptr_t>
-    bool match_children(
+    bool search_children(
         Allocator& allocator,
         Iterator it,
-        const MatchFunction& match,
-        const RematchFunction& rematch = nullptr) {
+        const MatchFunction& search,
+        const RematchFunction& backtrack = nullptr) {
         if constexpr (matcher::children_count() > 0) {
-            auto do_rematch = [&](auto& child) -> bool {
+            auto do_backtrack = [&](auto& child) -> bool {
                 if constexpr (!std::is_same_v<RematchFunction, std::nullptr_t>) {
                     // If a proper rematch function was provided
-                    if (rematch(it, child)) {
+                    if (backtrack(it, child)) {
                         return true;
                     }
                 }
@@ -219,10 +219,10 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     // If current chiuld prefers to not match anything
                     continue;
                 }
-                if (!this->try_match(it, match, current_child, info)) {
+                if (!this->try_match(it, search, current_child, info)) {
                     // There is a rematch function
                     while (current_child >= 0) {
-                        if (apply_at_index(do_rematch, this->children, current_child)) {
+                        if (apply_at_index(do_backtrack, this->children, current_child)) {
                             break; // We found a child that could rematch and leave the other children new nodes
                         }
                         --current_child;
@@ -262,11 +262,11 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     }
 
     template <typename NodeAllocator>
-    bool match_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
+    bool search_node(allocator_value_type<NodeAllocator>* node, NodeAllocator&& allocator) {
         if (node == nullptr) {
             return Derived::info.matches_null;
         }
-        if (static_cast<Derived*>(this)->match_node_impl(*node, allocator)) {
+        if (static_cast<Derived*>(this)->search_node_impl(*node, allocator)) {
             this->target_node = node;
             return true;
         }
