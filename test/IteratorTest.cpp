@@ -1,7 +1,7 @@
 #include <QtTest/QtTest>
 #include <deque>
-#include <functional> // std::function, std::reference_wrapper
-#include <memory>     // std::unique_ptr
+#include <list>
+#include <memory> // std::unique_ptr
 #include <queue>
 #include <type_traits>
 #include <unordered_map>
@@ -46,10 +46,10 @@ void IteratorTest::requirements() {
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::post_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::breadth_first>>);
     // Nary - class type
-    QVERIFY(is_default_constructible_v<nary_tree<function<int(char)>>::iterator<policy::pre_order>>);
-    QVERIFY(is_default_constructible_v<nary_tree<function<int(char)>>::iterator<policy::in_order>>);
-    QVERIFY(is_default_constructible_v<nary_tree<function<int(char)>>::iterator<policy::post_order>>);
-    QVERIFY(is_default_constructible_v<nary_tree<function<int(char)>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::pre_order>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::in_order>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::post_order>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::breadth_first>>);
 
     /*   ---   Copy constructible   ---   */
     // Binary - elementary type
@@ -68,10 +68,10 @@ void IteratorTest::requirements() {
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::post_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::breadth_first>>);
     // Nary - class type
-    QVERIFY(is_copy_constructible_v<nary_tree<reference_wrapper<deque<int>>>::iterator<policy::pre_order>>);
-    QVERIFY(is_copy_constructible_v<nary_tree<reference_wrapper<deque<int>>>::iterator<policy::in_order>>);
-    QVERIFY(is_copy_constructible_v<nary_tree<reference_wrapper<deque<int>>>::iterator<policy::post_order>>);
-    QVERIFY(is_copy_constructible_v<nary_tree<reference_wrapper<deque<int>>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::pre_order>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::in_order>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::post_order>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::breadth_first>>);
 
     /*   ---   Copy assignable   ---   */
     // Binary - elementary type

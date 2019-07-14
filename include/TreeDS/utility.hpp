@@ -30,6 +30,17 @@ namespace detail {
     class breadth_first_impl;
 }
 
+template <typename T, typename = void>
+constexpr bool is_equality_comparable = false;
+
+template <typename T>
+constexpr bool is_equality_comparable<
+    T,
+    std::enable_if_t<
+        std::is_same_v<
+            bool,
+            decltype(std::declval<const T>() == std::declval<const T>())>>> = true;
+
 template <
     typename T,
     typename Tuple,
@@ -269,7 +280,7 @@ template <typename T>
 void code_like_print(std::ostream& stream, const T& c) {
     if constexpr (is_printable<T>) {
         stream << c;
-    } else if (std::is_convertible_v<T, std::string>) {
+    } else if constexpr (std::is_convertible_v<T, std::string>) {
         stream << static_cast<std::string>(c);
     }
 }

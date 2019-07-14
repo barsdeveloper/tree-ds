@@ -4,6 +4,8 @@
 #include <type_traits> // std::is_same_v, std::is_convertible_v
 
 #include <TreeDS/matcher/utility.hpp>
+#include <TreeDS/matcher/value/alternative_match.hpp>
+#include <TreeDS/matcher/value/product_match.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
 #include <TreeDS/node/struct_node.hpp>
 #include <TreeDS/tree.hpp>
@@ -183,6 +185,8 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     bool match_value(const Value& value) {
         if constexpr (std::is_same_v<ValueMatcher, true_matcher>) {
             return true;
+        } else if constexpr (is_same_template<ValueMatcher, product_match<std::nullptr_t, std::nullptr_t>>) {
+            return this->value.match_value(value);
         } else {
             return this->value == value;
         }

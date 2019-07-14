@@ -369,7 +369,7 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename Allocator>
     nary_node* assign_child_like(unique_node_ptr<Allocator> child, const nary_node&) {
         assert(child);
-        return this->append_child(child.release);
+        return this->append_child(child.release());
     }
 
     template <typename Allocator>
@@ -436,7 +436,7 @@ class nary_node : public node<T, nary_node<T>> {
             return false;
         }
         // Test value for inequality
-        if (this->value != other.get_value()) {
+        if (!(this->value == other.get_value())) {
             return false;
         }
         // Pointer to the considered child (which is itself a pointer to const nary_node)

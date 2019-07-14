@@ -3,13 +3,19 @@
 namespace md {
 
 class true_matcher {
+
     public:
-    constexpr true_matcher() = default;
+    constexpr true_matcher() {
+    }
 
     template <typename Value>
-    bool match_value(const Value&) {
+    constexpr bool match_value(const Value&) {
         return true;
     }
 };
+
+true_matcher with_true() {
+    return true_matcher();
+}
 
 } // namespace md
