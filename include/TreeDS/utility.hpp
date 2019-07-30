@@ -55,7 +55,7 @@ constexpr bool is_constructible_from_tuple<
     Tuple,
     std::enable_if_t<
         std::is_invocable_v<
-            std::make_from_tuple<T>,
+            decltype(std::make_from_tuple<T>),
             const Tuple&>>> = true;
 
 template <typename Policy, typename = void>

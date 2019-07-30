@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>     // std::size_t
 #include <tuple>       // std::apply()
 #include <type_traits> // std::enable_if_t, std::decay_t, std::remove_pointer_t

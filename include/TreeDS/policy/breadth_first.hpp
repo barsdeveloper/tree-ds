@@ -16,8 +16,11 @@ template <typename NodePtr, typename NodeNavigator, typename Allocator>
 class breadth_first_impl final
         : public policy_base<breadth_first_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
+    public:
+    using typename policy_base<breadth_first_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator>::allocator_type;
+
     private:
-    std::deque<NodePtr, Allocator> open_nodes = manage_initial_status();
+    std::deque<NodePtr, allocator_type> open_nodes = manage_initial_status();
 
     public:
     using policy_base<breadth_first_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
@@ -78,8 +81,8 @@ class breadth_first_impl final
         return this->navigator.get_deepest_rightmost_leaf();
     }
 
-    std::deque<NodePtr, Allocator> manage_initial_status() {
-        std::deque<NodePtr, Allocator> result;
+    std::deque<NodePtr, allocator_type> manage_initial_status() {
+        std::deque<NodePtr, allocator_type> result;
         if (this->current == nullptr) {
             return result;
         }

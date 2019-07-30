@@ -21,8 +21,8 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     template <typename, typename, typename...>
     friend class matcher;
     friend class pattern<any_matcher>;
-    template <typename VM>
-    friend any_matcher<quantifier::DEFAULT, VM> star(const VM&);
+    template <quantifier Q, typename VM>
+    friend any_matcher<Q, VM> star(const VM&);
 
     /*   ---   ATTRIBUTES   ---   */
     public:

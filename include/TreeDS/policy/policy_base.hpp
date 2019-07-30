@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory> // std::allocator_traits
+
 #include <TreeDS/utility.hpp>
 
 namespace md::detail {
@@ -14,10 +16,13 @@ class policy_base {
     template <typename, typename, typename, typename>
     friend class policy_base;
 
+    public:
+    using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<NodePtr>;
+
     protected:
     NodePtr current = nullptr;
     NodeNavigator navigator;
-    Allocator allocator;
+    allocator_type allocator;
 
     public:
     /*
