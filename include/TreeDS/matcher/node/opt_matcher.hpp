@@ -11,18 +11,27 @@
 
 namespace md {
 
-template <quantifier Quantifier, typename ValueMatcher, typename... Children>
-class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Children...>, ValueMatcher, Children...> {
+template <quantifier Quantifier, typename ValueMatcher, typename FirstChild, typename NextSibling>
+class opt_matcher : public matcher<
+                        opt_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
+                        ValueMatcher,
+                        FirstChild,
+                        NextSibling> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename...>
+    template <typename, typename, typename, typename>
     friend class matcher;
 
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
         // Matches null
-        (... && Children::info.matches_null),
+        opt_matcher::foldl_children_types(
+            [](auto&& accumulated, auto&& element) {
+                using element_type = typename std::decay_t<decltype(element)>::type;
+                return accumulated && element_type::info.matches_null;
+            },
+            true),
         // It matches null if we consider just this node
         true,
         // Reluctant behavior
@@ -30,7 +39,7 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
         Quantifier == quantifier::POSSESSIVE};
 
     /*   ---   CONSTRUCTOR   ---   */
-    using matcher<opt_matcher, ValueMatcher, Children...>::matcher;
+    using matcher<opt_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
@@ -82,7 +91,7 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
             [&](auto&... children) {
                 (..., attach_child(children));
             },
-            this->children);
+            this->get_children());
         return std::move(result);
     }
 
@@ -90,15 +99,27 @@ class opt_matcher : public matcher<opt_matcher<Quantifier, ValueMatcher, Childre
     constexpr opt_matcher<Quantifier, ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
+
+    template <typename Child>
+    constexpr opt_matcher<Quantifier, ValueMatcher, std::remove_reference_t<Child>, NextSibling>
+    with_first_child(Child&& child) const {
+        return {this->value, child, this->next_sibling};
+    }
+
+    template <typename Sibling>
+    constexpr opt_matcher<Quantifier, ValueMatcher, FirstChild, std::remove_reference_t<Sibling>>
+    with_next_sibling(Sibling&& sibling) const {
+        return {this->value, this->first_child, sibling};
+    }
 };
 
 template <quantifier Quantifier = quantifier::DEFAULT, typename ValueMatcher>
-opt_matcher<Quantifier, ValueMatcher> opt(const ValueMatcher& value_matcher) {
-    return {value_matcher};
+opt_matcher<Quantifier, ValueMatcher, detail::empty_t, detail::empty_t> opt(const ValueMatcher& value_matcher) {
+    return {value_matcher, detail::empty_t(), detail::empty_t()};
 }
 template <quantifier Quantifier = quantifier::DEFAULT>
-opt_matcher<Quantifier, true_matcher> opt() {
-    return {true_matcher()};
+opt_matcher<Quantifier, true_matcher, detail::empty_t, detail::empty_t> opt() {
+    return {true_matcher(), detail::empty_t(), detail::empty_t()};
 }
 
 } // namespace md

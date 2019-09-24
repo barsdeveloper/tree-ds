@@ -118,11 +118,12 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Construct from struct_node using allocator   ---   */
     template <
         typename ConvertibleT,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename Allocator = std::allocator<nary_node>,
         typename           = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     explicit nary_node(
-        const struct_node<ConvertibleT, Nodes...>& other,
+        const struct_node<ConvertibleT, FirstChild, NextSibling>& other,
         Allocator&& allocator = std::allocator<nary_node>()) :
             node<T, nary_node>(other.get_value()) {
         this->manage_children(other.get_children(), allocator);
@@ -131,11 +132,12 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Construct from emplacing struct_node using allocator   ---   */
     template <
         typename... EmplaceArgs,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename Allocator = std::allocator<nary_node>,
         typename           = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit nary_node(
-        const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
+        const struct_node<std::tuple<EmplaceArgs...>, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
             node<T, nary_node>(other.get_value()) {
         this->manage_children(other.get_children(), allocator);
@@ -428,18 +430,40 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Compare against struct_node   ---   */
     template <
         typename ConvertibleT = T,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
-    bool operator==(const struct_node<ConvertibleT, Nodes...>& other) const {
+    bool operator==(const struct_node<ConvertibleT, FirstChild, NextSibling>& other) const {
         // One of the subtree has children while the other doesn't
-        if ((this->first_child == nullptr) != (other.children_count() == 0)) {
+        if (this->children() != other.children_count()) {
             return false;
         }
         // Test value for inequality
         if (!(this->value == other.get_value())) {
             return false;
         }
-        // Pointer to the considered child (which is itself a pointer to const nary_node)
+        if constexpr (!is_empty<FirstChild>) {
+            if constexpr (is_empty_node<FirstChild>) {
+                return false;
+            } else {
+                // Deep comparison (at this point both are either null or something)
+                if (*this->get_first_child() != other.get_first_child()) {
+                    return false;
+                }
+            }
+        }
+        if constexpr (!is_empty<NextSibling>) {
+            if constexpr (is_empty_node<NextSibling>) {
+                return false;
+            } else {
+                // Deep comparison (at this point both are either null or something)
+                if (*this->get_next_sibling() != other.get_next_sibling()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+        /*// Pointer to the considered child (which is itself a pointer to const nary_node)
         const nary_node* const* current_child = &this->first_child;
         // Lambda that constructs (by calling allocate) a nary_node from a struct_node
         auto compare_child = [&](auto& structure_node) -> bool {
@@ -458,7 +482,7 @@ class nary_node : public node<T, nary_node<T>> {
                        return (compare_child(nodes) && ...);
                    },
                    other.get_children())
-            && *current_child == nullptr;
+            && *current_child == nullptr;*/
     }
 
     template <typename MatcherNode>
@@ -497,10 +521,11 @@ bool operator!=(const binary_node<T>& lhs, const nary_node<T>& rhs) {
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator==(
-    const struct_node<ConvertibleT, Children...>& lhs,
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& lhs,
     const nary_node<T>& rhs) {
     return rhs.operator==(lhs);
 }
@@ -508,21 +533,23 @@ bool operator==(
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const nary_node<T>& lhs,
-    const struct_node<ConvertibleT, Children...>& rhs) {
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& rhs) {
     return !lhs.operator==(rhs);
 }
 
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
-    const struct_node<ConvertibleT, Children...>& lhs,
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& lhs,
     const nary_node<T>& rhs) {
     return !rhs.operator==(lhs);
 }

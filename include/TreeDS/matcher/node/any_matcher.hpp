@@ -14,11 +14,19 @@
 
 namespace md {
 
-template <quantifier Quantifier, typename ValueMatcher, typename... Children>
-class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Children...>, ValueMatcher, Children...> {
+template <
+    quantifier Quantifier,
+    typename ValueMatcher,
+    typename FirstChild  = detail::empty_t,
+    typename NextSibling = detail::empty_t>
+class any_matcher : public matcher<
+                        any_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
+                        ValueMatcher,
+                        FirstChild,
+                        NextSibling> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename...>
+    template <typename, typename, typename, typename>
     friend class matcher;
     friend class pattern<any_matcher>;
     template <quantifier Q, typename VM>
@@ -26,9 +34,14 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {
+    static constexpr matcher_info_t info{
         // It matches null only if all its children do so
-        (... && Children::info.matches_null),
+        any_matcher::foldl_children_types(
+            [](auto&& accumulator, auto&& element) {
+                using element_type = typename std::remove_reference_t<decltype(element)>::type;
+                return accumulator && element_type::info.matches_null;
+            },
+            true),
         // This node could match null
         true,
         // It is reluctant if it has that quantifier
@@ -37,7 +50,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     void* subtree_cut = nullptr;
 
     /*   ---   CONSTRUCTORS   ---   */
-    using matcher<any_matcher, ValueMatcher, Children...>::matcher;
+    using matcher<any_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
     private:
@@ -160,7 +173,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
     unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
         using node_t                          = allocator_value_type<NodeAllocator>;
         unique_node_ptr<NodeAllocator> result = nullptr;
-        if constexpr (sizeof...(Children) == 0) {
+        if constexpr (any_matcher::children_count() == 0) {
             // Doesn't have children
             switch (Quantifier) {
             case quantifier::RELUCTANT:
@@ -208,7 +221,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                     [&](auto&... child) {
                         (..., attach_child(child));
                     },
-                    this->children);
+                    this->get_children());
 
             } else if constexpr (
                 Quantifier == quantifier::DEFAULT
@@ -219,19 +232,19 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                     return std::move(result);
                 }
                 unsigned not_null_count = 0;
-                std::array<node_t*, sizeof...(Children)> childrens_nodes;
+                std::array<node_t*, any_matcher::children_count()> childrens_nodes;
                 std::apply(
                     [&](auto&... children) {
                         childrens_nodes = {
                             (children.empty()
                                  ? nullptr
                                  : (
-                                     // Increment the count
-                                     ++not_null_count,
-                                     // Give the node matched by the child (comma operator returns the last expression)
-                                     children.get_node(allocator)))...};
+                                       // Increment the count
+                                       ++not_null_count,
+                                       // Give the node matched by the child (comma operator returns the last expression)
+                                       children.get_node(allocator)))...};
                     },
-                    this->children);
+                    this->get_children());
                 auto search_start = childrens_nodes.begin();
                 result            = this->clone_node(allocator);
                 multiple_node_pointer roots(this->get_node(allocator), result.get());
@@ -258,7 +271,7 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
                                 // Assign the result of the child to the generated subtree
                                 multi_node_ptr.assign_pointer(1, child.result(allocator).release());
                             },
-                            this->children,
+                            this->get_children(),
                             position - childrens_nodes.begin());
                         std::iter_swap(search_start, position);
                         ++search_start;
@@ -276,20 +289,29 @@ class any_matcher : public matcher<any_matcher<Quantifier, ValueMatcher, Childre
         return std::move(result);
     }
 
-    template <typename... Nodes>
-    constexpr any_matcher<Quantifier, ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
-        return {this->value, nodes...};
+    template <typename Child>
+    constexpr any_matcher<Quantifier, ValueMatcher, std::remove_reference_t<Child>, NextSibling>
+    with_first_child(Child&& child) const {
+        return {this->value, child, this->next_sibling};
+    }
+
+    template <typename Sibling>
+    constexpr any_matcher<Quantifier, ValueMatcher, FirstChild, std::remove_reference_t<Sibling>>
+    with_next_sibling(Sibling&& sibling) const {
+        return {this->value, this->first_child, sibling};
     }
 };
 
 template <quantifier Quantifier = quantifier::DEFAULT, typename ValueMatcher>
-any_matcher<Quantifier, ValueMatcher> star(const ValueMatcher& value_matcher) {
-    return {value_matcher};
+any_matcher<Quantifier, ValueMatcher>
+star(const ValueMatcher& value_matcher) {
+    return {value_matcher, detail::empty_t(), detail::empty_t()};
 }
 
 template <quantifier Quantifier = quantifier::DEFAULT>
-any_matcher<Quantifier, true_matcher> star() {
-    return {true_matcher()};
+any_matcher<Quantifier, true_matcher>
+star() {
+    return {true_matcher(), detail::empty_t(), detail::empty_t()};
 }
 
 } // namespace md

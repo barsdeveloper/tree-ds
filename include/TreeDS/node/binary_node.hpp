@@ -73,32 +73,34 @@ class binary_node : public node<T, binary_node<T>> {
     /*   ---   Construct from struct_node using allocator   ---   */
     template <
         typename ConvertibleT,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename Allocator = std::allocator<binary_node>,
         typename           = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     explicit binary_node(
-        const struct_node<ConvertibleT, Nodes...>& other,
+        const struct_node<ConvertibleT, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
-        static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
+        static_assert(std::decay_t<decltype(other)>::children_count() <= 2, "A binary node must have at most 2 children.");
         attach_child();
     }
 
     /*   ---   Emplacing from struct_node using allocator   ---   */
     template <
         typename... EmplaceArgs,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename Allocator = std::allocator<binary_node>,
         typename           = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
     explicit binary_node(
-        const struct_node<std::tuple<EmplaceArgs...>, Nodes...>& other,
+        const struct_node<std::tuple<EmplaceArgs...>, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
             left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
             right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
-        static_assert(sizeof...(Nodes) <= 2, "A binary node must have at most 2 children.");
+        static_assert(std::decay_t<decltype(other)>::children_count() <= 2, "A binary node must have at most 2 children.");
         attach_child();
     }
 
@@ -377,9 +379,10 @@ class binary_node : public node<T, binary_node<T>> {
 
     template <
         typename ConvertibleT = T,
-        typename... Nodes,
+        typename FirstChild,
+        typename NextSibling,
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
-    bool operator==(const struct_node<ConvertibleT, Nodes...>& other) const {
+    bool operator==(const struct_node<ConvertibleT, FirstChild, NextSibling>& other) const {
         // Too large tree
         if (other.children_count() > 2) {
             return false;
@@ -388,8 +391,8 @@ class binary_node : public node<T, binary_node<T>> {
         if (!(this->value == other.get_value())) {
             return false;
         }
-        if constexpr (sizeof...(Nodes) >= 1) {
-            const auto& left = md::get_child<0>(other);
+        if constexpr (std::decay_t<decltype(other)>::children_count_all() >= 1) {
+            const auto& left = other.get_child(const_index<0>());
             if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
@@ -403,8 +406,8 @@ class binary_node : public node<T, binary_node<T>> {
         } else if (this->left) {
             return false;
         }
-        if constexpr (sizeof...(Nodes) >= 2) {
-            const auto& right = md::get_child<1>(other);
+        if constexpr (std::decay_t<decltype(other)>::children_count_all() >= 2) {
+            const auto& right = other.get_child(const_index<1>());
             if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
                 static_assert(
                     std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
@@ -436,10 +439,11 @@ bool operator!=(const binary_node<T>& lhs, const binary_node<T>& rhs) {
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator==(
-    const struct_node<ConvertibleT, Children...>& lhs,
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& lhs,
     const binary_node<T>& rhs) {
     return rhs.operator==(lhs);
 }
@@ -447,21 +451,23 @@ bool operator==(
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
     const binary_node<T>& lhs,
-    const struct_node<ConvertibleT, Children...>& rhs) {
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& rhs) {
     return !lhs.operator==(rhs);
 }
 
 template <
     typename T,
     typename ConvertibleT,
-    typename... Children,
+    typename FirstChild,
+    typename NextSibling,
     typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
 bool operator!=(
-    const struct_node<ConvertibleT, Children...>& lhs,
+    const struct_node<ConvertibleT, FirstChild, NextSibling>& lhs,
     const binary_node<T>& rhs) {
     return !rhs.operator==(lhs);
 }

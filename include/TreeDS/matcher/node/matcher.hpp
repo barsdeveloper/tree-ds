@@ -2,6 +2,7 @@
 
 #include <cstddef>     // std::size_t
 #include <type_traits> // std::is_same_v, std::is_convertible_v
+#include <utility>     // std::declval()
 
 #include <TreeDS/matcher/utility.hpp>
 #include <TreeDS/matcher/value/alternative_match.hpp>
@@ -19,20 +20,51 @@ enum class quantifier {
     POSSESSIVE
 };
 
-template <typename Derived, typename ValueMatcher, typename... Children>
-class matcher : public struct_node<ValueMatcher, Children...> {
+template <typename T>
+struct matcher_traits {};
+
+template <typename Derived, typename ValueMatcher>
+struct matcher_traits<matcher<Derived, ValueMatcher, detail::empty_t, detail::empty_t>> {
+    using children_captures = std::tuple<>;
+    using siblings_captures = std::tuple<>;
+};
+
+template <typename Derived, typename ValueMatcher, typename NextSibling>
+struct matcher_traits<matcher<Derived, ValueMatcher, detail::empty_t, NextSibling>> {
+    using children_captures = std::tuple<>;
+    using siblings_captures = typename NextSibling::captures_t;
+};
+
+template <typename Derived, typename ValueMatcher, typename FirstChild>
+struct matcher_traits<matcher<Derived, ValueMatcher, FirstChild, detail::empty_t>> {
+    using children_captures = std::tuple<>;
+    using siblings_captures = typename FirstChild::captures_t;
+};
+
+template <typename Derived, typename ValueMatcher, typename FirstChild, typename NextSibling>
+struct matcher_traits<matcher<Derived, ValueMatcher, FirstChild, NextSibling>> {
+    using children_captures = typename FirstChild::captures_t;
+    using siblings_captures = typename NextSibling::captures_t;
+};
+
+template <typename Derived, typename ValueMatcher, typename FirstChild, typename NextSibling>
+class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextSibling> {
+
+    template <typename, typename, typename, typename>
+    friend class matcher;
 
     /*   ---   TYPES   ---   */
-    protected:
-    using children_captures_t = decltype(std::tuple_cat(std::declval<typename Children::captures_t>()...));
-    using captures_t          = decltype(std::tuple_cat(
-        std::declval<
-            std::conditional_t<
-                // If this is a capture node
-                is_same_template<ValueMatcher, capture_name<>>,
-                std::tuple<matcher&>,
-                std::tuple<>>>(),
-        std::declval<children_captures_t>()));
+    public:
+    using captures_t
+        = decltype(
+            std::tuple_cat(
+                std::declval<
+                    std::conditional_t<
+                        is_same_template<ValueMatcher, capture_name<>>,
+                        std::tuple<matcher&>,
+                        std::tuple<>>>(),
+                std::declval<typename matcher_traits<matcher>::children_captures>(),
+                std::declval<typename matcher_traits<matcher>::siblings_captures>()));
 
     /*   ---   VALIDATION   ---   */
     static_assert(
@@ -40,31 +72,19 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             // This capture has a (non empty) name
             detail::is_capture_name<ValueMatcher>
             // There exists another capture among children with the same name
-            && detail::is_valid_name<ValueMatcher, children_captures_t>),
+            && detail::is_valid_name<ValueMatcher, typename matcher_traits<matcher>::children_captures>),
         "Named captures must have unique names.");
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
     std::size_t steps   = 1;
     void* target_node   = nullptr;
-    captures_t captures = std::tuple_cat(
-        [&]() {
-            if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
-                return std::tie(*this);
-            } else {
-                return std::make_tuple();
-            }
-        }(),
-        std::apply(
-            [](auto&... child) {
-                return std::tuple_cat(child.captures...);
-            },
-            this->children));
-    std::array<void*, sizeof...(Children)> child_match_attempt_begin {};
+    captures_t captures = this->get_following_captures();
+    std::array<void*, matcher::children_count()> child_match_attempt_begin{};
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
-    using struct_node<ValueMatcher, Children...>::struct_node;
+    using struct_node_base<Derived, ValueMatcher, FirstChild, NextSibling>::struct_node_base;
 
     /*
      * This copy constructor is needed because the implicitly generated one would rewrite the attribute captures (which
@@ -72,7 +92,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
      * object is constructed. This is not a problem since this calculation happens at compile time.
      */
     matcher(const matcher& other) :
-            struct_node<ValueMatcher, Children...>(other),
+            struct_node_base<Derived, ValueMatcher, FirstChild, NextSibling>(other),
             target_node(other.target_node) {
     }
 
@@ -88,7 +108,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                     [&](auto& child) {
                         return match(it, child);
                     },
-                    this->children,
+                    this->get_children(),
                     index)) {
                 it.increment();
                 return true;
@@ -100,6 +120,34 @@ class matcher : public struct_node<ValueMatcher, Children...> {
             return true;
         }
         return false;
+    }
+
+    constexpr auto get_following_captures() {
+        return std::tuple_cat(this->get_this_capture(), this->get_child_capture(), this->get_sibling_capture());
+    }
+
+    constexpr auto get_this_capture() {
+        if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
+            return std::tie(*this);
+        } else {
+            return std::make_tuple();
+        }
+    }
+
+    constexpr auto get_child_capture() {
+        if constexpr (matcher::has_first_child()) {
+            return this->first_child.get_following_captures();
+        } else {
+            return std::make_tuple();
+        }
+    }
+
+    constexpr auto get_sibling_capture() {
+        if constexpr (matcher::has_next_sibling()) {
+            return this->next_sibling.get_following_captures();
+        } else {
+            return std::make_tuple();
+        }
     }
 
     protected:
@@ -115,19 +163,33 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     static constexpr std::size_t child_steal_index() {
         if constexpr (matcher::child_may_steal_target()) {
             std::size_t result = 0;
-            std::size_t i      = 0;
-            (..., (!Children::info.matches_null ? result = i++ : i++));
+            matcher::foldl_children_types(
+                [&](auto&& accumulated, auto&& element) {
+                    using element_type = typename std::decay_t<decltype(element)>::type;
+                    if constexpr (!element_type::info.matches_null) {
+                        result = accumulated;
+                    }
+                    return accumulated + 1;
+                },
+                0u);
             return result;
         } else {
-            return sizeof...(Children);
+            return 0u;
         }
     }
 
     // True if no more than one children requires a node in order to match
     static constexpr bool child_may_steal_target() {
         if constexpr (Derived::info.shallow_matches_null) {
-            std::size_t requires_match = 0;
-            (..., (requires_match += !Children::info.matches_null ? 1u : 0u));
+            constexpr std::size_t requires_match = matcher::foldl_children_types(
+                [](auto&& accumulated, auto&& element) {
+                    using element_type = typename std::decay_t<decltype(element)>::type;
+                    if constexpr (!element_type::info.matches_null) {
+                        return accumulated + 1u;
+                    }
+                    return accumulated;
+                },
+                0u);
             return requires_match == 1;
         } else {
             return false;
@@ -137,7 +199,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     const matcher_info_t& get_child_info(std::size_t index) const {
         return apply_at_index(
             [](auto& child) -> const matcher_info_t& { return child.info; },
-            this->children,
+            this->get_children(),
             index);
     }
 
@@ -149,7 +211,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                 [&](auto& child) -> bool {
                     return child.search_node(&node, allocator);
                 },
-                this->children,
+                this->get_children(),
                 matcher::child_steal_index());
         } else {
             return false;
@@ -167,7 +229,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                           : ptr),
                      ...);
                 },
-                this->children);
+                this->get_children());
             if (ptr != nullptr) {
                 result = std::move(ptr);
                 return true;
@@ -226,7 +288,7 @@ class matcher : public struct_node<ValueMatcher, Children...> {
                 if (!this->try_match(it, search, current_child, info)) {
                     // There is a rematch function
                     while (current_child >= 0) {
-                        if (apply_at_index(do_backtrack, this->children, current_child)) {
+                        if (apply_at_index(do_backtrack, this->get_children(), current_child)) {
                             break; // We found a child that could rematch and leave the other children new nodes
                         }
                         --current_child;
@@ -258,11 +320,12 @@ class matcher : public struct_node<ValueMatcher, Children...> {
 
     void reset() {
         this->target_node = nullptr;
-        std::apply(
-            [](auto&... child) {
-                (..., child.reset());
-            },
-            this->children);
+        if constexpr (matcher ::has_first_child()) {
+            this->first_child.reset();
+        }
+        if constexpr (matcher::has_next_sibling()) {
+            this->next_sibling.reset();
+        }
     }
 
     template <typename NodeAllocator>
@@ -312,11 +375,6 @@ class matcher : public struct_node<ValueMatcher, Children...> {
     constexpr std::size_t mark_count() const {
         return std::tuple_size_v<captures_t>;
     }
-
-    template <typename... Nodes>
-    auto operator()(Nodes&&... nodes) const {
-        return static_cast<const Derived*>(this)->replace_children(nodes...);
-    }
-}; // namespace md
+};
 
 } // namespace md

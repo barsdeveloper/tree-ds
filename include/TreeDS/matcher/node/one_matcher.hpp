@@ -11,11 +11,15 @@
 
 namespace md {
 
-template <typename ValueMatcher, typename... Children>
-class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, ValueMatcher, Children...> {
+template <typename ValueMatcher, typename FirstChild, typename NextSibling>
+class one_matcher : public matcher<
+                        one_matcher<ValueMatcher, FirstChild, NextSibling>,
+                        ValueMatcher,
+                        FirstChild,
+                        NextSibling> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename...>
+    template <typename, typename, typename, typename>
     friend class matcher;
 
     /*   ---   ATTRIBUTES   ---   */
@@ -31,7 +35,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
         true};
 
     /*   ---   CONSTRUCTOR   ---   */
-    using matcher<one_matcher, ValueMatcher, Children...>::matcher;
+    using matcher<one_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
     template <typename NodeAllocator>
@@ -64,7 +68,7 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
             [&](auto&... children) {
                 (..., attach_child(children));
             },
-            this->children);
+            this->get_children());
         return std::move(result);
     }
 
@@ -72,15 +76,28 @@ class one_matcher : public matcher<one_matcher<ValueMatcher, Children...>, Value
     constexpr one_matcher<ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
+
+    template <typename Child>
+    constexpr one_matcher<ValueMatcher, std::remove_reference_t<Child>, NextSibling>
+    with_first_child(Child&& child) const {
+        return {this->value, child, this->next_sibling};
+    }
+
+    template <typename Sibling>
+    constexpr one_matcher<ValueMatcher, FirstChild, std::remove_reference_t<Sibling>>
+    with_next_sibling(Sibling&& sibling) const {
+        return {this->value, this->first_child, sibling};
+    }
 };
 
 template <typename ValueMatcher>
-one_matcher<ValueMatcher> one(const ValueMatcher& value_matcher) {
-    return {value_matcher};
+one_matcher<ValueMatcher, detail::empty_t, detail::empty_t>
+one(const ValueMatcher& value_matcher) {
+    return {value_matcher, detail::empty_t(), detail::empty_t()};
 }
 
-one_matcher<true_matcher> one() {
-    return {true_matcher()};
+one_matcher<true_matcher, detail::empty_t, detail::empty_t> one() {
+    return {true_matcher(), detail::empty_t(), detail::empty_t()};
 }
 
 } // namespace md

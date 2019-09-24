@@ -10,6 +10,9 @@
 namespace md {
 
 /*   ---   FORWARD DECLARATIONS   ---   */
+template <typename, typename, typename>
+class struct_node;
+
 template <typename>
 class binary_node;
 
@@ -30,6 +33,7 @@ namespace detail {
     class breadth_first_impl;
 }
 
+/*   ---   TYPE TRAITS   ---   */
 template <typename T, typename = void>
 constexpr bool is_equality_comparable = false;
 
@@ -109,9 +113,26 @@ constexpr bool is_const_cast_equivalent
           // They point to the same type (ignoring const/volatile)
           std::is_same<std::decay_t<std::remove_pointer_t<A>>, std::decay_t<std::remove_pointer_t<B>>>>;
 
+template <std::size_t Index>
+struct const_index {};
+
+template <typename T>
+struct type_value {
+    using type = T;
+};
+
 namespace detail {
     struct empty_t {};
 } // namespace detail
+
+template <typename X>
+inline constexpr bool is_empty = std::is_same_v<std::decay_t<X>, detail::empty_t>;
+
+template <typename X>
+inline constexpr bool is_empty_node = false;
+
+template <typename FirstChild, typename NextSibling>
+inline constexpr bool is_empty_node<struct_node<detail::empty_t, FirstChild, NextSibling>> = true;
 
 template <typename Node, typename Call, typename Test, typename Result>
 Node keep_calling(Node from, Call&& call, Test&& test, Result&& result) {
@@ -239,6 +260,26 @@ decltype(auto) apply_at_index(F&& f, Tuple&& tuple, std::size_t index) {
         std::forward<F>(f),
         std::forward<Tuple>(tuple),
         index);
+}
+
+template <typename F, typename Initial>
+constexpr auto foldl(F&&, Initial&& initial) {
+    return initial;
+}
+
+template <typename F, typename Initial, typename First, typename... Remainning>
+constexpr auto foldl(F&& f, Initial&& initial, First&& x, Remainning&&... xs) {
+    return foldl(f, f(initial, x), xs...);
+}
+
+template <typename F, typename Initial>
+constexpr auto foldr(F&&, Initial&& initial) {
+    return initial;
+}
+
+template <typename F, typename Initial, typename First, typename... Remainning>
+constexpr auto foldr(F&& f, Initial&& initial, First&& x, Remainning&&... xs) {
+    return f(x, foldr(f, initial, xs...));
 }
 
 } // namespace md

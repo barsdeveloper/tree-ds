@@ -7,10 +7,10 @@
 namespace md {
 
 /*   ---   FORWARD DECLARATIONS   ---   */
-template <typename, typename, typename...>
+template <typename, typename, typename, typename>
 class matcher;
 
-template <typename, typename>
+template <typename, typename, typename>
 class capture_node;
 
 /*   ---   CLASSES DEINITIONS   ---   */
@@ -74,10 +74,16 @@ namespace detail {
     constexpr std::size_t index_of_capture = 1;
 
     // 2
-    template <typename CaptureName, typename Child, typename... Types>
+    template <typename CaptureName, typename FirstChild, typename NextSibling, typename... Types>
     constexpr std::size_t index_of_capture<
         CaptureName,
-        std::tuple<matcher<capture_node<CaptureName, Child>, CaptureName, Child>&, Types...>> = 0;
+        std::tuple<
+            matcher<
+                capture_node<CaptureName, FirstChild, NextSibling>,
+                CaptureName,
+                FirstChild,
+                NextSibling>&,
+            Types...>> = 0;
     //                                  ^^^^^^^^^^^          ^^^^^^^^^^^ We are looking for this
 
     // 3
