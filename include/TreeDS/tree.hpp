@@ -138,9 +138,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleV, value_type>>>
     tree(const struct_node<ConvertibleV, Children...>& root) :
             tree(
-                allocate(this->allocator, root, this->allocator).release(), // root
-                root.get_subtree_size(),                                    // size
-                root.get_subtree_arity()) {                                 // arity
+                allocate(this->allocator, root, this->allocator).release(),
+                root.subtree_size(),
+                root.subtree_arity()) {
     }
 
     template <
@@ -149,9 +149,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
         typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     tree(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) :
             tree(
-                allocate(this->allocator, root, this->allocator).release(), // root
-                root.get_subtree_size(),                                    // size
-                root.get_subtree_arity()) {                                 // arity
+                allocate(this->allocator, root, this->allocator).release(),
+                root.subtree_size(),
+                root.subtree_arity()) {
     }
 
     /**
@@ -206,8 +206,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
     operator=(const struct_node<ConvertibleV, Nodes...>& root) {
         this->assign(
             allocate(this->allocator, root, this->allocator).release(),
-            root.get_subtree_size(),
-            root.get_subtree_arity());
+            root.subtree_size(),
+            root.subtree_arity());
         return *this;
     }
 
@@ -218,8 +218,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
     tree& operator=(const struct_node<std::tuple<EmplacingArgs...>, Children...>& root) {
         this->assign(
             allocate(this->allocator, root, this->allocator).release(),
-            root.get_subtree_size(),
-            root.get_subtree_arity());
+            root.subtree_size(),
+            root.subtree_arity());
         return *this;
     }
 
@@ -372,9 +372,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             target->append_child(node.release());
         }
         this->size_value += replacement_size;
-        // +1 because get_following_siblings() counts just the node that follow next
+        // +1 because following_siblings() counts just the node that follow next
         std::size_t local_arity = target->get_first_child()
-            ? target->get_first_child()->get_following_siblings() + 1
+            ? target->get_first_child()->following_siblings() + 1
             : 1u;
         this->arity_value = std::max(replacement_arity, std::max(this->arity_value, local_arity));
         return iterator<P>(position, this, target);
@@ -492,8 +492,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size(),
-            node.get_subtree_arity());
+            node.subtree_size(),
+            node.subtree_arity());
     }
 
     template <typename P, bool C, typename OtherP>
@@ -556,8 +556,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size(),
-            node.get_subtree_arity());
+            node.subtree_size(),
+            node.subtree_arity());
     }
 
     template <typename P, bool C>
@@ -647,8 +647,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, value, this->allocator),
-            value.get_subtree_size(),
-            value.get_subtree_arity());
+            value.subtree_size(),
+            value.subtree_arity());
     }
 
     template <typename P, bool C, typename OtherP>
@@ -706,8 +706,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size(),
-            node.get_subtree_arity());
+            node.subtree_size(),
+            node.subtree_arity());
     }
 
     template <
@@ -734,8 +734,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
             allocate(this->allocator, node, this->allocator),
-            node.get_subtree_size(),
-            node.get_subtree_arity());
+            node.subtree_size(),
+            node.subtree_arity());
     }
 
     iterator<policy::post_order> erase(const_iterator<policy::post_order> position) {

@@ -12,6 +12,12 @@ namespace md {
 template <typename Derived, typename T, typename FirstChild, typename NextSibling>
 class struct_node_base {
 
+    /*   ---   VALIDATION   ---   */
+    static_assert(
+        !(is_empty<T> && !is_empty<FirstChild>),
+        "An emtpy node n() cannot have children: n()(something)");
+    static_assert(!is_empty_node<T>, "A node cannot carry an empty node: n(n()).");
+
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename, typename>
     friend class struct_node_base;
@@ -58,7 +64,9 @@ class struct_node_base {
         if constexpr (Index == 0) {
             return std::tie(*this->as_actual_type());
         } else {
-            return std::tuple_cat(std::tie(*this->as_actual_type()), this->next_sibling.get_successors(const_index<Index - 1>()));
+            return std::tuple_cat(
+                std::tie(*this->as_actual_type()),
+                this->next_sibling.get_successors(const_index<Index - 1>()));
         }
     }
 
@@ -67,7 +75,9 @@ class struct_node_base {
         if constexpr (Index == 0) {
             return std::tie(*this->as_actual_type());
         } else {
-            return std::tuple_cat(std::tie(*this->as_actual_type()), this->next_sibling.get_successors(const_index<Index - 1>()));
+            return std::tuple_cat(
+                std::tie(*this->as_actual_type()),
+                this->next_sibling.get_successors(const_index<Index - 1>()));
         }
     }
 
@@ -185,20 +195,20 @@ class struct_node_base {
             0u);
     }
 
-    static constexpr std::size_t get_subtree_size() {
+    static constexpr std::size_t subtree_size() {
         return struct_node_base::foldl_children_types(
             [](auto&& accumulated, auto&& element) {
                 using element_type = typename std::remove_reference_t<decltype(element)>::type;
-                return accumulated + element_type::get_subtree_size();
+                return accumulated + element_type::subtree_size();
             },
             struct_node_base::is_valid_node() ? 1u : 0u);
     }
 
-    static constexpr std::size_t get_subtree_arity() {
+    static constexpr std::size_t subtree_arity() {
         return struct_node_base::foldl_children_types(
             [](auto&& accumulated, auto&& element) {
                 using element_type = typename std::remove_reference_t<decltype(element)>::type;
-                return std::max({accumulated, struct_node_base::children_count(), element_type::get_subtree_arity()});
+                return std::max({accumulated, struct_node_base::children_count(), element_type::subtree_arity()});
             },
             static_cast<std::size_t>(0u));
     }

@@ -192,7 +192,7 @@ template <typename Node>
 std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
     const Node* child = node.get_first_child();
     std::size_t arity = child
-        ? child->get_following_siblings() + 1
+        ? child->following_siblings() + 1
         : 0u;
     while (child) {
         if (arity == max_expected_arity) {

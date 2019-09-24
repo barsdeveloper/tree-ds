@@ -129,7 +129,7 @@ struct CustomAllocator {
     }
     void deallocate(T* ptr, std::size_t) {
         assert(ptr != nullptr);
-        assert(
+        assert( // ptr was previously allocated
             std::find(allocated.begin(), allocated.end(), ptr)
             != allocated.end());
         allocated.erase(std::remove(allocated.begin(), allocated.end(), ptr), allocated.end());

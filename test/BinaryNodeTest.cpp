@@ -43,7 +43,7 @@ void BinaryNodeTest::defaultConstructed() {
     QCOMPARE(node.get_left_child(), nullptr);
     QCOMPARE(node.get_right_child(), nullptr);
     QCOMPARE(node.children(), 0u);
-    QCOMPARE(node.get_following_siblings(), 0u);
+    QCOMPARE(node.following_siblings(), 0u);
 
     QVERIFY(node.is_root());
     QVERIFY(!node.is_unique_child());
@@ -81,7 +81,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(node.get_prev_sibling(), nullptr);
     QCOMPARE(node.get_next_sibling(), nullptr);
     QCOMPARE(node.children(), 2);
-    QCOMPARE(node.get_following_siblings(), 0u);
+    QCOMPARE(node.following_siblings(), 0u);
 
     QVERIFY(left.is_left_child());
     QVERIFY(!left.is_right_child());
@@ -91,7 +91,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(left.get_prev_sibling(), nullptr);
     QCOMPARE(left.get_next_sibling(), &right);
     QCOMPARE(left.children(), 0);
-    QCOMPARE(left.get_following_siblings(), 1u);
+    QCOMPARE(left.following_siblings(), 1u);
 
     QVERIFY(!right.is_left_child());
     QVERIFY(right.is_right_child());
@@ -101,7 +101,7 @@ void BinaryNodeTest::constructFromStructNode() {
     QCOMPARE(right.get_prev_sibling(), &left);
     QCOMPARE(right.get_next_sibling(), nullptr);
     QCOMPARE(right.children(), 0u);
-    QCOMPARE(right.get_following_siblings(), 0u);
+    QCOMPARE(right.following_siblings(), 0u);
 
     // Move test
     binary_node<Target> newNode(move(node));
@@ -142,7 +142,8 @@ void BinaryNodeTest::equalityWithStructNode() {
     QVERIFY(bothChild != rightWrong);
 
     QVERIFY(bothChild == n("a")(n("b"), n("c")));
-    QVERIFY(bothChild == n("a")(n("b"), n("c")));
+    QVERIFY(bothChild == n("a")(n("b")(n()), n("c")));
+    QVERIFY(bothChild == n("a")(n("b"), n("c"), n(), n()));
     QVERIFY(bothChild != n("a")(n("b"), n("c"), n("d")));
     QVERIFY(bothChild != n("#")(n("b"), n("c")));
     QVERIFY(bothChild != n("a")(n("b"), n("#")));

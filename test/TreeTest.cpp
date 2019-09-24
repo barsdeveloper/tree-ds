@@ -164,7 +164,7 @@ void TreeTest::naryTree() {
     expected = vector<char> {'a', 'b', 'c', 'd', 'e', 'f', '!', 'h'};
     QCOMPARE(actual, expected);
     QVERIFY(moved != copy2);
-    QCOMPARE(bang_it.get_raw_node()->get_following_siblings(), 0);
+    QCOMPARE(bang_it.get_raw_node()->following_siblings(), 0);
 
     // b -> ?
     auto it = find(
@@ -179,7 +179,7 @@ void TreeTest::naryTree() {
     QCOMPARE(moved.size(), 8);
     QCOMPARE(moved.arity(), 3);
     QCOMPARE(actual, expected);
-    QCOMPARE(it.get_raw_node()->get_following_siblings(), 1);
+    QCOMPARE(it.get_raw_node()->following_siblings(), 1);
 
     // e -> t
     auto t_it = moved.insert_over(
@@ -196,23 +196,23 @@ void TreeTest::naryTree() {
     nary_node<char>* n_f = find(moved.begin(), moved.end(), 'f').get_raw_node();
     QCOMPARE(n_d->get_prev_sibling(), nullptr);
     QCOMPARE(n_d->get_next_sibling(), n_t);
-    QCOMPARE(n_d->get_following_siblings(), 2);
+    QCOMPARE(n_d->following_siblings(), 2);
     QCOMPARE(n_t->get_prev_sibling(), n_d);
     QCOMPARE(n_t->get_next_sibling(), n_f);
-    QCOMPARE(n_t->get_following_siblings(), 1);
+    QCOMPARE(n_t->following_siblings(), 1);
     QCOMPARE(n_f->get_prev_sibling(), n_t);
     QCOMPARE(n_f->get_next_sibling(), nullptr);
-    QCOMPARE(n_f->get_following_siblings(), 0);
+    QCOMPARE(n_f->following_siblings(), 0);
 
     // Erase t
     auto it_f = moved.erase(find(moved.begin(policy::post_order()), moved.end(policy::post_order()), 't'));
     QCOMPARE(it_f.get_raw_node(), n_f);
     QCOMPARE(n_d->get_prev_sibling(), nullptr);
     QCOMPARE(n_d->get_next_sibling(), n_f);
-    QCOMPARE(n_d->get_following_siblings(), 1);
+    QCOMPARE(n_d->following_siblings(), 1);
     QCOMPARE(n_f->get_prev_sibling(), n_d);
     QCOMPARE(n_f->get_next_sibling(), nullptr);
-    QCOMPARE(n_f->get_following_siblings(), 0);
+    QCOMPARE(n_f->following_siblings(), 0);
 
     // Erase
 
@@ -241,7 +241,7 @@ void TreeTest::naryTree2() {
 
     const nary_node<Foo>* root = tree.root().get_raw_node();
     QCOMPARE(root->get_parent(), nullptr);
-    QCOMPARE(root->get_following_siblings(), 0);
+    QCOMPARE(root->following_siblings(), 0);
     QCOMPARE(root->get_prev_sibling(), nullptr);
     QCOMPARE(root->get_next_sibling(), nullptr);
     QCOMPARE(root->get_first_child(), nullptr);
@@ -255,17 +255,17 @@ void TreeTest::naryTree2() {
 
     auto siblings_it(tree.root().go_first_child().other_policy(policy::siblings()));
     QCOMPARE(*siblings_it, Foo(2, 5));
-    QCOMPARE(siblings_it.get_raw_node()->get_following_siblings(), 2);
+    QCOMPARE(siblings_it.get_raw_node()->following_siblings(), 2);
     QCOMPARE(siblings_it.get_raw_node()->get_prev_sibling(), nullptr);
     QCOMPARE(siblings_it.get_raw_node()->get_next_sibling()->get_value(), Foo(3, 6));
     ++siblings_it;
     QCOMPARE(*siblings_it, Foo(3, 6));
-    QCOMPARE(siblings_it.get_raw_node()->get_following_siblings(), 1);
+    QCOMPARE(siblings_it.get_raw_node()->following_siblings(), 1);
     QCOMPARE(siblings_it.get_raw_node()->get_prev_sibling()->get_value(), Foo(2, 5));
     QCOMPARE(siblings_it.get_raw_node()->get_next_sibling()->get_value(), Foo(4, 7));
     ++siblings_it;
     QCOMPARE(*siblings_it, Foo(4, 7));
-    QCOMPARE(siblings_it.get_raw_node()->get_following_siblings(), 0);
+    QCOMPARE(siblings_it.get_raw_node()->following_siblings(), 0);
     QCOMPARE(siblings_it.get_raw_node()->get_prev_sibling()->get_value(), Foo(3, 6));
     QCOMPARE(siblings_it.get_raw_node()->get_next_sibling(), nullptr);
 
@@ -275,12 +275,12 @@ void TreeTest::naryTree2() {
 
     siblings_it = tree.root().go_first_child().other_policy(policy::siblings());
     QCOMPARE(*siblings_it, Foo(2, 5));
-    QCOMPARE(siblings_it.get_raw_node()->get_following_siblings(), 1);
+    QCOMPARE(siblings_it.get_raw_node()->following_siblings(), 1);
     QCOMPARE(siblings_it.get_raw_node()->get_prev_sibling(), nullptr);
     QCOMPARE(siblings_it.get_raw_node()->get_next_sibling()->get_value(), Foo(4, 7));
     ++siblings_it;
     QCOMPARE(*siblings_it, Foo(4, 7));
-    QCOMPARE(siblings_it.get_raw_node()->get_following_siblings(), 0);
+    QCOMPARE(siblings_it.get_raw_node()->following_siblings(), 0);
     QCOMPARE(siblings_it.get_raw_node()->get_prev_sibling()->get_value(), Foo(2, 5));
     QCOMPARE(siblings_it.get_raw_node()->get_next_sibling(), nullptr);
 
@@ -306,22 +306,22 @@ void TreeTest::naryTree2() {
     QCOMPARE(tree.arity(), 4);
 
     auto it = std::find(tree.begin(), tree.end(), Foo(-2, -3)).other_policy(policy::siblings());
-    QCOMPARE(it.get_raw_node()->get_following_siblings(), 3);
+    QCOMPARE(it.get_raw_node()->following_siblings(), 3);
     QCOMPARE(it.get_raw_node()->get_prev_sibling(), nullptr);
     QCOMPARE(it.get_raw_node()->get_next_sibling()->get_value(), Foo(-3, -4));
     ++it;
     QCOMPARE(*it, Foo(-3, -4));
-    QCOMPARE(it.get_raw_node()->get_following_siblings(), 2);
+    QCOMPARE(it.get_raw_node()->following_siblings(), 2);
     QCOMPARE(it.get_raw_node()->get_prev_sibling()->get_value(), Foo(-2, -3));
     QCOMPARE(it.get_raw_node()->get_next_sibling()->get_value(), Foo(-4, -5));
     ++it;
     QCOMPARE(*it, Foo(-4, -5));
-    QCOMPARE(it.get_raw_node()->get_following_siblings(), 1);
+    QCOMPARE(it.get_raw_node()->following_siblings(), 1);
     QCOMPARE(it.get_raw_node()->get_prev_sibling()->get_value(), Foo(-3, -4));
     QCOMPARE(it.get_raw_node()->get_next_sibling()->get_value(), Foo(-5, -6));
     ++it;
     QCOMPARE(*it, Foo(-5, -6));
-    QCOMPARE(it.get_raw_node()->get_following_siblings(), 0);
+    QCOMPARE(it.get_raw_node()->following_siblings(), 0);
     QCOMPARE(it.get_raw_node()->get_prev_sibling()->get_value(), Foo(-4, -5));
     QCOMPARE(it.get_raw_node()->get_next_sibling(), nullptr);
 }

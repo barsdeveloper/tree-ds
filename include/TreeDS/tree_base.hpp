@@ -300,8 +300,8 @@ class tree_base {
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleV, value_type>>>
     bool operator==(const struct_node<ConvertibleV, Children...>& other) const {
         // Test if different size or arity
-        if (this->size() != other.get_subtree_size()
-            || this->arity() != other.get_subtree_arity()) {
+        if (this->size() != other.subtree_size()
+            || this->arity() != other.subtree_arity()) {
             return false;
         }
         // Deep test for equality

@@ -45,32 +45,33 @@ class binary_node : public node<T, binary_node<T>> {
             node<T, binary_node<T>>(other.value),
             left(other.left),
             right(other.right) {
-        if (other.left) {
-            other.left->parent = this;
+        if (this->left) {
+            this->left->parent = this;
         }
-        if (other.right) {
-            other.right->parent = this;
+        if (this->right) {
+            this->right->parent = this;
         }
         other.parent = nullptr;
         other.left   = nullptr;
         other.right  = nullptr;
     }
 
-    /*   ---   Wide acceptance copy constructor using allocator   ---   */
-    template <typename Allocator = std::allocator<binary_node<T>>>
-    explicit binary_node(const binary_node<T>& other, Allocator&& allocator = Allocator()) :
+    /*   ---   Copy constructor using allocator   ---   */
+    template <typename Allocator = std::allocator<binary_node>>
+    explicit binary_node(const binary_node& other, Allocator&& allocator = Allocator()) :
             node<T, binary_node<T>>(other.value),
             left(
                 other.left
-                    ? attach_child(allocate(allocator, *other.left, allocator).release())
+                    ? allocate(allocator, *other.left, allocator).release()
                     : nullptr),
             right(
                 other.right
-                    ? attach_child(allocate(allocator, *other.right, allocator).release())
+                    ? allocate(allocator, *other.right, allocator).release()
                     : nullptr) {
+        this->attach_child();
     }
 
-    /*   ---   Construct from struct_node using allocator   ---   */
+    /*   ---   Converting constructor from struct_node using allocator   ---   */
     template <
         typename ConvertibleT,
         typename FirstChild,
@@ -81,10 +82,12 @@ class binary_node : public node<T, binary_node<T>> {
         const struct_node<ConvertibleT, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
-            left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
-            right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
-        static_assert(std::decay_t<decltype(other)>::children_count() <= 2, "A binary node must have at most 2 children.");
-        attach_child();
+            left(binary_node::allocate_left_child(other, allocator)),
+            right(binary_node::allocate_right_child(other, allocator)) {
+        static_assert(
+            std::decay_t<decltype(other)>::children_count() <= 2,
+            "A binary node must have at most 2 children.");
+        this->attach_child();
     }
 
     /*   ---   Emplacing from struct_node using allocator   ---   */
@@ -98,33 +101,30 @@ class binary_node : public node<T, binary_node<T>> {
         const struct_node<std::tuple<EmplaceArgs...>, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
             node<T, binary_node>(other.get_value()),
-            left(extract_left(other.get_children(), std::forward<Allocator>(allocator))),
-            right(extract_right(other.get_children(), std::forward<Allocator>(allocator))) {
-        static_assert(std::decay_t<decltype(other)>::children_count() <= 2, "A binary node must have at most 2 children.");
-        attach_child();
-    }
-
-    ~binary_node() {
+            left(binary_node::allocate_left_child(other, allocator)),
+            right(binary_node::allocate_right_child(other, allocator)) {
+        static_assert(
+            std::decay_t<decltype(other)>::children_count() <= 2,
+            "A binary node must have at most 2 children.");
+        this->attach_child();
     }
 
     private:
-    template <typename... Nodes, typename Allocator>
-    binary_node* extract_left(const std::tuple<Nodes...>& children, Allocator&& allocator) {
-        if constexpr (sizeof...(Nodes) >= 1) {
-            const auto& left = std::get<0>(children);
-            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
-                return allocate(allocator, left, std::forward<Allocator>(allocator)).release();
-            }
+    template <typename U, typename FirstChild, typename NextSibling, typename Allocator>
+    static binary_node* allocate_left_child(const struct_node<U, FirstChild, NextSibling>& node, Allocator& allocator) {
+        if constexpr (!is_empty<FirstChild> && !is_empty_node<FirstChild>) {
+            return allocate(allocator, node.get_first_child(), allocator).release();
         }
         return nullptr;
     }
-
-    template <typename... Nodes, typename Allocator>
-    binary_node* extract_right(const std::tuple<Nodes...>& children, Allocator&& allocator) {
-        if constexpr (sizeof...(Nodes) >= 2) {
-            const auto& right = std::get<1>(children);
-            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
-                return allocate(allocator, right, std::forward<Allocator>(allocator)).release();
+    template <typename U, typename FirstChild, typename NextSibling, typename Allocator>
+    static binary_node* allocate_right_child(const struct_node<U, FirstChild, NextSibling>& node, Allocator& allocator) {
+        if constexpr (!is_empty<FirstChild>) {
+            if constexpr (FirstChild::has_next_sibling()) {
+                auto& sibling = node.get_first_child().get_next_sibling();
+                if constexpr (!is_empty_node<std::decay_t<decltype(sibling)>>) {
+                    return allocate(allocator, sibling, allocator).release();
+                }
             }
         }
         return nullptr;
@@ -330,7 +330,7 @@ class binary_node : public node<T, binary_node<T>> {
         return result;
     }
 
-    std::size_t get_following_siblings() const {
+    std::size_t following_siblings() const {
         const binary_node* parent = this->parent;
         if (parent) {
             return parent->get_last_child() != this ? 1u : 0;
@@ -384,42 +384,33 @@ class binary_node : public node<T, binary_node<T>> {
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     bool operator==(const struct_node<ConvertibleT, FirstChild, NextSibling>& other) const {
         // Too large tree
-        if (other.children_count() > 2) {
+        if (other.subtree_arity() > 2) {
             return false;
         }
         // Test value for inequality
         if (!(this->value == other.get_value())) {
             return false;
         }
-        if constexpr (std::decay_t<decltype(other)>::children_count_all() >= 1) {
-            const auto& left = other.get_child(const_index<0>());
-            if constexpr (!std::is_same_v<decltype(left.get_value()), detail::empty_t>) {
-                static_assert(
-                    std::is_convertible_v<std::decay_t<decltype(left.get_value())>, T>,
-                    "The struct_node passed has a LEFT child with a value that is not compatible with T.");
-                if (!this->left || *this->left != left) {
-                    return false;
-                }
-            } else if (this->left) {
-                return false;
-            }
-        } else if (this->left) {
+        // Trivial test left child presence
+        if (this->children() != other.children_count()) {
             return false;
         }
-        if constexpr (std::decay_t<decltype(other)>::children_count_all() >= 2) {
-            const auto& right = other.get_child(const_index<1>());
-            if constexpr (!std::is_same_v<decltype(right.get_value()), detail::empty_t>) {
-                static_assert(
-                    std::is_convertible_v<std::decay_t<decltype(right.get_value())>, T>,
-                    "The struct_node passed has a RIGHT child with a value that is not compatible with T.");
-                if (!this->right || *this->right != right) {
+        if constexpr (!is_empty<FirstChild>) {
+            // Test left child inequality
+            if constexpr (!is_empty_node<FirstChild>) {
+                if (!this->left->operator==(other.get_first_child())) {
                     return false;
                 }
-            } else if (this->right) {
-                return false;
             }
-        } else if (this->right) {
-            return false;
+            // Test right child inequality
+            if constexpr (FirstChild::has_next_sibling()) {
+                auto& sibling = other.get_first_child().get_next_sibling();
+                if constexpr (!is_empty_node<std::decay_t<decltype(sibling)>>) {
+                    if (!this->right->operator==(sibling)) {
+                        return false;
+                    }
+                }
+            }
         }
         // All the possible false cases were tested, then it's true
         return true;
