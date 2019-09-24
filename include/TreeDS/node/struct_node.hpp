@@ -221,6 +221,14 @@ class struct_node_base {
         }
     }
 
+    static constexpr std::size_t following_siblings() {
+        if constexpr (!is_empty<NextSibling>) {
+            return 1u + NextSibling::following_siblings();
+        } else {
+            return 0u;
+        }
+    }
+
     constexpr auto get_children() const {
         if constexpr (struct_node_base::has_first_child()) {
             return this->first_child.get_successors(const_index<struct_node_base::children_count_all() - 1>());

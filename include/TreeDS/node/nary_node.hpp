@@ -35,8 +35,6 @@ class nary_node : public node<T, nary_node<T>> {
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
-    using node<T, nary_node<T>>::node;
-
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
     explicit nary_node(Args&&... args) :
@@ -59,16 +57,33 @@ class nary_node : public node<T, nary_node<T>> {
             next_sibling(other.next_sibling),
             first_child(other.first_child),
             last_child(other.last_child) {
-        other.move_resources_to(*this);
+        nary_node* current_child = this->first_child;
+        while (current_child) {
+            current_child->parent = this;
+            current_child         = current_child->get_next_sibling();
+        }
+        this->manage_parent_last_child();
+        other.parent             = nullptr;
+        other.following_siblings = 0u;
+        other.prev_sibling       = nullptr;
+        other.next_sibling       = nullptr;
+        other.first_child        = nullptr;
+        other.last_child         = nullptr;
     }
 
     /*   ---   Copy constructor using allocator   ---   */
+    template <typename Allocator = std::allocator<nary_node>>
+    explicit nary_node(const nary_node& other, Allocator&& allocator = Allocator()) :
+            nary_node(other, nullptr, nullptr, allocator) {
+    }
+
+    /*   ---   Delegated copy constructor using allocator   ---   */
     template <typename Allocator>
     nary_node(
         const nary_node& other,
         nary_node* parent,
         nary_node* prev_sibling,
-        Allocator&& allocator = Allocator()) :
+        Allocator&& allocator) :
             node<T, nary_node<T>>(parent, other.value),
             following_siblings(other.following_siblings),
             prev_sibling(prev_sibling),
@@ -83,18 +98,19 @@ class nary_node : public node<T, nary_node<T>> {
         this->manage_parent_last_child();
     }
 
-    template <typename Allocator>
-    explicit nary_node(const nary_node& other, Allocator&& allocator = Allocator()) :
+    /*   ---   Conversion constructor from binary_node using allocator   ---   */
+    template <typename Allocator = std::allocator<nary_node>>
+    explicit nary_node(const binary_node<T>& other, Allocator&& allocator = Allocator()) :
             nary_node(other, nullptr, nullptr, allocator) {
     }
 
-    /*   ---   Conversion constructor from binary_node using allocator   ---   */
-    template <typename Allocator = std::allocator<nary_node>>
+    /*   ---   Delegated conversion constructor from binary_node using allocator   ---   */
+    template <typename Allocator>
     nary_node(
         const binary_node<T>& other,
         nary_node* parent,
         nary_node* prev_sibling,
-        Allocator&& allocator = Allocator()) :
+        Allocator&& allocator) :
             node<T, nary_node>(parent, other.get_value()),
             following_siblings(other.get_following_siblings()),
             prev_sibling(prev_sibling),
@@ -109,13 +125,7 @@ class nary_node : public node<T, nary_node<T>> {
         this->manage_parent_last_child();
     }
 
-    /*   ---   Conversion constructor from binary_node using allocator   ---   */
-    template <typename Allocator = std::allocator<nary_node>>
-    explicit nary_node(const binary_node<T>& other, Allocator&& allocator = Allocator()) :
-            nary_node(other, nullptr, nullptr, allocator) {
-    }
-
-    /*   ---   Construct from struct_node using allocator   ---   */
+    /*   ---   Conversion constructor from struct_node using allocator   ---   */
     template <
         typename ConvertibleT,
         typename FirstChild,
@@ -124,12 +134,44 @@ class nary_node : public node<T, nary_node<T>> {
         typename           = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     explicit nary_node(
         const struct_node<ConvertibleT, FirstChild, NextSibling>& other,
-        Allocator&& allocator = std::allocator<nary_node>()) :
-            node<T, nary_node>(other.get_value()) {
-        this->manage_children(other.get_children(), allocator);
+        Allocator&& allocator = Allocator()) :
+            nary_node(other, nullptr, nullptr, allocator) {
     }
 
-    /*   ---   Construct from emplacing struct_node using allocator   ---   */
+    /*   ---   Delegated conversion constructor from struct_node using allocator   ---   */
+    template <
+        typename ConvertibleT,
+        typename FirstChild,
+        typename NextSibling,
+        typename Allocator,
+        typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
+    explicit nary_node(
+        const struct_node<ConvertibleT, FirstChild, NextSibling>& other,
+        nary_node* parent,
+        nary_node* prev_sibling,
+        Allocator&& allocator) :
+            node<T, nary_node>(parent, other.get_value()),
+            following_siblings(std::decay_t<decltype(other)>::following_siblings()),
+            prev_sibling(prev_sibling),
+            next_sibling(
+                [&]() {
+                    if constexpr (is_empty<NextSibling>) {
+                        return nullptr;
+                    } else {
+                        return allocate(allocator, other.get_next_sibling(), parent, this, allocator).release();
+                    }
+                }()),
+            first_child([&]() {
+                if constexpr (is_empty<FirstChild>) {
+                    return nullptr;
+                } else {
+                    return allocate(allocator, other.get_first_child(), this, nullptr, allocator).release();
+                }
+            }()) {
+        this->manage_parent_last_child();
+    }
+
+    /*   ---   Conversion constructor from emplacing struct_node using allocator   ---   */
     template <
         typename... EmplaceArgs,
         typename FirstChild,
@@ -139,8 +181,40 @@ class nary_node : public node<T, nary_node<T>> {
     explicit nary_node(
         const struct_node<std::tuple<EmplaceArgs...>, FirstChild, NextSibling>& other,
         Allocator&& allocator = Allocator()) :
-            node<T, nary_node>(other.get_value()) {
-        this->manage_children(other.get_children(), allocator);
+            nary_node(other, nullptr, nullptr, allocator) {
+    }
+
+    /*   ---   Delegated conversion constructor from emplacing struct_node using allocator   ---   */
+    template <
+        typename... EmplaceArgs,
+        typename FirstChild,
+        typename NextSibling,
+        typename Allocator,
+        typename = std::enable_if_t<std::is_constructible_v<T, EmplaceArgs...>>>
+    explicit nary_node(
+        const struct_node<std::tuple<EmplaceArgs...>, FirstChild, NextSibling>& other,
+        nary_node* parent,
+        nary_node* prev_sibling,
+        Allocator&& allocator) :
+            node<T, nary_node>(parent, other.get_value()),
+            following_siblings(std::decay_t<decltype(other)>::following_siblings()),
+            prev_sibling(prev_sibling),
+            next_sibling(
+                [&]() {
+                    if constexpr (is_empty<NextSibling>) {
+                        return nullptr;
+                    } else {
+                        return allocate(allocator, other.get_next_sibling(), parent, this, allocator).release();
+                    }
+                }()),
+            first_child([&]() {
+                if constexpr (is_empty<FirstChild>) {
+                    return nullptr;
+                } else {
+                    return allocate(allocator, other.get_first_child(), this, nullptr, allocator).release();
+                }
+            }()) {
+        this->manage_parent_last_child();
     }
 
     /*   ---   METHODS   ---   */
@@ -153,58 +227,6 @@ class nary_node : public node<T, nary_node<T>> {
         if (!this->first_child) {
             this->last_child = nullptr;
         }
-    }
-
-    template <typename Allocator, typename... Nodes>
-    void manage_children(const std::tuple<Nodes...>& nodes, Allocator& allocator) {
-        std::size_t remaining = sizeof...(Nodes);
-        // Pointer to the considered child (which is itself a pointer to nary_node)
-        nary_node* result         = nullptr;
-        nary_node** prev_next_ptr = &result;
-        this->last_child          = nullptr; // Last child must be managed explicitly because it cannot be default set
-        // Lambda that assigns one child at time
-        auto assign_child = [&](auto* node) {
-            node->following_siblings = --remaining;         // Assign siblings count
-            node->prev_sibling       = this->last_child;    // Link node to the previous
-            node->parent             = this;                // Link node to the parent
-            *prev_next_ptr           = node;                // Link the previous child to node
-            this->last_child         = node;                // Potential last child
-            prev_next_ptr            = &node->next_sibling; // Update prev_node
-        };
-        // Lambda that constructs (by calling allocate) a nary_node from a struct_node
-        auto process_child = [&](auto& structure_node) {
-            static_assert(
-                !std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>,
-                "ds::nary_node does not accept empty nodes");
-            assign_child(allocate(allocator, structure_node, allocator).release());
-        };
-        std::apply(
-            // Call allocate_child for each element in the tuple other.get_children()
-            [&](auto&... nodes) {
-                (..., process_child(nodes));
-            },
-            nodes);
-        this->first_child = result;
-    }
-
-    /// Move the resources hold by this node to another node
-    void move_resources_to(nary_node& node) {
-        nary_node* current = this->first_child;
-        nary_node* last    = nullptr;
-        while (current) {
-            last            = current;
-            current->parent = &node;
-            current         = current->next_sibling;
-        }
-        if (last != nullptr) {
-            last->parent->last_child = last;
-        }
-        this->parent             = nullptr;
-        this->following_siblings = 0u;
-        this->prev_sibling       = nullptr;
-        this->next_sibling       = nullptr;
-        this->first_child        = nullptr;
-        this->last_child         = nullptr;
     }
 
     /// Discard this whole subtree and replace it with node
@@ -292,10 +314,11 @@ class nary_node : public node<T, nary_node<T>> {
     template <typename Node>
     static Node* calculate_child(Node* ptr, std::size_t index) {
         Node* current = ptr->first_child;
-        if (current != nullptr && index == current->following_siblings) {
+        // Trivil last child shortcut
+        if (current && index == current->following_siblings) {
             return ptr->last_child;
         }
-        for (std::size_t i = 0; i < index && current != nullptr; ++i) {
+        for (std::size_t i = 0; current && i < index; ++i) {
             current = current->next_sibling;
         }
         return current;
@@ -385,8 +408,7 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Compare egains itself   ---   */
     bool operator==(const nary_node& other) const {
         // Trivial case exclusion
-        if ((this->first_child == nullptr) != (other.first_child == nullptr)
-            || (this->next_sibling == nullptr) != (other.next_sibling == nullptr)) {
+        if (this->children() != other.children()) {
             return false;
         }
         // Test value for inequality
@@ -408,7 +430,7 @@ class nary_node : public node<T, nary_node<T>> {
     /*   ---   Compare egains binary_node   ---   */
     bool operator==(const binary_node<T>& other) const {
         // Trivial case exclusion
-        if (this->has_children() != other.has_children()) {
+        if (this->children() != other.children()) {
             return false;
         }
         // Test value for inequality
@@ -463,26 +485,6 @@ class nary_node : public node<T, nary_node<T>> {
             }
         }
         return true;
-        /*// Pointer to the considered child (which is itself a pointer to const nary_node)
-        const nary_node* const* current_child = &this->first_child;
-        // Lambda that constructs (by calling allocate) a nary_node from a struct_node
-        auto compare_child = [&](auto& structure_node) -> bool {
-            bool result;
-            if constexpr (std::is_same_v<decltype(structure_node.get_value()), detail::empty_t>) {
-                result = *current_child == nullptr;
-            } else { // Not empty node
-                result = *current_child && **current_child == structure_node;
-            }
-            current_child = &(*current_child)->next_sibling;
-            return result;
-        };
-        return std::apply(
-                   [&](auto&... nodes) {
-                       // Call compare_child for each element in the tuple other.get_children() and check all are true
-                       return (compare_child(nodes) && ...);
-                   },
-                   other.get_children())
-            && *current_child == nullptr;*/
     }
 
     template <typename MatcherNode>
