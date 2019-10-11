@@ -52,13 +52,6 @@ class struct_node_base {
 
     /*   ---   METHODS   ---   */
     private:
-    const Derived* as_actual_type() const {
-        return static_cast<const Derived*>(this);
-    }
-    Derived* as_actual_type() {
-        return static_cast<Derived*>(this);
-    }
-
     template <std::size_t Index>
     auto get_successors(const_index<Index>) const {
         if constexpr (Index == 0) {
@@ -104,6 +97,14 @@ class struct_node_base {
         if constexpr (struct_node_base::has_next_sibling()) {
             this->next_sibling.assign_indexes(index + 1);
         }
+    }
+
+    protected:
+    const Derived* as_actual_type() const {
+        return static_cast<const Derived*>(this);
+    }
+    Derived* as_actual_type() {
+        return static_cast<Derived*>(this);
     }
 
     public:
@@ -173,7 +174,7 @@ class struct_node_base {
         return this->value;
     }
 
-    static constexpr std::size_t children_count() {
+    static constexpr std::size_t children() {
         return struct_node_base::foldl_children_types(
             [](auto&& accumulated, auto&& element) {
                 using element_type = typename std::remove_reference_t<decltype(element)>::type;
@@ -187,7 +188,7 @@ class struct_node_base {
             0u);
     }
 
-    static constexpr std::size_t children_count_all() {
+    static constexpr std::size_t children_all() {
         return struct_node_base::foldl_children_types(
             [](auto&& accumulated, auto&&) {
                 return accumulated + 1u;
@@ -208,7 +209,7 @@ class struct_node_base {
         return struct_node_base::foldl_children_types(
             [](auto&& accumulated, auto&& element) {
                 using element_type = typename std::remove_reference_t<decltype(element)>::type;
-                return std::max({accumulated, struct_node_base::children_count(), element_type::subtree_arity()});
+                return std::max({accumulated, struct_node_base::children(), element_type::subtree_arity()});
             },
             static_cast<std::size_t>(0u));
     }
@@ -241,7 +242,7 @@ class struct_node_base {
 
     constexpr auto get_children() const {
         if constexpr (struct_node_base::has_first_child()) {
-            return this->first_child.get_successors(const_index<struct_node_base::children_count_all() - 1>());
+            return this->first_child.get_successors(const_index<struct_node_base::children_all() - 1>());
         } else {
             return std::make_tuple();
         }
@@ -249,7 +250,7 @@ class struct_node_base {
 
     constexpr auto get_children() {
         if constexpr (struct_node_base::has_first_child()) {
-            return this->first_child.get_successors(const_index<struct_node_base::children_count_all() - 1>());
+            return this->first_child.get_successors(const_index<struct_node_base::children_all() - 1>());
         } else {
             return std::make_tuple();
         }
@@ -257,7 +258,7 @@ class struct_node_base {
 
     template <std::size_t Index>
     constexpr auto& get_child(const_index<Index>) const {
-        //static_assert(Index < struct_node::children_count(), "The index of the child is out of range.");
+        //static_assert(Index < struct_node::children(), "The index of the child is out of range.");
         return std::get<Index>(this->get_children());
     }
 };

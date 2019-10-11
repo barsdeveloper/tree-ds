@@ -14,8 +14,8 @@
 using namespace std;
 using namespace md;
 
-template class md::tree_iterator<nary_tree<int>, policy::pre_order, false>;
-template class md::tree_iterator<binary_tree<Bar>, policy::in_order, true>;
+template class md::tree_iterator<nary_tree<int>, policy::pre_order, node_navigator<nary_node<int>*>>;
+template class md::tree_iterator<binary_tree<Bar>, policy::in_order, node_navigator<binary_node<Bar>*>>;
 
 class IteratorTest : public QObject {
 

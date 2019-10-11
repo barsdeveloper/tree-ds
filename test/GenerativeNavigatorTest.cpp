@@ -34,11 +34,11 @@ void GenerativeNavigatorTest::binary1() {
     multiple_node_pointer ptrs(target.root().get_raw_node(), generated.root().get_raw_node());
     std::allocator<binary_node<int>> alloc;
     generative_navigator nav(
-        alloc,
         ptrs,
         [](auto&&) {
             return true;
-        });
+        },
+        alloc);
 
     ptrs = nav.get_left_child(ptrs); // 2
     generated.update_size_arity();
@@ -116,11 +116,11 @@ void GenerativeNavigatorTest::binary2() {
     multiple_node_pointer ptrs(target.root().go_last_child().get_raw_node(), generated.root().get_raw_node());
     std::allocator<binary_node<int>> alloc;
     generative_navigator nav(
-        alloc,
         ptrs,
         [](auto node) {
             return node->get_value() >= 0;
-        });
+        },
+        alloc);
 
     ptrs = nav.get_right_child(ptrs); // 6
     generated.update_size_arity();

@@ -16,7 +16,7 @@ template <typename T>
 class nary_node : public node<T, nary_node<T>> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, bool>
+    template <typename, typename, typename>
     friend class tree_iterator;
 
     template <typename, typename, typename>
@@ -457,7 +457,7 @@ class nary_node : public node<T, nary_node<T>> {
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, T>>>
     bool operator==(const struct_node<ConvertibleT, FirstChild, NextSibling>& other) const {
         // One of the subtree has children while the other doesn't
-        if (this->children() != other.children_count()) {
+        if (this->children() != other.children()) {
             return false;
         }
         // Test value for inequality

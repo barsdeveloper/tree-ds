@@ -9,7 +9,7 @@ namespace md::detail {
 template <
     typename ActualPolicy,
     typename NodePtr,
-    typename NodeNavigator,
+    typename Navigator,
     typename Allocator>
 class policy_base {
 
@@ -21,10 +21,13 @@ class policy_base {
 
     protected:
     NodePtr current = nullptr;
-    NodeNavigator navigator;
-    allocator_type allocator;
+    Navigator navigator {};
+    allocator_type allocator {};
 
     public:
+    policy_base() {
+    }
+
     /*
      * Create a policy that does not point at the beginning of the iteration but somewhere into the range. This means
      * that we must reconstruct the state like if we started at the beginning and arrived at current. Current can also
@@ -35,7 +38,7 @@ class policy_base {
             allocator(allocator) {
     }
 
-    policy_base(NodePtr current, const NodeNavigator& navigator, const Allocator& allocator) :
+    policy_base(NodePtr current, const Navigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
@@ -43,26 +46,26 @@ class policy_base {
 
     template <
         typename OtherActualPolicy,
-        typename OtherNode,
-        typename OtherNodeNavigator,
-        typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<is_const_cast_equivalent<OtherNode, NodePtr>>,
-        typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
-    policy_base(const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other) :
-            policy_base(const_cast<NodePtr>(other.current), other.navigator, other.allocator) {
+        typename OtherNodePtr,
+        typename OtherNavigator,
+        typename = std::enable_if_t<is_same_template<OtherActualPolicy, ActualPolicy>>,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
+    policy_base(const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, Allocator>& other) :
+            policy_base(other.current, other.navigator, other.allocator) {
     }
 
     template <
         typename OtherActualPolicy,
-        typename OtherNode,
-        typename OtherNodeNavigator,
+        typename OtherNodePtr,
+        typename OtherNavigator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
-        typename = std::enable_if_t<is_const_cast_equivalent<OtherNode, NodePtr>>,
-        typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
     policy_base(
-        const policy_base<OtherActualPolicy, OtherNode, OtherNodeNavigator, Allocator>& other,
+        const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, Allocator>& other,
         const NodePtr current) :
-            policy_base(const_cast<NodePtr>(current), other.navigator, other.allocator) {
+            policy_base(current, other.navigator, other.allocator) {
     }
 
     public:
@@ -74,7 +77,7 @@ class policy_base {
         return this->current;
     }
 
-    NodeNavigator get_navigator() const {
+    Navigator get_navigator() const {
         return this->navigator;
     }
 

@@ -18,16 +18,15 @@ class node_navigator : public navigator_base<node_navigator<NodePtr>, NodePtr> {
     public:
     using navigator_base<node_navigator<NodePtr>, NodePtr>::navigator_base;
 
-    template <typename OtherNodePTr, typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePTr, NodePtr>>>
-    node_navigator(const node_navigator<OtherNodePTr>& other) :
-            node_navigator(const_cast<NodePtr>(other.root), other.is_subtree) {
+    template <typename OtherNodePtr, typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>>
+    node_navigator(const node_navigator<OtherNodePtr>& other) :
+            node_navigator(other.root) {
     }
 
     /*   ---   ASSIGNMENT   ---   */
-    template <typename OtherNodePtr, typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
+    template <typename OtherNodePtr, typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>>
     node_navigator& operator=(const node_navigator<OtherNodePtr>& other) {
-        this->is_subtree = other.is_subtree;
-        this->root       = const_cast<NodePtr>(other.root);
+        this->navigator_base<node_navigator, NodePtr>::operator==(other);
     }
 };
 

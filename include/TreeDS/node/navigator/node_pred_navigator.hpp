@@ -5,101 +5,121 @@
 
 namespace md {
 
-template <typename NodePtr, typename Predicate, bool Dynamic = false>
-class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, Predicate, Dynamic>, NodePtr, Dynamic> {
+template <typename NodePtr, typename Predicate>
+class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, Predicate>, NodePtr> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, bool>
+    template <typename, typename>
     friend class node_pred_navigator;
+
+    /*   ---   TYPES   ---   */
+    public:
+    using typename navigator_base<node_pred_navigator, NodePtr>::node_pointer;
+    using typename navigator_base<node_pred_navigator, NodePtr>::node_type;
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
-    Predicate predicate;
+    std::optional<Predicate> predicate; // Not optional, just wrapped so to make it default constructible when lambda
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
-    template <typename Pred = Predicate, typename = std::enable_if_t<std::is_default_constructible_v<Pred>>>
-    node_pred_navigator() :
-            predicate() {
+    node_pred_navigator() {
     }
 
     template <
         typename OtherNodePtr,
-        typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
-    node_pred_navigator(const node_pred_navigator<OtherNodePtr, Predicate, Dynamic>& other) :
-            node_pred_navigator(const_cast<NodePtr*>(other.root, other.is_subtree)) {
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>>
+    node_pred_navigator(OtherNodePtr current, Predicate predicate) :
+            navigator_base<node_pred_navigator, NodePtr>(current),
+            predicate(predicate) {
     }
 
-    node_pred_navigator(NodePtr root, Predicate predicate, bool is_subtree = true) :
-            navigator_base<node_pred_navigator<NodePtr, Predicate, Dynamic>, NodePtr, Dynamic>(root, is_subtree),
+    template <
+        typename OtherNodePtr,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>>
+    node_pred_navigator(NodePtr root, Predicate predicate) :
+            navigator_base<node_pred_navigator, NodePtr>(root),
             predicate(predicate) {
     }
 
     /*   ---   ASSIGNMENT   ---   */
-    node_pred_navigator operator=(const node_pred_navigator& other) {
-        return this->operator=<NodePtr>(other);
+    node_pred_navigator& operator=(const node_pred_navigator& other) {
+        this->navigator_base<node_pred_navigator, NodePtr>::operator=(other);
+        // predicate may not be assignable
+        return *this;
     }
 
-    template <
-        typename OtherNodePtr,
-        typename = std::enable_if_t<is_const_cast_equivalent<OtherNodePtr, NodePtr>>>
-    node_pred_navigator operator=(const node_pred_navigator<OtherNodePtr, Predicate, Dynamic>& other) {
-        this->is_subtree = other.is_subtree;
-        this->root       = const_cast<NodePtr>(other.root);
-        return *this;
+    template <typename OtherNodePtr, typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>>
+    node_pred_navigator& operator=(const node_pred_navigator<OtherNodePtr, Predicate>& other) {
+        this->navigator_base<node_pred_navigator, NodePtr>::operator=(other);
+        return *this->cast();
     }
 
     /*   ---   METHODS   ---   */
     public:
-    NodePtr get_prev_sibling(NodePtr node) {
-        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_prev_sibling(node);
-        while (result && !this->predicate(*result)) {
-            result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_prev_sibling(result);
+    NodePtr get_prev_sibling(NodePtr node) const {
+        // Call the "vanilla" get_prev_sibling()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_prev_sibling(node);
+        while (result && !(*this->predicate)(result)) {
+            // Then keep discarding siblings until a valid node appears
+            result = this->navigator_base<node_pred_navigator, NodePtr>::get_prev_sibling(node);
         }
         return result;
     }
 
-    NodePtr get_next_sibling(NodePtr node) {
-        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_next_sibling(node);
-        while (result && !this->predicate(*result)) {
-            result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_next_sibling(result);
+    NodePtr get_next_sibling(NodePtr node) const {
+        // Call the "vanilla" get_next_sibling()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_next_sibling(node);
+        while (result && !(*this->predicate)(*result)) {
+            // Then keep discarding siblings until a valid node appears
+            result = this->navigator_base<node_pred_navigator, NodePtr>::get_next_sibling(result);
         }
         return result;
     }
 
-    NodePtr get_first_child(NodePtr node) {
-        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_first_child(node);
-        return result && !this->predicate(*result)
+    NodePtr get_first_child(NodePtr node) const {
+        // Call the "vanilla" get_first_child()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_first_child(node);
+        // Filter using get_next_sibling
+        return result && !(*this->predicate)(*result)
             ? this->get_next_sibling(result)
             : result;
     }
 
-    NodePtr get_last_child(NodePtr node) {
-        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr, Dynamic>::get_last_child(node);
-        return result && !this->predicate(*result)
+    NodePtr get_last_child(NodePtr node) const {
+        // Call the "vanilla" get_last_child()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_last_child(node);
+        // Filter using get_prev_sibling
+        return result && !(*this->predicate)(*result)
             ? this->get_prev_sibling(result)
             : result;
     }
 
-    template <typename N>
-    NodePtr get_left_child(N node) {
-        NodePtr result = node.get_left_child();
-        if (result && !this->predicate(*result)) {
-            return nullptr;
-        }
-        return result;
+    template <
+        typename N = NodePtr,
+        typename   = std::enable_if_t<is_binary_node_pointer<N>>>
+    NodePtr get_left_child(N node) const {
+        // Call the "vanilla" get_left_child()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_left_child(node);
+        // Return nothing if fails the predicate
+        return result && !(*this->predicate)(*result)
+            ? N()
+            : result;
     }
 
-    template <typename N>
-    NodePtr get_right_child(N node) {
-        NodePtr result = node.get_right_child();
-        if (result && !this->predicate(*result)) {
-            return nullptr;
-        }
-        return result;
+    template <
+        typename N = NodePtr,
+        typename   = std::enable_if_t<is_binary_node_pointer<N>>>
+    NodePtr get_right_child(N node) const {
+        // Call the "vanilla" get_right_child()
+        NodePtr result = this->navigator_base<node_pred_navigator, NodePtr>::get_right_child(node);
+        // Return nothing if fails the predicate
+        return result && !(*this->predicate)(*result)
+            ? N()
+            : result;
     }
 
-    bool is_valid(NodePtr node) {
+    bool is_valid(NodePtr node) const {
         return this->predicate(*node);
     }
 };

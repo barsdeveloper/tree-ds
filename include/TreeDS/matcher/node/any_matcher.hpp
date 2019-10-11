@@ -34,7 +34,7 @@ class any_matcher : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info{
+    static constexpr matcher_info_t info {
         // It matches null only if all its children do so
         any_matcher::foldl_children_types(
             [](auto&& accumulator, auto&& element) {
@@ -66,7 +66,7 @@ class any_matcher : public matcher<
                 return n.get_parent() != this->subtree_cut && this->match_value(n.get_parent()->get_value());
             }
         };
-        node_pred_navigator<node_t*, decltype(predicate), true> navigator(&node, predicate, true);
+        node_pred_navigator<node_t*, decltype(predicate)> navigator(&node, predicate);
         if constexpr (any_matcher::info.possessive) {
             return policy::leaves().get_instance(static_cast<node_t*>(nullptr), navigator, allocator).go_first();
         } else {
@@ -173,7 +173,7 @@ class any_matcher : public matcher<
     unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
         using node_t                          = allocator_value_type<NodeAllocator>;
         unique_node_ptr<NodeAllocator> result = nullptr;
-        if constexpr (any_matcher::children_count() == 0) {
+        if constexpr (any_matcher::children() == 0) {
             // Doesn't have children
             switch (Quantifier) {
             case quantifier::RELUCTANT:
@@ -232,17 +232,17 @@ class any_matcher : public matcher<
                     return std::move(result);
                 }
                 unsigned not_null_count = 0;
-                std::array<node_t*, any_matcher::children_count()> childrens_nodes;
+                std::array<node_t*, any_matcher::children()> childrens_nodes;
                 std::apply(
                     [&](auto&... children) {
                         childrens_nodes = {
                             (children.empty()
                                  ? nullptr
                                  : (
-                                       // Increment the count
-                                       ++not_null_count,
-                                       // Give the node matched by the child (comma operator returns the last expression)
-                                       children.get_node(allocator)))...};
+                                     // Increment the count
+                                     ++not_null_count,
+                                     // Give the node matched by the child (comma operator returns the last expression)
+                                     children.get_node(allocator)))...};
                     },
                     this->get_children());
                 auto search_start = childrens_nodes.begin();
@@ -279,7 +279,7 @@ class any_matcher : public matcher<
                     }
                     return this->match_value(multi_node_ptr->get_value());
                 };
-                generative_navigator nav(allocator, roots, check_target, true);
+                generative_navigator nav(roots, check_target, allocator);
                 detail::breadth_first_impl iterator(policy::breadth_first().get_instance(roots, nav, allocator));
                 while (iterator.get_current_node()) {
                     iterator.increment();

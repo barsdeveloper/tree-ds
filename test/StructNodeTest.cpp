@@ -183,8 +183,8 @@ void StructNodeTest::emtyNodes() {
                 n(9)));
     QCOMPARE(tree.subtree_size(), 9);
     QCOMPARE(tree.subtree_arity(), 4);
-    QCOMPARE(tree.children_count(), 3);
-    QCOMPARE(tree.children_count_all(), 5);
+    QCOMPARE(tree.children(), 3);
+    QCOMPARE(tree.children_all(), 5);
 }
 
 QTEST_MAIN(StructNodeTest);

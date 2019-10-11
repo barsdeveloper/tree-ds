@@ -22,7 +22,7 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
     using super = tree_base<const Node, Policy, Allocator>;
 
     tree_view() :
-            super(nullptr, 0, 0, node_navigator<Node*>(nullptr, false)) {
+            super(nullptr, 0, 0, node_navigator<Node*>()) {
     }
 
     template <typename TreeNode, typename TreePolicy>
@@ -38,23 +38,23 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
         typename TreePolicy,
         typename IteratorTree,
         typename IteratorPolicy,
-        bool IteratorConstant>
+        typename IteratorNavigator>
     tree_view(
         const tree_base<TreeNode, TreePolicy, Allocator>& tree,
-        const tree_iterator<IteratorTree, IteratorPolicy, IteratorConstant>& position) :
+        const tree_iterator<IteratorTree, IteratorPolicy, IteratorNavigator>& position) :
             super(
                 position.get_raw_node(),
                 position.get_raw_node()
-                    ? tree.get_node_navigator().is_root(position.get_raw_node())
+                    ? tree.get_navigator().is_root(position.get_raw_node())
                         ? tree.size_value
                         : 0u
                     : 0u,
                 position.get_raw_node()
-                    ? tree.get_node_navigator().is_root(position.get_raw_node())
+                    ? tree.get_navigator().is_root(position.get_raw_node())
                         ? tree.arity_value
                         : 0u
                     : 0u,
-                navigator_type(position.get_raw_node(), true)) {
+                navigator_type(position.get_raw_node())) {
         static_assert(
             std::is_convertible_v<std::add_pointer_t<TreeNode>, std::add_pointer_t<Node>>,
             "The view must refer to the same type of tree/view: either nary or binary.");

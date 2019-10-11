@@ -56,12 +56,12 @@ class tree : public tree_base<Node, Policy, Allocator> {
     /*   ---   CONSTRUCTORS   ---   */
     protected:
     tree(node_type* root, size_type size, size_type arity) :
-            super(root, size, arity, navigator_type(root, false)) {
+            super(root, size, arity, navigator_type(root)) {
     }
 
     template <typename Alloc>
     tree(node_type* root, size_type size, size_type arity, Alloc&& allocator) :
-            super(root, size, arity, navigator_type(root, false), std::forward<Alloc>(allocator)) {
+            super(root, size, arity, navigator_type(root), std::forward<Alloc>(allocator)) {
     }
 
     public:
@@ -241,9 +241,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
      * @return iterator to the first element
      */
     template <typename P = Policy>
-    iterator<P> begin(P policy = P()) {
+    iterator<P> begin(P = P()) {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++iterator<P>(policy, *this);
+        return ++iterator<P>(*this);
     }
 
     /**
@@ -255,8 +255,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
      * @return iterator the element following the last element
      */
     template <typename P = Policy>
-    iterator<P> end(P policy = P()) {
-        return iterator<P>(policy, *this);
+    iterator<P> end(P = P()) {
+        return iterator<P>(*this);
     }
 
     template <typename P = Policy>
@@ -276,7 +276,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
     using super::root;
 
     iterator<policy::fixed> root() {
-        return {policy::fixed(), *this, this->root_node};
+        return iterator<policy::fixed>(*this, this->root_node, this->get_navigator());
     }
 
     //   ---   MODIFIERS   ---
@@ -303,9 +303,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return {replaced, deleter(this->allocator)};
     }
 
-    template <typename P, bool Constant>
+    template <typename T, typename P, typename N>
     iterator<P> modify_subtree(
-        tree_iterator<super, P, Constant> position,
+        tree_iterator<T, P, N> position,
         unique_node_ptr<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
@@ -334,16 +334,16 @@ class tree : public tree_base<Node, Policy, Allocator> {
         } else {
             throw std::logic_error("The iterator points to a non valid position (end).");
         }
-        if constexpr (Constant) {
+        if constexpr (tree_iterator<T, P, N>::IS_CONSTANT_ITERATOR) {
             return position.craft_non_constant_iterator();
         } else {
             return position;
         }
     }
 
-    template <bool First, typename P, bool C>
+    template <bool First, typename T, typename P, typename N>
     iterator<P> add_child(
-        tree_iterator<super, P, C> position,
+        tree_iterator<T, P, N> position,
         unique_node_ptr<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
@@ -377,11 +377,11 @@ class tree : public tree_base<Node, Policy, Allocator> {
             ? target->get_first_child()->following_siblings() + 1
             : 1u;
         this->arity_value = std::max(replacement_arity, std::max(this->arity_value, local_arity));
-        return iterator<P>(position, this, target);
+        return iterator<P>(*this, target, this->get_navigator());
     }
 
-    template <typename P, bool Constant>
-    void erase_subtree(tree_iterator<super, P, Constant> position) {
+    template <typename T, typename P, typename N>
+    void erase_subtree(tree_iterator<T, P, N> position) {
         /*
          * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
          * iterator refers to this tree, which is however mutable, just like the node that iterator is pointing to,
@@ -410,14 +410,14 @@ class tree : public tree_base<Node, Policy, Allocator> {
         this->root_node   = root;
         this->size_value  = size;
         this->arity_value = arity;
-        this->navigator   = navigator_type(this->root_node, false);
+        this->navigator   = navigator_type(this->root_node);
     }
 
     void nullify() {
         this->root_node   = nullptr; // Weallocation was already node somewhere else
         this->size_value  = 0u;
         this->arity_value = 0u;
-        this->navigator   = navigator_type(nullptr, false);
+        this->navigator   = navigator_type();
     }
 
     public:
@@ -454,9 +454,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
      * @param value to insert in the tree, that will be copied
      * @return an iterator that points to the inserted element
      */
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         const value_type& value) {
         return this->modify_subtree(position, allocate(this->allocator, value), 1u, 0u);
     }
@@ -464,9 +464,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
     /**
      * @overload
      */
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         value_type&& value) {
         return this->modify_subtree(position, allocate(this->allocator, std::move(value)), 1u, 0u);
     }
@@ -479,15 +479,17 @@ class tree : public tree_base<Node, Policy, Allocator> {
      * @return an iterator that points to the inserted element
      */
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename ConvertibleT,
-        typename... Children,
+        typename First,
+        typename Next,
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleT, value_type>>>
     iterator<P>
     insert_over(
-        const tree_iterator<super, P, C>& position,
-        const struct_node<ConvertibleT, Children...>& node) {
+        const tree_iterator<T, P, N>& position,
+        const struct_node<ConvertibleT, First, Next>& node) {
         return this->modify_subtree(
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
@@ -496,9 +498,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             node.subtree_arity());
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         const tree_base<Node, OtherP, Allocator>& other) {
         return this->modify_subtree(
             position,
@@ -510,9 +512,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             other.arity());
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         tree<Node, OtherP, Allocator>&& other) {
         if constexpr (std::is_same_v<policy_type, OtherP>) {
             if (this == &other) {
@@ -529,12 +531,13 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... Args,
         typename = std::enable_if_t<std::is_constructible_v<value_type, Args...>>>
     iterator<P> emplace_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         Args&&... args) {
         return this->modify_subtree(
             position,
@@ -544,13 +547,14 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... EmplacingArgs,
         typename... Children,
         typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_over(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
         return this->modify_subtree(
             position,
@@ -560,37 +564,39 @@ class tree : public tree_base<Node, Policy, Allocator> {
             node.subtree_arity());
     }
 
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_child_front(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         value_type& value) {
         return this->add_child<true>(position, allocate(this->allocator, value), 1u, 0u);
     }
 
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_child_front(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         value_type&& value) {
         return this->add_child<true>(position, allocate(this->allocator, std::move(value)), 1u, 0u);
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename ConvertibleV,
-        typename... Children,
+        typename First,
+        typename Next,
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleV, value_type>>>
     iterator<P>
     insert_child_front(
-        const tree_iterator<super, P, C>& position,
-        struct_node<ConvertibleV, Children...> value) {
+        const tree_iterator<T, P, N>& position,
+        struct_node<ConvertibleV, First, Next> value) {
         // Last allocator is forwarded to Node constructor to allocate its children
         return this->add_child<true>(position, allocate(this->allocator, value, this->allocator), 1u, 0u);
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_child_front(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         const tree_base<Node, OtherP, Allocator>& other) {
         return this->add_child<true>(
             position,
@@ -601,9 +607,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             0u);
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_child_front(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         tree<Node, OtherP, Allocator>&& other) {
         if constexpr (std::is_same_v<policy_type, OtherP>) {
             if (this == &other) {
@@ -619,30 +625,32 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return result;
     }
 
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_child_back(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         value_type& value) {
         return this->add_child<false>(position, allocate(this->allocator, value), 1u, 0u);
     }
 
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     iterator<P> insert_child_back(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         value_type&& value) {
         return this->add_child<false>(position, allocate(this->allocator, std::move(value)), 1u, 0u);
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename ConvertibleV,
-        typename... Children,
+        typename First,
+        typename Next,
         typename = std::enable_if_t<std::is_convertible_v<ConvertibleV, value_type>>>
     iterator<P>
     insert_child_back(
-        const tree_iterator<super, P, C>& position,
-        struct_node<ConvertibleV, Children...> value) {
+        const tree_iterator<T, P, N>& position,
+        struct_node<ConvertibleV, First, Next> value) {
         return this->add_child<false>(
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
@@ -651,9 +659,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             value.subtree_arity());
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_child_back(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         const tree_base<Node, OtherP, Allocator>& other) {
         return this->add_child<false>(
             position,
@@ -664,9 +672,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
             0u);
     }
 
-    template <typename P, bool C, typename OtherP>
+    template <typename T, typename P, typename N, typename OtherP>
     iterator<P> insert_child_back(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         tree<Node, OtherP, Allocator>&& other) {
         if constexpr (std::is_same_v<policy_type, OtherP>) {
             if (this == &other) {
@@ -683,25 +691,28 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... Args,
         typename = std::enable_if_t<std::is_constructible_v<value_type, Args&&...>>>
     iterator<P> emplace_child_front(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         Args&&... args) {
         return this->add_child<true>(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... EmplacingArgs,
-        typename... Children,
+        typename First,
+        typename Next,
         typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_child_front(
-        const tree_iterator<super, P, C>& position,
-        const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
+        const tree_iterator<T, P, N>& position,
+        const struct_node<std::tuple<EmplacingArgs...>, First, Next>& node) {
         return this->add_child<true>(
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
@@ -711,25 +722,28 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... Args,
         typename = std::enable_if_t<std::is_constructible_v<value_type, Args&&...>>>
     iterator<P> emplace_child_back(
-        const tree_iterator<super, P, C>& position,
+        const tree_iterator<T, P, N>& position,
         Args&&... args) {
         return this->add_child<false>(position, allocate(this->allocator, std::forward<Args>(args)...), 1u, 0u);
     }
 
     template <
+        typename T,
         typename P,
-        bool C,
+        typename N,
         typename... EmplacingArgs,
-        typename... Children,
+        typename First,
+        typename Next,
         typename = std::enable_if_t<std::is_constructible_v<value_type, EmplacingArgs...>>>
     iterator<P> emplace_child_back(
-        const tree_iterator<super, P, C>& position,
-        const struct_node<std::tuple<EmplacingArgs...>, Children...>& node) {
+        const tree_iterator<T, P, N>& position,
+        const struct_node<std::tuple<EmplacingArgs...>, First, Next>& node) {
         return this->add_child<false>(
             position,
             // Last allocator is forwarded to Node constructor to allocate its children
@@ -742,7 +756,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         if (position.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
         }
-        iterator<policy::post_order> result(position.craft_non_constant_iterator());
+        iterator<policy::post_order> result(position.craft_non_constant_iterator(type_value<iterator<policy::post_order>>()));
         ++result;
         this->erase_subtree(position);
         return result;
@@ -757,12 +771,12 @@ class tree : public tree_base<Node, Policy, Allocator> {
         while (first != last) {
             this->erase_subtree(first++);
         }
-        return last.craft_non_constant_iterator();
+        return last.craft_non_constant_iterator(type_value<iterator<policy::post_order>>());
     }
 
-    template <typename P, bool C>
+    template <typename T, typename P, typename N>
     tree<Node, Policy, Allocator>
-    detach_subtree(const tree_iterator<super, P, C>& position) {
+    detach_subtree(const tree_iterator<T, P, N>& position) {
         if (position.pointed_tree != this) {
             throw std::logic_error("Tried to modify the tree (detach subtree) with an iterator not belonging to it.");
         }

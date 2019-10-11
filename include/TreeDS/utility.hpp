@@ -113,6 +113,24 @@ constexpr bool is_const_cast_equivalent
           // They point to the same type (ignoring const/volatile)
           std::is_same<std::decay_t<std::remove_pointer_t<A>>, std::decay_t<std::remove_pointer_t<B>>>>;
 
+template <
+    typename T,
+    typename = void>
+constexpr bool is_binary_node_pointer = false;
+
+template <typename T>
+constexpr bool is_binary_node_pointer<
+    T,
+    std::enable_if_t<
+        is_same_template<
+            std::decay_t<std::remove_pointer_t<T>>,
+            binary_node<void>>>> = true;
+
+template <typename T, typename... Others>
+constexpr bool is_binary_node_pointer<
+    multiple_node_pointer<T, Others...>,
+    std::enable_if_t<is_binary_node_pointer<T>>> = true;
+
 template <std::size_t Index>
 struct const_index {};
 
@@ -159,7 +177,7 @@ template <typename Node, typename Call>
 Node keep_calling(Node from, Call&& call) {
     Node prev = from;
     Node next = call(prev);
-    while (next != nullptr) {
+    while (next) {
         prev = next;
         next = call(prev);
     }
@@ -211,7 +229,7 @@ auto create_breadth_first_generative_iterator(
     Predicate&& predicate,
     NodeAllocator&& allocator) {
     multiple_node_pointer roots(target, generated);
-    generative_navigator nav(allocator, roots, predicate, true);
+    generative_navigator nav(roots, predicate, allocator);
     detail::breadth_first_impl<decltype(roots), decltype(nav), std::decay_t<NodeAllocator>> it(
         roots,
         nav,

@@ -80,7 +80,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     std::size_t steps   = 1;
     void* target_node   = nullptr;
     captures_t captures = this->get_following_captures();
-    std::array<void*, matcher::children_count()> child_match_attempt_begin{};
+    std::array<void*, matcher::children()> child_match_attempt_begin {};
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -260,7 +260,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
         Iterator it,
         const MatchFunction& search,
         const RematchFunction& backtrack = nullptr) {
-        if constexpr (matcher::children_count() > 0) {
+        if constexpr (matcher::children() > 0) {
             auto do_backtrack = [&](auto& child) -> bool {
                 if constexpr (!std::is_same_v<RematchFunction, std::nullptr_t>) {
                     // If a proper rematch function was provided
@@ -279,7 +279,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
                 return false;
             };
             int current_child;
-            for (current_child = 0; current_child < static_cast<int>(this->children_count()); ++current_child) {
+            for (current_child = 0; current_child < static_cast<int>(this->children()); ++current_child) {
                 const matcher_info_t& info = this->get_child_info(current_child);
                 if (info.matches_null && (info.reluctant || !it)) {
                     // If current chiuld prefers to not match anything
@@ -298,7 +298,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
                     }
                 }
             }
-            return current_child == this->children_count();
+            return current_child == this->children();
         }
         return true;
     }

@@ -17,7 +17,7 @@ class breadth_first_impl final
         : public policy_base<breadth_first_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
     public:
-    using typename policy_base<breadth_first_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator>::allocator_type;
+    using typename policy_base<breadth_first_impl, NodePtr, NodeNavigator, Allocator>::allocator_type;
 
     private:
     std::deque<NodePtr, allocator_type> open_nodes = manage_initial_status();

@@ -11,6 +11,7 @@
     using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::const_pointer;                                   \
     using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::policy_type;                                     \
     using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::navigator_type;                                  \
+    using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::const_navigator_type;                            \
     using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::allocator_type;                                  \
     using typename tree_base<NODE_T, POLICY_T, ALLOCATOR_T>::node_allocator_type;                             \
     template <typename P>                                                                                     \
@@ -61,18 +62,19 @@ class tree_base {
     /*   ---   TYPES   ---   */
     public:
     // General
-    using value_type          = std::remove_reference_t<decltype(std::declval<Node>().get_value())>;
-    using reference           = value_type&;
-    using const_reference     = const value_type&;
-    using node_type           = Node;
-    using size_type           = std::size_t;
-    using difference_type     = std::ptrdiff_t;
-    using pointer             = value_type*;
-    using const_pointer       = const value_type*;
-    using policy_type         = Policy;
-    using navigator_type      = node_navigator<node_type*>;
-    using allocator_type      = Allocator;
-    using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<node_type>>;
+    using value_type           = std::remove_reference_t<decltype(std::declval<Node>().get_value())>;
+    using reference            = value_type&;
+    using const_reference      = const value_type&;
+    using node_type            = Node;
+    using size_type            = std::size_t;
+    using difference_type      = std::ptrdiff_t;
+    using pointer              = value_type*;
+    using const_pointer        = const value_type*;
+    using policy_type          = Policy;
+    using navigator_type       = node_navigator<node_type*>;
+    using const_navigator_type = node_navigator<const node_type*>;
+    using allocator_type       = Allocator;
+    using node_allocator_type  = typename std::allocator_traits<Allocator>::template rebind_alloc<std::decay_t<node_type>>;
 
     static_assert(is_tag_of_policy<Policy>, "Invalid Policy template parameter, pick one from namespace md::policy");
     static_assert(
@@ -81,13 +83,15 @@ class tree_base {
 
     // Iterators
     template <typename P>
-    using iterator = tree_iterator<tree_base, P, false>;
+    using iterator = tree_iterator<tree_base, P, navigator_type>;
     template <typename P>
-    using const_iterator = tree_iterator<tree_base, P, true>;
+    using const_iterator = tree_iterator<const tree_base, P, const_navigator_type>;
     template <typename P>
     using reverse_iterator = std::reverse_iterator<iterator<P>>;
     template <typename P>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<P>>;
+
+    /*   ---   VALIDATION   ---   */
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
@@ -98,7 +102,7 @@ class tree_base {
     /// @brief Maximum number of children a node can have.
     mutable size_type arity_value = 0u;
     /// @brief An object used to navigate the nodes.
-    navigator_type navigator {this->root_node, this->root_node ? this->root_node->is_root() : false};
+    navigator_type navigator {this->root_node};
     /// @brief Allocator object used to allocate the nodes.
     node_allocator_type allocator {};
     /// @brief Allocator object used by the method get_allocator to return the allocator supplied.
@@ -147,9 +151,9 @@ class tree_base {
     }
 
     template <typename P = Policy>
-    const_iterator<P> cbegin(P policy = P()) const {
+    const_iterator<P> cbegin(P = P()) const {
         // Incremented to shift it to the first element (initially it's end-equivalent)
-        return ++const_iterator<P>(policy, *this);
+        return ++const_iterator<P>(*this);
     }
 
     template <typename P = Policy>
@@ -158,8 +162,8 @@ class tree_base {
     }
 
     template <typename P = Policy>
-    const_iterator<P> cend(P policy = P()) const {
-        return const_iterator<P>(policy, *this);
+    const_iterator<P> cend(P = P()) const {
+        return const_iterator<P>(*this);
     }
 
     template <typename P = Policy>
@@ -183,12 +187,12 @@ class tree_base {
         return std::make_reverse_iterator(this->cbegin(policy));
     }
 
-    template <typename OtherPolicy, bool Constant>
-    bool is_own_iterator(
-        const tree_iterator<
-            tree_base<Node, Policy, Allocator>,
-            OtherPolicy,
-            Constant>& it) const {
+    template <
+        typename OtherTree,
+        typename OtherPolicy,
+        typename OtherNavigator,
+        typename = std::enable_if_t<std::is_same_v<typename OtherTree::node_type, node_type>>>
+    bool is_own_iterator(const tree_iterator<OtherTree, OtherPolicy, OtherNavigator>& it) const {
         return it.pointed_tree == this;
     }
 
@@ -255,18 +259,18 @@ class tree_base {
     }
 
     const_iterator<policy::fixed> root() const {
-        return {policy::fixed(), *this, this->root_node};
+        return this->croot();
     }
 
     const_iterator<policy::fixed> croot() const {
-        return {policy::fixed(), *this, this->root_node};
+        return const_iterator<policy::fixed>(*this, this->root_node, this->get_navigator());
     }
 
-    node_navigator<const node_type*> get_node_navigator() const {
+    const_navigator_type get_navigator() const {
         return this->navigator;
     }
 
-    node_navigator<node_type*> get_node_navigator() {
+    navigator_type get_navigator() {
         return this->navigator;
     }
 

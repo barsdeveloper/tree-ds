@@ -19,7 +19,7 @@ template <typename T>
 class binary_node : public node<T, binary_node<T>> {
 
     /*   ---   FRIENDS   ---   */
-    template <typename, typename, bool>
+    template <typename, typename, typename>
     friend class tree_iterator;
 
     template <typename, typename, typename>
@@ -85,7 +85,7 @@ class binary_node : public node<T, binary_node<T>> {
             left(binary_node::allocate_left_child(other, allocator)),
             right(binary_node::allocate_right_child(other, allocator)) {
         static_assert(
-            std::decay_t<decltype(other)>::children_count() <= 2,
+            std::decay_t<decltype(other)>::children() <= 2,
             "A binary node must have at most 2 children.");
         this->attach_child();
     }
@@ -104,7 +104,7 @@ class binary_node : public node<T, binary_node<T>> {
             left(binary_node::allocate_left_child(other, allocator)),
             right(binary_node::allocate_right_child(other, allocator)) {
         static_assert(
-            std::decay_t<decltype(other)>::children_count() <= 2,
+            std::decay_t<decltype(other)>::children() <= 2,
             "A binary node must have at most 2 children.");
         this->attach_child();
     }
@@ -392,7 +392,8 @@ class binary_node : public node<T, binary_node<T>> {
             return false;
         }
         // Trivial test left child presence
-        if (this->children() != other.children_count()) {
+        if ((this->left == nullptr) != (is_empty<FirstChild> || is_empty_node<FirstChild>)
+            || this->children() != other.children()) {
             return false;
         }
         if constexpr (!is_empty<FirstChild>) {
