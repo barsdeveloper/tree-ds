@@ -46,7 +46,6 @@ As we can see some nodes are hidden (...). We can control the number of nodes to
 ```c++
 #define MD_PRINT_TREE_MAX_NODES 10
 #define MD_PRINT_TREE_INDENTATION 4
-#define MD_PRINT_TREE_ADDRESS false
 #define MD_PRINT_TREE_ADDRESS_DIGITS 4
 
 #include <TreeDS/tree> // Defines must be set before including the header
