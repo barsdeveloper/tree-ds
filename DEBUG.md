@@ -42,7 +42,7 @@ n('a')(
 
 ```
 
-As we can see some nodes are hidden (...). We can control the number of nodes to print and other settings by setting some defines. The following options can be used:
+As we can see some nodes are hidden (...). We can control the number of nodes to print and other settings by means of defines. The following options can be used:
 ```c++
 #define MD_PRINT_TREE_MAX_NODES 10
 #define MD_PRINT_TREE_INDENTATION 4
