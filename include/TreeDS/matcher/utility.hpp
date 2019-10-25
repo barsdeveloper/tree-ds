@@ -13,18 +13,25 @@ class matcher;
 template <typename, typename, typename>
 class capture_node;
 
-/*   ---   CLASSES DEINITIONS   ---   */
+/*   ---   TYPES DEINITIONS   ---   */
 struct matcher_info_t {
     bool matches_null;
     bool shallow_matches_null;
-    bool reluctant;
+    bool prefers_null;
     bool possessive;
-    constexpr matcher_info_t(bool matches_null, bool shallow_matches_null, bool reluctant, bool possessive) :
+    constexpr matcher_info_t(bool matches_null, bool shallow_matches_null, bool prefers_null, bool possessive) :
             matches_null(matches_null),
             shallow_matches_null(shallow_matches_null),
-            reluctant(reluctant),
+            prefers_null(prefers_null),
             possessive(possessive) {
     }
+};
+
+enum class quantifier {
+    DEFAULT,
+    RELUCTANT,
+    GREEDY,
+    POSSESSIVE
 };
 
 template <std::size_t Index>
@@ -34,6 +41,34 @@ template <char... Name>
 struct capture_name {};
 
 namespace detail {
+
+    template <typename T>
+    struct matcher_traits {};
+
+    template <typename Derived, typename ValueMatcher>
+    struct matcher_traits<matcher<Derived, ValueMatcher, detail::empty_t, detail::empty_t>> {
+        using children_captures = std::tuple<>;
+        using siblings_captures = std::tuple<>;
+    };
+
+    template <typename Derived, typename ValueMatcher, typename NextSibling>
+    struct matcher_traits<matcher<Derived, ValueMatcher, detail::empty_t, NextSibling>> {
+        using children_captures = std::tuple<>;
+        using siblings_captures = typename NextSibling::captures_t;
+    };
+
+    template <typename Derived, typename ValueMatcher, typename FirstChild>
+    struct matcher_traits<matcher<Derived, ValueMatcher, FirstChild, detail::empty_t>> {
+        using children_captures = std::tuple<>;
+        using siblings_captures = typename FirstChild::captures_t;
+    };
+
+    template <typename Derived, typename ValueMatcher, typename FirstChild, typename NextSibling>
+    struct matcher_traits<matcher<Derived, ValueMatcher, FirstChild, NextSibling>> {
+        using children_captures = typename FirstChild::captures_t;
+        using siblings_captures = typename NextSibling::captures_t;
+    };
+
     /*   ---   METAPROGRAMMING VARIABLES   ---   */
     template <typename T>
     constexpr bool is_capture_name = is_same_template<T, capture_name<>> && !std::is_same_v<T, capture_name<>>;

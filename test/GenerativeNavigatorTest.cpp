@@ -167,6 +167,17 @@ void GenerativeNavigatorTest::binary2() {
 void GenerativeNavigatorTest::nary1() {
 }
 
+template <typename TargetPtr, typename GeneratedPtr, typename Predicate, typename Allocator>
+auto create_breadth_first_generative_iterator(
+    TargetPtr target,
+    GeneratedPtr generated,
+    Predicate&& predicate,
+    Allocator&& allocator) {
+    multiple_node_pointer roots(target, generated);
+    generative_navigator nav(roots, predicate, allocator);
+    return policy::breadth_first().get_instance(roots, nav, allocator);
+}
+
 void GenerativeNavigatorTest::breadthFirstIterate() {
     binary_tree<char> target {
         n('a')(

@@ -19,6 +19,13 @@ class policy_base {
     public:
     using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<NodePtr>;
 
+    static_assert(
+        std::is_same_v<typename Navigator::node_pointer, NodePtr>,
+        "Navigator must use the same NodePtr template parameter as NodePtr");
+    static_assert(
+        std::is_same_v<typename std::allocator_traits<Allocator>::value_type, NodePtr>,
+        "Allocator type must have a value_type = NodePtr");
+
     protected:
     NodePtr current = nullptr;
     Navigator navigator {};
@@ -36,22 +43,25 @@ class policy_base {
     policy_base(NodePtr current, const Allocator& allocator) :
             current(current),
             allocator(allocator) {
+        this->cast()->fix_navigator_root();
     }
 
     policy_base(NodePtr current, const Navigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
+        this->cast()->fix_navigator_root();
     }
 
     template <
         typename OtherActualPolicy,
         typename OtherNodePtr,
         typename OtherNavigator,
+        typename OtherAllocator,
         typename = std::enable_if_t<is_same_template<OtherActualPolicy, ActualPolicy>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
-    policy_base(const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, Allocator>& other) :
+    policy_base(const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, OtherAllocator>& other) :
             policy_base(other.current, other.navigator, other.allocator) {
     }
 
@@ -59,13 +69,30 @@ class policy_base {
         typename OtherActualPolicy,
         typename OtherNodePtr,
         typename OtherNavigator,
+        typename OtherAllocator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
     policy_base(
-        const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, Allocator>& other,
+        const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, OtherAllocator>& other,
         const NodePtr current) :
             policy_base(current, other.navigator, other.allocator) {
+    }
+
+    private:
+    constexpr void fix_navigator_root() {
+        if (!this->navigator.get_root()) {
+            this->navigator.set_root(this->current);
+        }
+    }
+
+    protected:
+    const ActualPolicy* cast() const {
+        return static_cast<ActualPolicy*>(this);
+    }
+
+    ActualPolicy* cast() {
+        return static_cast<ActualPolicy*>(this);
     }
 
     public:
@@ -81,28 +108,32 @@ class policy_base {
         return this->navigator;
     }
 
-    const Allocator& get_allocator() const {
+    const allocator_type& get_allocator() const {
         return this->allocator;
     }
 
     ActualPolicy& increment() {
-        this->current = static_cast<ActualPolicy*>(this)->increment_impl();
-        return *static_cast<ActualPolicy*>(this);
+        assert(this->current);
+        this->current = this->cast()->increment_impl();
+        return *this->cast();
     }
 
     ActualPolicy& decrement() {
-        this->current = static_cast<ActualPolicy*>(this)->decrement_impl();
-        return *static_cast<ActualPolicy*>(this);
+        assert(this->current);
+        this->current = this->cast()->decrement_impl();
+        return *this->cast();
     }
 
     ActualPolicy& go_first() {
-        this->current = static_cast<ActualPolicy*>(this)->go_first_impl();
-        return *static_cast<ActualPolicy*>(this);
+        assert(this->navigator.get_root());
+        this->current = this->cast()->go_first_impl();
+        return *this->cast();
     }
 
     ActualPolicy& go_last() {
-        this->current = static_cast<ActualPolicy*>(this)->go_last_impl();
-        return *static_cast<ActualPolicy*>(this);
+        assert(this->navigator.get_root());
+        this->current = this->cast()->go_last_impl();
+        return *this->cast();
     }
 
     ActualPolicy& update(NodePtr current, NodePtr replacement) {
@@ -110,7 +141,7 @@ class policy_base {
         if (current == this->current) {
             this->current = replacement;
         }
-        return *static_cast<ActualPolicy*>(this);
+        return *this->cast();
     }
 
     operator bool() const {
@@ -128,11 +159,16 @@ struct policy_tag {
         typename NodePtr,
         typename NodeNavigator,
         typename Allocator>
-    PolicyTemplate<NodePtr, NodeNavigator, Allocator> get_instance(
+    PolicyTemplate<
+        NodePtr,
+        NodeNavigator,
+        typename std::allocator_traits<Allocator>::template rebind_alloc<NodePtr>>
+    get_instance(
         NodePtr current,
         const NodeNavigator& navigator,
         const Allocator& allocator) const {
-        return PolicyTemplate<NodePtr, NodeNavigator, Allocator>(current, navigator, allocator);
+        using allocator_t = typename std::allocator_traits<Allocator>::template rebind_alloc<NodePtr>;
+        return {current, navigator, static_cast<allocator_t>(allocator)};
     }
 };
 

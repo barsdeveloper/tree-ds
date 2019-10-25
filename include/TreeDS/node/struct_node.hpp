@@ -55,10 +55,10 @@ class struct_node_base {
     template <std::size_t Index>
     auto get_successors(const_index<Index>) const {
         if constexpr (Index == 0) {
-            return std::tie(*this->as_actual_type());
+            return std::tie(*this->cast());
         } else {
             return std::tuple_cat(
-                std::tie(*this->as_actual_type()),
+                std::tie(*this->cast()),
                 this->next_sibling.get_successors(const_index<Index - 1>()));
         }
     }
@@ -66,10 +66,10 @@ class struct_node_base {
     template <std::size_t Index>
     auto get_successors(const_index<Index>) {
         if constexpr (Index == 0) {
-            return std::tie(*this->as_actual_type());
+            return std::tie(*this->cast());
         } else {
             return std::tuple_cat(
-                std::tie(*this->as_actual_type()),
+                std::tie(*this->cast()),
                 this->next_sibling.get_successors(const_index<Index - 1>()));
         }
     }
@@ -84,9 +84,27 @@ class struct_node_base {
     }
 
     template <typename Func, typename Initial>
+    constexpr auto foldl_siblings(Func&& f, Initial&& initial) {
+        if constexpr (struct_node_base::has_next_sibling()) {
+            return this->next_sibling.foldl_siblings(f, f(initial, this->next_sibling));
+        } else {
+            return initial;
+        }
+    }
+
+    template <typename Func, typename Initial>
     static constexpr auto foldr_siblings_types(Func&& f, Initial&& initial) {
         if constexpr (struct_node_base::has_next_sibling()) {
             return f(type_value<NextSibling>(), NextSibling::foldr_siblings_types(f, initial));
+        } else {
+            return initial;
+        }
+    }
+
+    template <typename Func, typename Initial>
+    constexpr auto foldr_siblings(Func&& f, Initial&& initial) {
+        if constexpr (struct_node_base::has_next_sibling()) {
+            return f(this->next_sibling, this->get_next_sibling().foldr_siblings(f, initial));
         } else {
             return initial;
         }
@@ -100,10 +118,10 @@ class struct_node_base {
     }
 
     protected:
-    const Derived* as_actual_type() const {
+    const Derived* cast() const {
         return static_cast<const Derived*>(this);
     }
-    Derived* as_actual_type() {
+    Derived* cast() {
         return static_cast<Derived*>(this);
     }
 
@@ -134,9 +152,9 @@ class struct_node_base {
     }
 
     template <typename Func, typename Initial>
-    constexpr auto foldl_children(Func&& f, Initial&& initial) const {
+    constexpr auto foldl_children(Func&& f, Initial&& initial) {
         if constexpr (struct_node_base::has_first_child()) {
-            return this->first_child.foldl_siblings_types(f, f(initial, this->first_child));
+            return this->first_child.foldl_siblings(f, f(initial, this->first_child));
         } else {
             return initial;
         }
@@ -152,7 +170,7 @@ class struct_node_base {
     }
 
     template <typename Func, typename Initial>
-    constexpr auto foldr_children(Func&& f, Initial&& initial) const {
+    constexpr auto foldr_children(Func&& f, Initial&& initial) {
         if constexpr (struct_node_base::has_first_child) {
             return f(this->first_child, this->first_child.foldr_siblings(f, initial));
         } else {
@@ -220,7 +238,7 @@ class struct_node_base {
     template <typename... Nodes>
     constexpr auto operator()(Nodes&&... nodes) const {
         if constexpr (sizeof...(Nodes) > 0) {
-            return this->as_actual_type()->with_first_child(
+            return this->cast()->with_first_child(
                 foldr(
                     [](auto&& element, auto&& accumulated) {
                         return element.with_next_sibling(accumulated);

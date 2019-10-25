@@ -17,9 +17,6 @@ class nary_node : public node<T, nary_node<T>> {
 
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename>
-    friend class tree_iterator;
-
-    template <typename, typename, typename>
     friend class tree;
 
     template <typename, typename, typename, typename>
@@ -392,13 +389,13 @@ class nary_node : public node<T, nary_node<T>> {
     }
 
     template <typename Allocator>
-    nary_node* assign_child_like(unique_node_ptr<Allocator> child, const nary_node&) {
+    nary_node* assign_child_like(unique_ptr_alloc<Allocator> child, const nary_node&) {
         assert(child);
         return this->append_child(child.release());
     }
 
     template <typename Allocator>
-    unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const nary_node& reference_copy) {
+    unique_ptr_alloc<Allocator> allocate_assign_parent(Allocator& allocator, const nary_node& reference_copy) {
         assert(!reference_copy.is_root());
         auto parent = allocate(allocator, reference_copy.get_parent()->get_value());
         parent->append_child(this);

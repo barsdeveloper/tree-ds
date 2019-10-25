@@ -32,7 +32,7 @@ class pattern {
             return true;
         }
         pattern_tree.reset();
-        if (this->pattern_tree.search_node(tree.raw_root_node(), tree.get_node_allocator())) {
+        if (this->pattern_tree.search_node(tree.get_node_allocator(), tree.root())) {
             this->node_type    = tree_type;
             this->matched_tree = &tree;
             return true;
@@ -41,10 +41,14 @@ class pattern {
     }
 
     public:
+    /// @brief Returns the number of marked nodes within the pattern
     std::size_t mark_count() const {
         return this->pattern_tree.mark_count();
     }
 
+    /**
+     * Determines if there is a match between the pattern and some provided tree
+     */
     template <typename Node, typename Policy, typename Allocator>
     bool search(tree_base<Node, Policy, Allocator>& tree) {
         return this->do_search(tree);
@@ -59,7 +63,7 @@ class pattern {
     void assign_result(tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
-                "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
+                "Tried to assign the matched result to a tree having a different type of nodes.");
         }
         tree = pattern_tree.result(tree.allocator);
     }
@@ -68,7 +72,7 @@ class pattern {
     void assign_mark(capture_index<Index> index, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
-                "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
+                "Tried to assign the matched result to a tree having a different type of nodes.");
         }
         tree = pattern_tree.marked_result(index, tree.allocator);
     }
@@ -77,7 +81,7 @@ class pattern {
     void assign_mark(capture_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
-                "Tried to assign the matched result to a tree having a different type of nodes (binary->nary or nary->binary).");
+                "Tried to assign the matched result to a tree having a different type of nodes.");
         }
         tree = pattern_tree.marked_result(name, tree.allocator);
     }

@@ -35,21 +35,33 @@ void IteratorTest::requirements() {
     QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::in_order>>);
     QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::post_order>>);
     QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::breadth_first>>);
+    QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::leaves>>);
+    QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::siblings>>);
+    QVERIFY(is_default_constructible_v<binary_tree<int>::iterator<policy::fixed>>);
     // Binary - class type
     QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::pre_order>>);
     QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::in_order>>);
     QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::post_order>>);
     QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::leaves>>);
+    QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::siblings>>);
+    QVERIFY(is_default_constructible_v<binary_tree<vector<string>>::iterator<policy::fixed>>);
     // Nary - elementary type
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::pre_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::in_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::post_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::breadth_first>>);
+    QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::leaves>>);
+    QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::siblings>>);
+    QVERIFY(is_default_constructible_v<nary_tree<float*>::iterator<policy::fixed>>);
     // Nary - class type
     QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::pre_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::in_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::post_order>>);
     QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::leaves>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::siblings>>);
+    QVERIFY(is_default_constructible_v<nary_tree<std::list<char>>::iterator<policy::fixed>>);
 
     /*   ---   Copy constructible   ---   */
     // Binary - elementary type
@@ -57,21 +69,33 @@ void IteratorTest::requirements() {
     QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::in_order>>);
     QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::post_order>>);
     QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<double>::iterator<policy::fixed>>);
     // Binary - class type
     QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::pre_order>>);
     QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::in_order>>);
     QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::post_order>>);
     QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_constructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::fixed>>);
     // Nary - elementary type
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::pre_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::in_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::post_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<char>::iterator<policy::fixed>>);
     // Nary - class type
     QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::pre_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::in_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::post_order>>);
     QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_constructible_v<nary_tree<deque<int>>::iterator<policy::fixed>>);
 
     /*   ---   Copy assignable   ---   */
     // Binary - elementary type
@@ -79,21 +103,33 @@ void IteratorTest::requirements() {
     QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::in_order>>);
     QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::post_order>>);
     QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_assignable_v<binary_tree<void*>::iterator<policy::fixed>>);
     // Binary - class type
     QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::pre_order>>));
     QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::in_order>>));
     QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::post_order>>));
     QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::breadth_first>>));
+    QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::leaves>>));
+    QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::siblings>>));
+    QVERIFY((is_copy_assignable_v<binary_tree<NonCopyable>::iterator<policy::fixed>>));
     // Nary - elementary type
     QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::pre_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::in_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::post_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<bool>::iterator<policy::fixed>>);
     // Nary - class type
     QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::pre_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::in_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::post_order>>);
     QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::breadth_first>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::leaves>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::siblings>>);
+    QVERIFY(is_copy_assignable_v<nary_tree<NonCopyable>::iterator<policy::fixed>>);
 
     /*   ---   Destructible   ---   */
     // Binary - elementary type
@@ -101,21 +137,33 @@ void IteratorTest::requirements() {
     QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::in_order>>);
     QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::post_order>>);
     QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::breadth_first>>);
+    QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::leaves>>);
+    QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::siblings>>);
+    QVERIFY(is_destructible_v<binary_tree<int*>::iterator<policy::fixed>>);
     // Binary - class type
     QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::pre_order>>);
     QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::in_order>>);
     QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::post_order>>);
     QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::leaves>>);
+    QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::siblings>>);
+    QVERIFY(is_destructible_v<binary_tree<unique_ptr<list<string>>>::iterator<policy::fixed>>);
     // Nary - elementary type
     QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::pre_order>>);
     QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::in_order>>);
     QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::post_order>>);
     QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::breadth_first>>);
+    QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::leaves>>);
+    QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::siblings>>);
+    QVERIFY(is_destructible_v<nary_tree<bool>::iterator<policy::fixed>>);
     // Nary - class type
     QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::pre_order>>);
     QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::in_order>>);
     QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::post_order>>);
     QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::breadth_first>>);
+    QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::leaves>>);
+    QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::siblings>>);
+    QVERIFY(is_destructible_v<nary_tree<queue<int>>::iterator<policy::fixed>>);
 }
 
 void IteratorTest::test1() {
@@ -124,10 +172,10 @@ void IteratorTest::test1() {
     auto start = tree.begin();
     decltype(tree)::iterator<policy::post_order> related(start);
 
-    QVERIFY(unrelated != related);
-    QVERIFY(related != unrelated);
-    QVERIFY(!(unrelated == related));
-    QVERIFY(!(related == unrelated));
+    QVERIFY(unrelated == related);
+    QVERIFY(related == unrelated);
+    QVERIFY(!(unrelated != related));
+    QVERIFY(!(related != unrelated));
 
     QVERIFY(start == related);
     QVERIFY(related == start);
@@ -219,6 +267,13 @@ void IteratorTest::test3() {
                 n('g'),
                 n('h')),
             n('d'))};
+
+    auto it_r = tree.root();
+    QCOMPARE(*it_r, 'a');
+    ++it_r;
+    QCOMPARE(it_r.get_raw_node(), nullptr);
+    ++it_r;
+    QCOMPARE(*it_r, 'a');
 
     auto it_1 = tree.begin();
     it_1.go_last_child();

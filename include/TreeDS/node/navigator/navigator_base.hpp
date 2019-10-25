@@ -10,10 +10,6 @@ namespace md {
 template <typename Derived, typename NodePtr>
 class navigator_base {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename>
-    friend class node_navigator;
-
     /*   ---   TYPES   ---   */
     public:
     using node_pointer = NodePtr;
@@ -59,16 +55,12 @@ class navigator_base {
 
     /*   ---   METHODS   ---   */
     protected:
-    const Derived* cast() const {
-        return static_cast<const Derived*>(this);
-    }
-
     Derived* cast() {
         return static_cast<Derived*>(this);
     }
 
     template <bool Left>
-    NodePtr get_other_branch(NodePtr node) const {
+    NodePtr get_other_branch(NodePtr node) {
         int relative_level    = 0;
         NodePtr deepest_child = node;
         NodePtr crossed       = NodePtr();
@@ -127,7 +119,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_row_extremum(NodePtr from) const {
+    NodePtr get_row_extremum(NodePtr from) {
         if (from == this->root) {
             return from;
         }
@@ -180,7 +172,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_highest_leaf() const {
+    NodePtr get_highest_leaf() {
         return keep_calling(
             this->root,
             [this](NodePtr node) {
@@ -191,7 +183,7 @@ class navigator_base {
     }
 
     template <bool Left>
-    NodePtr get_deepest_extremum_child() const {
+    NodePtr get_deepest_extremum_child() {
         int current_level    = 0;
         int deepest_level    = 0;
         NodePtr current_node = this->root;
@@ -225,33 +217,33 @@ class navigator_base {
     }
 
     public:
-    bool is_valid(NodePtr node) const {
+    bool is_valid(NodePtr node) {
         return node != nullptr;
     }
 
-    bool is_root(NodePtr node) const {
+    bool is_root(NodePtr node) {
         return node == this->root;
     }
 
-    bool is_first_child(NodePtr node) const {
+    bool is_first_child(NodePtr node) {
         return !this->cast()->is_root(node) && node == node->get_parent()->get_first_child();
     }
 
-    bool is_last_child(NodePtr node) const {
+    bool is_last_child(NodePtr node) {
         return !this->cast()->is_root(node) && node == node->get_parent()->get_last_child();
     }
 
     template <
         typename N = NodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    bool is_left_child(N node) const {
+    bool is_left_child(N node) {
         return !this->cast()->is_root(node) && node == node->get_parent()->get_left_child();
     }
 
     template <
         typename N = NodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    bool is_right_child(N node) const {
+    bool is_right_child(N node) {
         return !this->cast()->is_root(node) && node == node->get_parent()->get_right_child();
     }
 
@@ -259,73 +251,77 @@ class navigator_base {
         return this->root;
     }
 
-    NodePtr get_parent(NodePtr node) const {
+    void set_root(NodePtr root) {
+        this->root = root;
+    }
+
+    NodePtr get_parent(NodePtr node) {
         return !this->cast()->is_root(node) ? node->get_parent() : NodePtr();
     }
 
-    NodePtr get_prev_sibling(NodePtr node) const {
+    NodePtr get_prev_sibling(NodePtr node) {
         return !this->cast()->is_root(node) ? node->get_prev_sibling() : NodePtr();
     }
 
-    NodePtr get_next_sibling(NodePtr node) const {
+    NodePtr get_next_sibling(NodePtr node) {
         return !this->cast()->is_root(node) ? node->get_next_sibling() : NodePtr();
     }
 
-    NodePtr get_first_child(NodePtr node) const {
+    NodePtr get_first_child(NodePtr node) {
         return node->get_first_child();
     }
 
-    NodePtr get_last_child(NodePtr node) const {
+    NodePtr get_last_child(NodePtr node) {
         return node->get_last_child();
     }
 
-    NodePtr get_child(NodePtr node, std::size_t index) const {
+    NodePtr get_child(NodePtr node, std::size_t index) {
         return node->get_child(index);
     }
 
     template <
         typename N = NodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    NodePtr get_left_child(N node) const {
+    NodePtr get_left_child(N node) {
         return node->get_left_child();
     }
 
     template <
         typename N = NodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    NodePtr get_right_child(N node) const {
+    NodePtr get_right_child(N node) {
         return node->get_right_child();
     }
 
-    NodePtr get_left_branch(NodePtr node) const {
+    NodePtr get_left_branch(NodePtr node) {
         return this->cast()->template get_other_branch<true>(node);
     }
 
-    NodePtr get_right_branch(NodePtr node) const {
+    NodePtr get_right_branch(NodePtr node) {
         return this->cast()->template get_other_branch<false>(node);
     }
 
-    NodePtr get_same_row_leftmost(NodePtr from) const {
+    NodePtr get_same_row_leftmost(NodePtr from) {
         return this->cast()->template get_row_extremum<true>(from);
     }
 
-    NodePtr get_same_row_rightmost(NodePtr from) const {
+    NodePtr get_same_row_rightmost(NodePtr from) {
         return this->cast()->template get_row_extremum<false>(from);
     }
 
-    NodePtr get_highest_left_leaf() const {
+    NodePtr get_highest_left_leaf() {
         return this->cast()->template get_highest_leaf<true>();
     }
 
-    NodePtr get_highest_right_leaf() const {
+    NodePtr get_highest_right_leaf() {
         return this->cast()->template get_highest_leaf<false>();
     }
 
-    NodePtr get_deepest_leftmost_leaf() const {
+    NodePtr get_deepest_leftmost_leaf() {
         return this->cast()->template get_deepest_extremum_child<true>();
     }
 
-    NodePtr get_deepest_rightmost_leaf() const {
+    NodePtr get_deepest_rightmost_leaf() {
         return this->cast()->template get_deepest_extremum_child<false>();
     }
 };

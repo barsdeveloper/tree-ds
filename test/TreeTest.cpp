@@ -25,7 +25,6 @@ class TreeTest : public QObject {
     void binaryTree();
     void binaryTree2();
     void nonCopyable();
-    void forbiddenOperations();
 };
 
 void TreeTest::naryTree() {
@@ -213,8 +212,6 @@ void TreeTest::naryTree() {
     QCOMPARE(n_f->get_prev_sibling(), n_d);
     QCOMPARE(n_f->get_next_sibling(), nullptr);
     QCOMPARE(n_f->following_siblings(), 0);
-
-    // Erase
 
     // Erase root
     auto end_it
@@ -426,44 +423,6 @@ void TreeTest::nonCopyable() {
     QCOMPARE(*it++, NonCopyable('a', 1));
     QCOMPARE(*it++, NonCopyable('z', 100));
     QCOMPARE(it, itEnd);
-}
-
-void TreeTest::forbiddenOperations() {
-    binary_tree<std::string> binEmpty;
-    binary_tree<std::string> bin(
-        n("a")(
-            n("b")(
-                n(),
-                n("d")(
-                    n("e"),
-                    n("f"))),
-            n("c")));
-
-    QVERIFY(bin != binEmpty);
-    QVERIFY(binEmpty != bin);
-    QVERIFY(!(bin == binEmpty));
-    QVERIFY(!(binEmpty == bin));
-
-    // Iterator belonging to another tree.
-    QVERIFY_EXCEPTION_THROWN(
-        binEmpty.emplace_over(bin.begin(), "x"),
-        std::logic_error);
-    QVERIFY_EXCEPTION_THROWN(
-        bin.insert_over(binEmpty.begin(), std::string("x")),
-        std::logic_error);
-    QVERIFY_EXCEPTION_THROWN(
-        bin.erase(binEmpty.begin(policy::post_order())),
-        std::logic_error);
-    // Iterator pointing to end.
-    QVERIFY_EXCEPTION_THROWN(
-        bin.emplace_over(bin.end(), "x"),
-        std::logic_error);
-    QVERIFY_EXCEPTION_THROWN(
-        bin.erase(bin.end(policy::post_order())),
-        std::logic_error);
-    QVERIFY_EXCEPTION_THROWN(
-        binEmpty.erase(bin.begin(policy::post_order()), bin.end(policy::post_order())),
-        std::logic_error);
 }
 
 QTEST_MAIN(TreeTest);

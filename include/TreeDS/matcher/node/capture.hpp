@@ -16,11 +16,6 @@ class capture_node : public matcher<
                          Captured,
                          NextSibling> {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
-    friend class matcher;
-    friend class pattern<capture_node>;
-
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {Captured::info};
@@ -30,19 +25,35 @@ class capture_node : public matcher<
     using matcher<capture_node, Name, Captured, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
-    protected:
-    template <typename NodeAllocator>
-    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        return std::get<0>(this->get_children()).search_node(&node, allocator);
-    }
-
-    template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        // Node retrieval is delegated to the captured pattern
-        return std::get<0>(this->get_children()).result(allocator);
-    }
-
     public:
+    template <
+        typename NodeAllocator,
+        typename Iterator,
+        typename AckowledgeFunction = detail::empty_t,
+        typename RematchFunction    = detail::empty_t>
+    bool search_node_this(
+        NodeAllocator&& allocator,
+        Iterator&& it,
+        AckowledgeFunction&& ackowledge = detail::empty_t(),
+        RematchFunction&& rematch       = detail::empty_t()) {
+        if (this->get_first_child().search_node(allocator, it, ackowledge, rematch)) {
+            this->target_node = this->get_first_child().get_node(allocator);
+            return true;
+        }
+        return false;
+    }
+
+    template <typename NodeAllocator, typename Iterator>
+    bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
+        return this->get_first_child().search_node(allocator, it);
+    }
+
+    template <typename NodeAllocator>
+    unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
+        // Node retrieval is delegated to the captured pattern
+        return this->get_first_child().result(allocator);
+    }
+
     template <typename... Nodes>
     constexpr capture_node<Name, Nodes...> replace_children(Nodes&... nodes) const {
         static_assert(

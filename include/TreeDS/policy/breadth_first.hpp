@@ -4,6 +4,7 @@
 #include <memory> // std::allocator_traits
 
 #include <TreeDS/policy/policy_base.hpp>
+#include <TreeDS/utility.hpp>
 
 namespace md::detail {
 

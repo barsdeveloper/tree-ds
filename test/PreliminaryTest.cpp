@@ -23,6 +23,7 @@ void PreliminaryTest::emptyBinary() {
     const binary_tree<Foo>& cRef = t;
 
     // The trees is empty.
+    QVERIFY(!t.root());
     QCOMPARE(t.size(), 0);
     QCOMPARE(t.arity(), 0);
     QVERIFY(t.empty());
@@ -50,11 +51,14 @@ void PreliminaryTest::emptyBinary() {
     QVERIFY(!t.empty());
 
     // All iterators begin from the unique element.
+    QCOMPARE(*t.root(), Foo(67, 93));
+    QCOMPARE(*t.croot(), Foo(67, 93));
     QCOMPARE(*t.begin(), Foo(67, 93));
     QCOMPARE(*t.cbegin(), Foo(67, 93));
     QCOMPARE(*t.rbegin(), Foo(67, 93));
     QCOMPARE(*t.crbegin(), Foo(67, 93));
     QCOMPARE(*cRef.begin(), Foo(67, 93));
+    QCOMPARE(*cRef.root(), Foo(67, 93));
 
     // Iterator no more point to the end.
     QVERIFY(t.begin() != t.end());

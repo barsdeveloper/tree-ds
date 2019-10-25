@@ -18,10 +18,6 @@ class one_matcher : public matcher<
                         FirstChild,
                         NextSibling> {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
-    friend class matcher;
-
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
@@ -34,46 +30,44 @@ class one_matcher : public matcher<
         // Possessive
         true};
 
-    /*   ---   CONSTRUCTOR   ---   */
+    /*   ---   CONSTRUCTORS   ---   */
     using matcher<one_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
-    template <typename NodeAllocator>
-    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        if (!this->match_value(node.get_value())) {
+    template <typename NodeAllocator, typename Iterator>
+    bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
+        if (!this->match_value(*it)) {
             return false;
         }
-        auto target = policy::siblings().get_instance(
-            node.get_first_child(),
-            node_navigator<allocator_value_type<NodeAllocator>*>(),
-            allocator);
-        // Pattern search children of the pattern
-        auto do_search_child = [&](auto& it, auto& child) -> bool {
-            return child.search_node(it.get_current_node(), allocator);
-        };
-        return this->search_children(allocator, std::move(target), do_search_child);
+        using basic_navigator = node_navigator<typename Iterator::node_type*>;
+        // Iterator that gives the children potential nodes to match
+        auto target_it
+            = it
+                  .other_policy(policy::siblings())
+                  .other_navigator(basic_navigator())
+                  .go_first_child();
+        return this->search_node_child(allocator, std::move(target_it));
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        unique_node_ptr<NodeAllocator> result = this->clone_node(allocator);
-        auto attach_child                     = [&](auto& child) {
-            if (!child.empty()) {
-                result->assign_child_like(
-                    child.result(allocator),
-                    *child.get_node(allocator));
-            }
-        };
-        std::apply(
-            [&](auto&... children) {
-                (..., attach_child(children));
+    unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
+        unique_ptr_alloc<NodeAllocator> node = this->clone_node(allocator);
+        this->foldl_children(
+            [&](bool, auto& child) {
+                if (!child.empty()) {
+                    node->assign_child_like(
+                        child.result(allocator),
+                        *child.get_node(allocator));
+                }
+                return true;
             },
-            this->get_children());
-        return std::move(result);
+            true);
+        return std::move(node);
     }
 
     template <typename... Nodes>
-    constexpr one_matcher<ValueMatcher, Nodes...> replace_children(Nodes&... nodes) const {
+    constexpr one_matcher<ValueMatcher, Nodes...>
+    replace_children(Nodes&... nodes) const {
         return {this->value, nodes...};
     }
 

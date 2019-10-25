@@ -18,10 +18,6 @@ class opt_matcher : public matcher<
                         FirstChild,
                         NextSibling> {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
-    friend class matcher;
-
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
@@ -42,38 +38,37 @@ class opt_matcher : public matcher<
     using matcher<opt_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
-    template <typename NodeAllocator>
-    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        if constexpr (opt_matcher::info.reluctant && opt_matcher::child_may_steal_target()) {
-            if (this->let_child_steal(node, allocator)) {
-                return true;
-            }
-        }
-        if (!this->match_value(node.get_value())) {
-            if constexpr (opt_matcher::info.possessive) {
-                return false;
+    template <typename NodeAllocator, typename Iterator>
+    bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
+        if (!this->match_value(*it)) {
+            if constexpr (opt_matcher::child_may_steal_target()) {
+                return this->search_node_child(allocator, it.other_policy(policy::fixed()));
             } else {
-                return this->let_child_steal(node, allocator);
+                return false;
             }
         }
-        auto target = policy::siblings().get_instance(
-            node.get_first_child(),
-            node_navigator<allocator_value_type<NodeAllocator>*>(),
-            allocator);
+        using basic_navigator = node_navigator<typename Iterator::node_type*>;
+        auto target_it
+            = it
+                  .other_policy(policy::siblings())
+                  .other_navigator(basic_navigator())
+                  .go_first_child();
         // Match children of the pattern
-        auto do_search_child = [&](auto& it, auto& child) -> bool {
-            return child.search_node(it.get_current_node(), allocator);
-        };
-        bool children_matched = this->search_children(allocator, std::move(target), do_search_child);
-        if (!opt_matcher::info.possessive && opt_matcher::child_may_steal_target() && !children_matched) {
-            return this->let_child_steal(node, allocator);
+        bool result = this->search_node_child(allocator, std::move(target_it));
+        if constexpr (
+            !opt_matcher::info.possessive
+            && opt_matcher::child_may_steal_target()) {
+            // Every other match failed, we try the last possibility: one of the children matches this node
+            if (!result) {
+                return this->search_node_child(allocator, it.other_policy(policy::fixed()));
+            }
         }
-        return children_matched;
+        return result;
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        unique_node_ptr<NodeAllocator> result;
+    unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
+        unique_ptr_alloc<NodeAllocator> result;
         if constexpr (!opt_matcher::info.possessive) {
             if (this->did_child_steal_target(result, allocator)) {
                 return std::move(result);

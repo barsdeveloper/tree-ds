@@ -187,15 +187,6 @@ class tree_base {
         return std::make_reverse_iterator(this->cbegin(policy));
     }
 
-    template <
-        typename OtherTree,
-        typename OtherPolicy,
-        typename OtherNavigator,
-        typename = std::enable_if_t<std::is_same_v<typename OtherTree::node_type, node_type>>>
-    bool is_own_iterator(const tree_iterator<OtherTree, OtherPolicy, OtherNavigator>& it) const {
-        return it.pointed_tree == this;
-    }
-
     /*   ---   CAPACITY METHODS   ---   */
     public:
     /**

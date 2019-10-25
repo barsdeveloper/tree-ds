@@ -61,9 +61,6 @@ class tree_view : public tree_base<const Node, Policy, Allocator> {
         static_assert(
             std::is_same_v<std::decay_t<Node>, std::decay_t<typename IteratorTree::node_type>>,
             "The iterator must belong to the tree.");
-        if (!tree.is_own_iterator(position)) {
-            throw std::logic_error("Tried to create an nary_tree_view with an iterator not belonging to the tree.");
-        }
     }
 };
 

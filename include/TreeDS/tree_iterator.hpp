@@ -59,7 +59,6 @@ class tree_iterator {
     /*   ---   ATTRIBUTES   ---   */
     protected:
     actual_policy_type policy {};
-    tree_type* pointed_tree = nullptr; // nullptr => no container associated (default iterator)
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -67,12 +66,15 @@ class tree_iterator {
     constexpr tree_iterator() {
     }
 
+    tree_iterator(const actual_policy_type& policy) :
+            policy(policy) {
+    }
+
     tree_iterator(tree_type& tree) :
             policy(Policy().get_instance(
                 static_cast<node_type*>(nullptr),
                 navigator_type(tree.raw_root_node()),
-                tree.get_node_allocator())),
-            pointed_tree(&tree) {
+                tree.get_node_allocator())) {
     }
 
     /**
@@ -84,8 +86,7 @@ class tree_iterator {
         typename OtherNodeNavigator = navigator_type,
         typename                    = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, navigator_type>>>
     tree_iterator(tree_type& tree, node_type* current_node, OtherNodeNavigator navigator) :
-            policy(Policy().get_instance(current_node, navigator, tree.get_node_allocator())),
-            pointed_tree(&tree) {
+            policy(Policy().get_instance(current_node, navigator, tree.get_node_allocator())) {
     }
 
     // Conversion constructor from iterator to const_iterator
@@ -95,8 +96,19 @@ class tree_iterator {
         typename = std::enable_if_t<std::is_convertible_v<OtherTree*, Tree*>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     tree_iterator(const tree_iterator<OtherTree, Policy, OtherNodeNavigator>& other) :
-            policy(other.policy),
-            pointed_tree(other.pointed_tree) {
+            policy(other.policy) {
+    }
+
+    // Conversion constructor from iterator to const_iterator
+    template <
+        typename OtherTree,
+        typename OtherNodeNavigator,
+        typename = std::enable_if_t<std::is_convertible_v<OtherTree*, Tree*>>,
+        typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
+    tree_iterator(
+        const tree_iterator<OtherTree, Policy, OtherNodeNavigator>& other,
+        node_type* current_node) :
+            policy(other.policy, current_node) {
     }
 
     // Conversion copy assignment from iterator to const_iterator
@@ -106,16 +118,22 @@ class tree_iterator {
         typename = std::enable_if_t<std::is_convertible_v<OtherTree*, Tree*>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator>>>
     tree_iterator& operator=(const tree_iterator<OtherTree, Policy, OtherNodeNavigator>& other) {
-        this->policy       = other.policy;
-        this->pointed_tree = other.pointed_tree;
+        this->policy = other.policy;
         return *this;
     }
 
     template <typename OtherPolicy>
-    tree_iterator<Tree, OtherPolicy, NodeNavigator> other_policy(OtherPolicy) {
-        return this->pointed_tree != nullptr
-            ? tree_iterator<Tree, OtherPolicy, NodeNavigator>(*this->pointed_tree, this->get_raw_node(), this->get_navigator())
-            : tree_iterator<Tree, OtherPolicy, NodeNavigator>();
+    tree_iterator<Tree, OtherPolicy, NodeNavigator>
+    other_policy(OtherPolicy) {
+        return tree_iterator<Tree, OtherPolicy, NodeNavigator>(
+            OtherPolicy().get_instance(this->get_raw_node(), this->get_navigator(), this->policy.get_allocator()));
+    }
+
+    template <typename OtherNavigator>
+    tree_iterator<Tree, Policy, OtherNavigator>
+    other_navigator(OtherNavigator&& navigator) {
+        return tree_iterator<Tree, Policy, OtherNavigator>(
+            Policy().get_instance(this->get_raw_node(), navigator, this->policy.get_allocator()));
     }
 
     /*   ---   METHODS   ---   */
@@ -129,9 +147,10 @@ class tree_iterator {
             std::is_same_v<std::decay_t<policy_type>, typename TargetType::policy_type>,
             "The requsted type must have the same node type as this iterator");
         return TargetType(
-            const_cast<std::remove_const_t<Tree>&>(*this->pointed_tree),
-            const_cast<std::remove_const_t<node_type>*>(this->get_raw_node()),
-            typename TargetType::navigator_type(const_cast<std::remove_const_t<node_type>*>(this->policy.get_navigator().get_root())));
+            typename TargetType::policy_type().get_instance(
+                const_cast<typename TargetType::node_type*>(this->get_raw_node()),
+                typename TargetType::navigator_type(const_cast<std::remove_const_t<node_type>*>(this->policy.get_navigator().get_root())),
+                static_cast<typename TargetType::actual_policy_type::allocator_type>(this->policy.get_allocator())));
     }
 
     template <typename F, typename... AdditionalArgs>
@@ -148,6 +167,10 @@ class tree_iterator {
     public:
     navigator_type get_navigator() const {
         return this->policy.get_navigator();
+    }
+
+    const node_type* get_raw_root() const {
+        return this->get_navigator().get_root();
     }
 
     const node_type* get_raw_node() const {
@@ -167,19 +190,19 @@ class tree_iterator {
     }
 
     value_type& operator*() {
-        return this->policy.get_current_node()->value;
+        return this->policy.get_current_node()->get_value();
     }
 
     const value_type& operator*() const {
-        return this->get_raw_node()->value;
+        return this->get_raw_node()->get_value();
     }
 
     value_type* operator->() {
-        return &(this->get_raw_node()->value);
+        return &(this->get_raw_node()->get_value());
     }
 
     const value_type* operator->() const {
-        return &(this->get_raw_node()->value);
+        return &(this->get_raw_node()->get_value());
     }
 
     /*   ---   COMPARISON   ---   */
@@ -189,8 +212,7 @@ class tree_iterator {
         typename = std::enable_if_t<std::is_convertible_v<OtherTree*, Tree*> || std::is_convertible_v<Tree*, OtherTree*>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodeNavigator, NodeNavigator> || std::is_convertible_v<NodeNavigator, OtherNodeNavigator>>>
     bool operator==(const tree_iterator<OtherTree, Policy, OtherNodeNavigator>& other) const {
-        return this->pointed_tree == other.pointed_tree
-            && this->get_raw_node() == other.get_raw_node();
+        return this->get_raw_node() == other.get_raw_node() && this->get_raw_root() == other.get_raw_root();
     }
 
     template <
@@ -229,7 +251,7 @@ class tree_iterator {
     tree_iterator& operator++() {
         if (this->get_raw_node()) {
             this->policy.increment();
-        } else if (this->pointed_tree && this->pointed_tree->raw_root_node()) {
+        } else if (this->get_raw_root()) {
             /*
              * If iterator is at the end():
              *     normal iterator  => incremented from end() => go to its first element (rewind)
@@ -250,7 +272,7 @@ class tree_iterator {
     tree_iterator& operator--() {
         if (this->policy.get_current_node()) {
             this->policy.decrement();
-        } else if (this->pointed_tree && this->pointed_tree->raw_root_node()) {
+        } else if (this->get_raw_root()) {
             /*
              * If iterator is at the end():
              *     normal iterator  => decremented from end() => go to its last element (before end())
@@ -270,6 +292,10 @@ class tree_iterator {
 
     void update(node_type& current, node_type* replacement) {
         this->policy.update(&current, replacement);
+    }
+
+    operator bool() const {
+        return static_cast<bool>(this->get_raw_node());
     }
 };
 

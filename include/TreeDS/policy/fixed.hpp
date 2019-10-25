@@ -9,25 +9,25 @@ class fixed_impl final
         : public policy_base<fixed_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
     protected:
-    NodePtr parent = nullptr;
+    NodePtr initial = this->current;
 
     public:
     using policy_base<fixed_impl, NodePtr, NodeNavigator, Allocator>::policy_base;
 
     NodePtr increment_impl() {
-        return this->navigator.get_next_sibling(*this->current);
+        return NodePtr();
     }
 
     NodePtr decrement_impl() {
-        return this->navigator.get_prev_sibling(*this->current);
+        return NodePtr();
     }
 
     NodePtr go_first_impl() {
-        return this->navigator.get_first_child(*this->parent);
+        return this->initial;
     }
 
     NodePtr go_last_impl() {
-        return this->navigator.get_last_child(*this->parent);
+        return this->initial;
     }
 };
 

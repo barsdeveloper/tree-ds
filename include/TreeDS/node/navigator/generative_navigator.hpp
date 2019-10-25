@@ -15,10 +15,6 @@ class generative_navigator
               multiple_node_pointer<TargetNodePtr, GeneratedNodePtr>,
               Predicate> {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename>
-    friend class node_navigator;
-
     /*   ---   TYPES   ---   */
     public:
     using generated_node_type = std::remove_pointer_t<GeneratedNodePtr>;
@@ -27,7 +23,7 @@ class generative_navigator
     using typename node_pred_navigator<node_ptrs_t, Predicate>::node_type;
 
     /*   ---   ATTRIBUTES   ---   */
-    NodeAllocator& allocator;
+    NodeAllocator allocator;
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -59,11 +55,11 @@ class generative_navigator
     /*   ---   METHODS   ---   */
     private:
     template <typename NavigateF, typename AttachF>
-    node_ptrs_t do_navigate_generate(node_ptrs_t& node, NavigateF&& navigate, AttachF&& attach_node) const {
+    node_ptrs_t do_navigate_generate(node_ptrs_t& node, NavigateF&& navigate, AttachF&& attach_node) {
         assert(node.all_valid());
         node_ptrs_t result(navigate(this, node));
         auto&& [reference_node, generated] = result.get_pointers();
-        unique_node_ptr<NodeAllocator> assigned_child;
+        unique_ptr_alloc<NodeAllocator> assigned_child;
         if (reference_node) {
             if (!generated) {
                 result.assign_pointer(1, allocate(this->allocator, reference_node->get_value()).release());
@@ -71,7 +67,7 @@ class generative_navigator
             if (result.is_pointer_assigned(1)) {
                 attach_node(
                     std::get<1>(node.get_pointers()),
-                    unique_node_ptr<NodeAllocator>(generated),
+                    unique_ptr_alloc<NodeAllocator>(generated),
                     *reference_node);
             }
         }
@@ -79,32 +75,32 @@ class generative_navigator
     }
 
     public:
-    node_ptrs_t get_prev_sibling(node_ptrs_t node) const {
+    node_ptrs_t get_prev_sibling(node_ptrs_t node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_prev_sibling),
-            [](auto* generated, unique_node_ptr<NodeAllocator> new_node, const auto& reference_node) {
+            [](auto* generated, unique_ptr_alloc<NodeAllocator> new_node, const auto& reference_node) {
                 return generated->get_parent()->assign_child_like(std::move(new_node), reference_node);
             });
     }
 
-    node_ptrs_t get_next_sibling(node_ptrs_t node) const {
+    node_ptrs_t get_next_sibling(node_ptrs_t node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_next_sibling),
-            [](auto* generated, unique_node_ptr<NodeAllocator> new_node, const auto& reference_node) {
+            [](auto* generated, unique_ptr_alloc<NodeAllocator> new_node, const auto& reference_node) {
                 return generated->get_parent()->assign_child_like(std::move(new_node), reference_node);
             });
     }
 
-    node_ptrs_t get_first_child(node_ptrs_t node) const {
+    node_ptrs_t get_first_child(node_ptrs_t node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_first_child),
             std::mem_fn(&generated_node_type::template assign_child_like<NodeAllocator>));
     }
 
-    node_ptrs_t get_last_child(node_ptrs_t node) const {
+    node_ptrs_t get_last_child(node_ptrs_t node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::get_last_child),
@@ -114,7 +110,7 @@ class generative_navigator
     template <
         typename N = TargetNodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    node_ptrs_t get_left_child(N node) const {
+    node_ptrs_t get_left_child(N node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_left_child<N>),
@@ -124,7 +120,7 @@ class generative_navigator
     template <
         typename N = TargetNodePtr,
         typename   = std::enable_if_t<is_binary_node_pointer<N>>>
-    node_ptrs_t get_right_child(N node) const {
+    node_ptrs_t get_right_child(N node) {
         return this->do_navigate_generate(
             node,
             std::mem_fn(&node_pred_navigator<node_ptrs_t, Predicate>::template get_right_child<N>),

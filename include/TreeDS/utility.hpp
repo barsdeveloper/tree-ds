@@ -28,11 +28,6 @@ class generative_navigator;
 template <typename, typename...>
 class multiple_node_pointer;
 
-namespace detail {
-    template <typename, typename, typename>
-    class breadth_first_impl;
-}
-
 /*   ---   TYPE TRAITS   ---   */
 template <typename T, typename = void>
 constexpr bool is_equality_comparable = false;
@@ -222,21 +217,6 @@ std::size_t calculate_arity(const Node& node, std::size_t max_expected_arity) {
     return arity;
 }
 
-template <typename TargetPtr, typename GeneratedPtr, typename Predicate, typename NodeAllocator>
-auto create_breadth_first_generative_iterator(
-    TargetPtr target,
-    GeneratedPtr generated,
-    Predicate&& predicate,
-    NodeAllocator&& allocator) {
-    multiple_node_pointer roots(target, generated);
-    generative_navigator nav(roots, predicate, allocator);
-    detail::breadth_first_impl<decltype(roots), decltype(nav), std::decay_t<NodeAllocator>> it(
-        roots,
-        nav,
-        allocator);
-    return it;
-}
-
 namespace detail {
     /***
      * @brief Retrieve unsing a runtime index the element of a tuple.
@@ -303,6 +283,8 @@ constexpr auto foldr(F&& f, Initial&& initial, First&& x, Remainning&&... xs) {
 } // namespace md
 
 #ifndef NDEBUG
+#include <iomanip> // std::setfill, std::setw
+#include <ios>     // std::hex
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -341,6 +323,8 @@ void code_like_print(std::ostream& stream, const T& c) {
         stream << c;
     } else if constexpr (std::is_convertible_v<T, std::string>) {
         stream << static_cast<std::string>(c);
+    } else {
+        stream << "_";
     }
 }
 
@@ -352,18 +336,13 @@ void code_like_print(std::ostream& stream, const T& c) {
 #define MD_PRINT_TREE_INDENTATION 4
 #endif
 
-#ifndef MD_PRINT_TREE_ADDRESS
-#define MD_PRINT_TREE_ADDRESS false
-#endif
-
 #ifndef MD_PRINT_TREE_ADDRESS_DIGITS
-#define MD_PRINT_TREE_ADDRESS_DIGITS 4
+#define MD_PRINT_TREE_ADDRESS_DIGITS 0
 #endif
 
 struct print_preferences {
     unsigned indentation_increment = MD_PRINT_TREE_INDENTATION;
     int limit                      = MD_PRINT_TREE_MAX_NODES;
-    bool address                   = static_cast<bool>(MD_PRINT_TREE_ADDRESS);
     unsigned address_digits        = MD_PRINT_TREE_ADDRESS_DIGITS;
 };
 
@@ -378,8 +357,12 @@ void print_node(
     }
     os << std::string(indentation, ' ') << "n(";
     code_like_print(os, node.get_value());
-    if (preferences.address) {
-        os << " @" << std::hex << (reinterpret_cast<std::size_t>(&node) % (std::size_t(1u) << 4u * preferences.address_digits));
+    if (preferences.address_digits > 0) {
+        os << " @"
+           << std::setfill('0')
+           << std::setw(preferences.address_digits)
+           << std::hex
+           << (reinterpret_cast<std::size_t>(&node) & ((std::size_t(1u) << (4u * preferences.address_digits)) - 1));
     }
     os << ')';
     const Node* current = node.get_first_child();

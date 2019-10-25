@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 
 #include <TreeDS/matcher/node/matcher.hpp>
@@ -25,13 +26,6 @@ class any_matcher : public matcher<
                         FirstChild,
                         NextSibling> {
 
-    /*   ---   FRIENDS   ---   */
-    template <typename, typename, typename, typename>
-    friend class matcher;
-    friend class pattern<any_matcher>;
-    template <quantifier Q, typename VM>
-    friend any_matcher<Q, VM> star(const VM&);
-
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
@@ -47,30 +41,35 @@ class any_matcher : public matcher<
         // It is reluctant if it has that quantifier
         Quantifier == quantifier::RELUCTANT,
         Quantifier == quantifier::POSSESSIVE};
-    void* subtree_cut = nullptr;
+    const void* subtree_cut = nullptr;
 
     /*   ---   CONSTRUCTORS   ---   */
     using matcher<any_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
     private:
-    template <typename NodeAllocator>
-    auto get_match_iterator(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        using node_t   = allocator_value_type<NodeAllocator>;
-        auto predicate = [this](node_t& n) {
+    template <typename NodeAllocator, typename Iterator>
+    auto get_match_iterator(NodeAllocator& allocator, Iterator& it) {
+        using tree_t     = typename Iterator::tree_type;
+        using node_ptr_t = decltype(it.get_raw_node());
+        auto predicate   = [this](node_ptr_t node_ptr) {
             // Parent always present (because we start matching from the child of node)
             if constexpr (any_matcher::info.possessive) {
-                return this->match_value(n.get_parent()->get_value());
+                return this->match_value(node_ptr->get_parent()->get_value());
             } else {
-
-                return n.get_parent() != this->subtree_cut && this->match_value(n.get_parent()->get_value());
+                return node_ptr->get_parent() != this->subtree_cut && this->match_value(node_ptr->get_parent()->get_value());
             }
         };
-        node_pred_navigator<node_t*, decltype(predicate)> navigator(&node, predicate);
+        using navigator_t = node_pred_navigator<node_ptr_t, decltype(predicate)>;
+        navigator_t navigator(it.get_raw_node(), predicate);
         if constexpr (any_matcher::info.possessive) {
-            return policy::leaves().get_instance(static_cast<node_t*>(nullptr), navigator, allocator).go_first();
+            return ++tree_iterator<tree_t, policy::leaves, navigator_t>(
+                policy::leaves()
+                    .get_instance(static_cast<node_ptr_t>(nullptr), navigator, allocator)
+                    .go_first());
         } else {
-            return policy::pre_order().get_instance(&node, navigator, allocator);
+            return ++tree_iterator<tree_t, policy::pre_order, navigator_t>(
+                policy::pre_order().get_instance(it.get_raw_node(), navigator, allocator));
         }
     }
 
@@ -92,32 +91,30 @@ class any_matcher : public matcher<
         };
     }
 
-    template <typename MatchFunction, typename NodeAllocator>
-    auto get_backtrack_funcion(MatchFunction& do_match, allocator_value_type<NodeAllocator>&, NodeAllocator& allocator) {
+    template <typename NodeAllocator>
+    auto get_backtrack_funcion(NodeAllocator& allocator) {
         if constexpr (any_matcher::info.possessive) {
             /*
              * Possessive any_matcher matches any node it can then tries to match its children just on leaf nodes. It
              * cannot rematch in case of children bad match (a match that leaves the other children without a match)
              * because the leaves constitutes a linear data structure.
              */
-            return nullptr;
+            return detail::empty_t();
         } else {
-            return [&](auto& it, auto& child) -> bool {
+            return [&](auto& matcher, auto& it) -> bool {
                 this->subtree_cut = nullptr;
-                if (child.empty()) {
-                    return false;
+                if (matcher.empty()) {
+                    return false; // The matcher didn't match anything so it cannot backtrack
                 }
-                using it_t = std::decay_t<decltype(it)>;
-                it         = it_t(it, child.get_node(allocator)).go_depth_first_ramification();
-                // If we can't advance in depth in the tree as to leave the next node with a previously unseen match
-                if (it.get_current_node()) {
-                    this->subtree_cut = it.get_current_node();
-                    if (do_match(it, child)) {
-                        it.increment();
-                        return true;
-                    }
-                }
-                return false;
+                using it_t       = std::decay_t<decltype(it)>;
+                using node_ptr_t = decltype(it.get_raw_node());
+                // From the target of this matcher, advance in depth as to leave the next matcher with an unseen target
+                auto policy = policy::pre_order()
+                                  .get_instance(static_cast<node_ptr_t>(matcher.get_node(allocator)), it.get_navigator(), allocator)
+                                  .go_depth_first_ramification();
+                it                = it_t(policy);
+                this->subtree_cut = nullptr;
+                return true;
             };
         }
     }
@@ -130,7 +127,7 @@ class any_matcher : public matcher<
         CheckNode&& check_function) {
         using node_t        = allocator_value_type<NodeAllocator>;
         const node_t* child = reference.get_first_child();
-        while (child != nullptr) {
+        while (child) {
             if (!check_function(*child)) {
                 continue;
             }
@@ -140,150 +137,159 @@ class any_matcher : public matcher<
         }
     }
 
-    public:
     template <typename NodeAllocator>
-    bool search_node_impl(allocator_value_type<NodeAllocator>& node, NodeAllocator& allocator) {
-        if (!this->match_value(node.get_value())) {
-            // If this matcher does not accepth the node, there is just one possibility: a single child can match it
-            return this->let_child_steal(node, allocator);
+    void no_children_set_result(NodeAllocator allocator, unique_ptr_alloc<NodeAllocator>& result) {
+        switch (Quantifier) {
+        case quantifier::RELUCTANT:
+            // Reluctant any_matcher without children matches nothing
+            result = nullptr;
+            break;
+        case quantifier::GREEDY:
+        case quantifier::POSSESSIVE:
+            // Greedy and possessive any_matcher without children matches everithing they can
+            result = this->clone_node(allocator);
+            any_matcher::keep_assigning_children(
+                *result,
+                *this->get_node(allocator),
+                allocator,
+                [this](const allocator_value_type<NodeAllocator>& check) {
+                    return this->match_value(check.get_value());
+                });
+            break;
+        case quantifier::DEFAULT:
+        default:
+            // Default any_matcher without children matches just a single node
+            result = this->clone_node(allocator);
         }
-        this->subtree_cut = nullptr;
-        // Each children has a pointer to the node where it started its match attempt, the last element is nullptr
-        auto target_it(this->get_match_iterator(node, allocator));
-        auto do_search    = this->get_search_funcion(node, allocator);
-        auto do_backtrack = this->get_backtrack_funcion(do_search, node, allocator);
-        if constexpr (!any_matcher::info.reluctant && !any_matcher::info.possessive) {
-            // Unless the quantifier is RELUCTANT, the matcher will try to match at least one node
-            target_it.increment();
+    }
+
+    template <typename NodeAllocator>
+    void children_reluctant_set_result(NodeAllocator allocator, unique_ptr_alloc<NodeAllocator>& result) {
+        using node_t = allocator_value_type<NodeAllocator>;
+        unique_ptr_alloc<NodeAllocator> candidate;
+        if (this->did_child_steal_target(candidate, allocator)) {
+            result = std::move(candidate);
+            return;
         }
-        bool result = this->search_children(allocator, std::move(target_it), do_search, do_backtrack);
-        if constexpr (
-            !any_matcher::info.reluctant
-            && !any_matcher::info.possessive
-            && any_matcher::child_may_steal_target()) {
-            // Every other match failed, we try the discarded possibility: one of the children matches this node
+        result = this->clone_node(allocator);
+        std::unordered_map<node_t*, node_t*> cloned_nodes;
+        cloned_nodes[this->get_node(allocator)] = result.get();
+        auto attach_child                       = [&](auto& child) {
+            std::pair<node_t*, unique_ptr_alloc<NodeAllocator>> child_head(
+                child.get_node(allocator),    // child target
+                child.clone_node(allocator)); // cloned target
+            auto it = cloned_nodes.find(child_head.first->get_parent());
+            while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
+                cloned_nodes[child_head.first] = child_head.second.get();
+                child_head                     = {
+                    child_head.first->get_parent(),
+                    child_head.second.release()->allocate_assign_parent(allocator, *child_head.first)};
+                it = cloned_nodes.find(child_head.first->get_parent());
+            }
+            it->second->assign_child_like(std::move(child_head.second), *child_head.first);
+        };
+        this->foldl_children(
+            [&](bool, auto& child) {
+                attach_child(child);
+                return true;
+            },
+            true);
+    }
+
+    template <typename NodeAllocator>
+    void children_set_result(NodeAllocator& allocator, unique_ptr_alloc<NodeAllocator>& result) {
+        using node_t = allocator_value_type<NodeAllocator>;
+        // If a children stole the target
+        unique_ptr_alloc<NodeAllocator> candidate;
+        if (this->did_child_steal_target(candidate, allocator)) {
+            result = std::move(candidate);
+            return;
+        }
+        result = this->clone_node(allocator);
+        std::unordered_map<node_t*, unique_ptr_alloc<NodeAllocator>> children_targets;
+        children_targets.reserve(this->children());
+        int valid_targets = this->foldl_children(
+            [&](unsigned accumulated, auto& child) {
+                if (!child.empty()) {
+                    children_targets[child.get_node(allocator)] = child.result(allocator);
+                    ++accumulated;
+                }
+                return accumulated;
+            },
+            0);
+        using multi_ptr_t = multiple_node_pointer<node_t*, node_t*>;
+        multi_ptr_t roots(this->get_node(allocator), result.get());
+        // The iterator will use this predicate to traverse the tree
+        // !IMPORTANT make multi_ptr a reference because we may need to assign the pointer
+        auto check_target = [&](multi_ptr_t& multi_ptr) {
+            if (Quantifier == quantifier::DEFAULT && valid_targets == 0) {
+                return false;
+            }
+            auto it = children_targets.find(multi_ptr.get_main_pointer());
+            if (it != children_targets.end()) {
+                // We found a node that was matched by a child
+                // Just assign the pointer it should have, generative_navigator will take care to attach it to the tree
+                multi_ptr.assign_pointer(1, it->second.release());
+                --valid_targets;
+                return true;
+            }
+            return this->match_value(multi_ptr->get_value());
+        };
+        generative_navigator nav(roots, check_target, allocator);
+        detail::breadth_first_impl iterator(policy::breadth_first().get_instance(roots, nav, allocator));
+        while (iterator) {
+            iterator.increment();
+        }
+    }
+
+    public:
+    template <typename NodeAllocator, typename Iterator>
+    bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
+        if (!this->match_value(*it)) {
+            // If this matcher does not accepth the node, there is still one possibility: a single child can match it
+            if constexpr (any_matcher::child_may_steal_target()) {
+                return this->search_node_child(allocator, it.other_policy(policy::fixed()));
+            } else {
+                return false;
+            }
+        }
+        auto target_it      = this->get_match_iterator(allocator, it);
+        using node_t        = allocator_value_type<NodeAllocator>;
+        auto do_acknowledge = [this](const node_t* matched) {
+            this->subtree_cut = matched;
+        };
+        auto do_backtrack = this->get_backtrack_funcion(allocator);
+        bool result       = this->search_node_child(allocator, target_it, do_acknowledge, do_backtrack);
+        if constexpr (!any_matcher::info.possessive && any_matcher::child_may_steal_target()) {
+            // Every other match failed, we try the last possibility: one of the children matches this node
             if (!result) {
-                return this->let_child_steal(node, allocator);
+                return this->search_node_child(allocator, it.other_policy(policy::fixed()));
             }
         }
         return result;
     }
 
     template <typename NodeAllocator>
-    unique_node_ptr<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        using node_t                          = allocator_value_type<NodeAllocator>;
-        unique_node_ptr<NodeAllocator> result = nullptr;
-        if constexpr (any_matcher::children() == 0) {
-            // Doesn't have children
-            switch (Quantifier) {
-            case quantifier::RELUCTANT:
-                result = nullptr;
-                break;
-            case quantifier::GREEDY:
-            case quantifier::POSSESSIVE:
-                result = this->clone_node(allocator);
-                any_matcher::keep_assigning_children(
-                    *result,
-                    *static_cast<node_t*>(this->target_node),
-                    allocator,
-                    [this](const node_t& check) {
-                        return this->match_value(check.get_value());
-                    });
-                break;
-            case quantifier::DEFAULT:
-            default:
-                result = this->clone_node(allocator);
-            }
+    unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
+        unique_ptr_alloc<NodeAllocator> result = nullptr;
+        bool all_children_empty                = this->foldl_children(
+            [](bool accumulated, auto child) {
+                return accumulated && child.empty();
+            },
+            true);
+        if (all_children_empty) {
+            this->no_children_set_result(allocator, result);
+        } else if constexpr (any_matcher::children() == 0) {
+            this->no_children_set_result(allocator, result);
         } else {
             // Has children
             if constexpr (Quantifier == quantifier::RELUCTANT) {
-                if (this->did_child_steal_target(result, allocator)) {
-                    return std::move(result);
-                }
-                result = this->clone_node(allocator);
-                std::unordered_map<node_t*, node_t*> cloned_nodes;
-                cloned_nodes.insert({this->get_node(allocator), result.get()});
-                auto attach_child = [&](auto& child) {
-                    std::pair<node_t*, unique_node_ptr<NodeAllocator>> child_head(
-                        child.get_node(allocator),    // same target
-                        child.clone_node(allocator)); // cloned target
-                    auto it = cloned_nodes.find(child_head.first->get_parent());
-                    while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
-                        cloned_nodes.insert({child_head.first, child_head.second.get()});
-                        child_head = {
-                            child_head.first->get_parent(),
-                            child_head.second.release()->allocate_assign_parent(allocator, *child_head.first)};
-                        it = cloned_nodes.find(child_head.first->get_parent());
-                    }
-                    it->second->assign_child_like(std::move(child_head.second), *child_head.first);
-                };
-                std::apply(
-                    [&](auto&... child) {
-                        (..., attach_child(child));
-                    },
-                    this->get_children());
-
+                this->children_reluctant_set_result(allocator, result);
             } else if constexpr (
                 Quantifier == quantifier::DEFAULT
                 || Quantifier == quantifier::GREEDY
                 || Quantifier == quantifier::POSSESSIVE) {
-                // If a children stole the target
-                if (this->did_child_steal_target(result, allocator)) {
-                    return std::move(result);
-                }
-                unsigned not_null_count = 0;
-                std::array<node_t*, any_matcher::children()> childrens_nodes;
-                std::apply(
-                    [&](auto&... children) {
-                        childrens_nodes = {
-                            (children.empty()
-                                 ? nullptr
-                                 : (
-                                     // Increment the count
-                                     ++not_null_count,
-                                     // Give the node matched by the child (comma operator returns the last expression)
-                                     children.get_node(allocator)))...};
-                    },
-                    this->get_children());
-                auto search_start = childrens_nodes.begin();
-                result            = this->clone_node(allocator);
-                multiple_node_pointer roots(this->get_node(allocator), result.get());
-                // The iterator will use this predicate to traverse the tree
-                auto check_target = [&](auto& multi_node_ptr) {
-                    if (Quantifier == quantifier::DEFAULT && not_null_count == 0) {
-                        // When the quantifier is the default one, stop iterating as soon as the last target is reached
-                        return false;
-                    }
-                    if (std::find(
-                            childrens_nodes.begin(),
-                            search_start, // We don't have to check the children that are not yet met
-                            multi_node_ptr.get_master_ptr()->get_parent())
-                        != search_start) {
-                        // When we find a node that is matched by a children
-                        return false;
-                    }
-                    auto position = std::find(search_start, childrens_nodes.end(), multi_node_ptr.get_master_ptr());
-                    if (position != childrens_nodes.end()) {
-                        --not_null_count;
-                        // If we reached a node that is matched by one of the children
-                        apply_at_index(
-                            [&](auto& child) {
-                                // Assign the result of the child to the generated subtree
-                                multi_node_ptr.assign_pointer(1, child.result(allocator).release());
-                            },
-                            this->get_children(),
-                            position - childrens_nodes.begin());
-                        std::iter_swap(search_start, position);
-                        ++search_start;
-                        return true;
-                    }
-                    return this->match_value(multi_node_ptr->get_value());
-                };
-                generative_navigator nav(roots, check_target, allocator);
-                detail::breadth_first_impl iterator(policy::breadth_first().get_instance(roots, nav, allocator));
-                while (iterator.get_current_node()) {
-                    iterator.increment();
-                }
+                this->children_set_result(allocator, result);
             }
         }
         return std::move(result);
@@ -303,13 +309,13 @@ class any_matcher : public matcher<
 };
 
 template <quantifier Quantifier = quantifier::DEFAULT, typename ValueMatcher>
-any_matcher<Quantifier, ValueMatcher>
+any_matcher<Quantifier, ValueMatcher, detail::empty_t>
 star(const ValueMatcher& value_matcher) {
     return {value_matcher, detail::empty_t(), detail::empty_t()};
 }
 
 template <quantifier Quantifier = quantifier::DEFAULT>
-any_matcher<Quantifier, true_matcher>
+any_matcher<Quantifier, true_matcher, detail::empty_t>
 star() {
     return {true_matcher(), detail::empty_t(), detail::empty_t()};
 }

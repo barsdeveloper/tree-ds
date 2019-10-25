@@ -123,7 +123,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         other.nullify();
     }
 
-    tree(unique_node_ptr<node_allocator_type> root, size_type size = 0u, size_type arity = 0u) :
+    tree(unique_ptr_alloc<node_allocator_type> root, size_type size = 0u, size_type arity = 0u) :
             tree(root.release(), size, arity) {
     }
 
@@ -223,7 +223,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return *this;
     }
 
-    tree& operator=(unique_node_ptr<node_allocator_type> root) {
+    tree& operator=(unique_ptr_alloc<node_allocator_type> root) {
         this->assign(root.release(), 0u, 0u);
         return *this;
     }
@@ -281,7 +281,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
 
     //   ---   MODIFIERS   ---
     protected:
-    unique_node_ptr<node_allocator_type> replace_node(
+    unique_ptr_alloc<node_allocator_type> replace_node(
         node_type* replaced,
         node_type* replacement,
         size_type replacement_size,
@@ -306,12 +306,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
     template <typename T, typename P, typename N>
     iterator<P> modify_subtree(
         tree_iterator<T, P, N> position,
-        unique_node_ptr<node_allocator_type> node,
+        unique_ptr_alloc<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
-        if (!this->is_own_iterator(position)) {
-            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
-        }
         node_type* replacement = node.release();
         /*
          * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
@@ -344,12 +341,9 @@ class tree : public tree_base<Node, Policy, Allocator> {
     template <bool First, typename T, typename P, typename N>
     iterator<P> add_child(
         tree_iterator<T, P, N> position,
-        unique_node_ptr<node_allocator_type> node,
+        unique_ptr_alloc<node_allocator_type> node,
         size_type replacement_size,
         size_type replacement_arity) {
-        if (!this->is_own_iterator(position)) {
-            throw std::logic_error("Tried to modify the tree (insert or emplace) with an iterator not belonging to it.");
-        }
         /*
          * const_cast is needed here because we must accept a tree::const_iterator which treats nodes as constant. That
          * iterator refers to this tree, which is however mutable, just like the node that iterator is pointing to,
@@ -753,23 +747,22 @@ class tree : public tree_base<Node, Policy, Allocator> {
     }
 
     iterator<policy::post_order> erase(const_iterator<policy::post_order> position) {
-        if (position.pointed_tree != this) {
-            throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
-        }
         iterator<policy::post_order> result(position.craft_non_constant_iterator(type_value<iterator<policy::post_order>>()));
-        ++result;
-        this->erase_subtree(position);
+        this->erase_subtree(result++);
+        if (this->empty()) {
+            return this->end(policy::post_order());
+        }
         return result;
     }
 
     iterator<policy::post_order> erase(
         const_iterator<policy::post_order> first,
         const_iterator<policy::post_order> last) {
-        if (first.pointed_tree != this || last.pointed_tree != this) {
-            throw std::logic_error("Tried to modify the tree (erase) with an iterator not belonging to it.");
-        }
         while (first != last) {
             this->erase_subtree(first++);
+        }
+        if (this->empty()) {
+            return this->end(policy::post_order());
         }
         return last.craft_non_constant_iterator(type_value<iterator<policy::post_order>>());
     }

@@ -73,8 +73,9 @@ struct deleter {
     }
 };
 
-template <typename NodeAllocactor>
-using unique_node_ptr = std::unique_ptr<allocator_value_type<NodeAllocactor>, deleter<NodeAllocactor>>;
+/// @brief Allocator aware std::unique_ptr (it just uses a proper deleter)
+template <typename NodeAllocator>
+using unique_ptr_alloc = std::unique_ptr<allocator_value_type<NodeAllocator>, deleter<NodeAllocator>>;
 
 /**
  * @private
@@ -89,13 +90,13 @@ using unique_node_ptr = std::unique_ptr<allocator_value_type<NodeAllocactor>, de
 template <
     typename Allocator,
     typename... Args>
-std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>> allocate(Allocator& allocator, Args&&... args) {
+unique_ptr_alloc<Allocator> allocate(Allocator& allocator, Args&&... args) {
     // Allocate
     auto* ptr = std::allocator_traits<Allocator>::allocate(allocator, 1);
     // Construct
     std::allocator_traits<Allocator>::construct(allocator, ptr, std::forward<Args>(args)...);
     // Return result
-    return std::unique_ptr<allocator_value_type<Allocator>, deleter<Allocator>>(
+    return unique_ptr_alloc<Allocator>(
         ptr,
         deleter(allocator));
 }

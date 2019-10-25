@@ -46,10 +46,10 @@ class pre_order_impl final
         }
         return prev_sibling
             ? keep_calling(
-                  prev_sibling,
-                  [this](NodePtr node) {
-                      return this->navigator.get_last_child(node);
-                  })
+                prev_sibling,
+                [this](NodePtr node) {
+                    return this->navigator.get_last_child(node);
+                })
             : nullptr;
     }
 
@@ -67,6 +67,7 @@ class pre_order_impl final
      * @return the first child {@b after} of the ramification's node
      */
     pre_order_impl& go_depth_first_ramification() {
+        assert(this->current);
         bool found     = false;
         NodePtr result = keep_calling(
             // From

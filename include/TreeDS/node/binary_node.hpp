@@ -20,9 +20,6 @@ class binary_node : public node<T, binary_node<T>> {
 
     /*   ---   FRIENDS   ---   */
     template <typename, typename, typename>
-    friend class tree_iterator;
-
-    template <typename, typename, typename>
     friend class tree;
 
     template <typename, typename, typename, typename>
@@ -343,14 +340,14 @@ class binary_node : public node<T, binary_node<T>> {
     }
 
     template <typename Allocator>
-    binary_node* assign_child_like(unique_node_ptr<Allocator> child, const binary_node& reference_child) {
+    binary_node* assign_child_like(unique_ptr_alloc<Allocator> child, const binary_node& reference_child) {
         return this->do_assign_child_like(child.release(), reference_child);
     }
 
     template <typename Allocator>
-    unique_node_ptr<Allocator> allocate_assign_parent(Allocator& allocator, const binary_node& reference_copy) {
+    unique_ptr_alloc<Allocator> allocate_assign_parent(Allocator& allocator, const binary_node& reference_copy) {
         assert(!reference_copy.is_root());
-        unique_node_ptr<Allocator> parent = allocate(allocator, reference_copy.get_parent()->get_value());
+        unique_ptr_alloc<Allocator> parent = allocate(allocator, reference_copy.get_parent()->get_value());
         parent->do_assign_child_like(this, reference_copy);
         return std::move(parent);
     }
