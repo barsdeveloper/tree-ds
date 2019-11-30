@@ -91,8 +91,6 @@ class tree_base {
     template <typename P>
     using const_reverse_iterator = std::reverse_iterator<const_iterator<P>>;
 
-    /*   ---   VALIDATION   ---   */
-
     /*   ---   ATTRIBUTES   ---   */
     protected:
     /// @brief Owning pointer to the root node.
@@ -137,7 +135,7 @@ class tree_base {
     ~tree_base() {
     }
 
-    /*   ---   ITERATOR METHODS   ---   */
+    /*   ---   ITERATORS   ---   */
     public:
     /**
      * @brief Returns a constant iterator to the beginning.
@@ -187,7 +185,7 @@ class tree_base {
         return std::make_reverse_iterator(this->cbegin(policy));
     }
 
-    /*   ---   CAPACITY METHODS   ---   */
+    /*   ---   CAPACITY   ---   */
     public:
     /**
      * @brief Checks whether the container is empty.
@@ -240,7 +238,7 @@ class tree_base {
         return std::numeric_limits<size_type>::max();
     }
 
-    /*   ---   GETTER METHODS   ---   */
+    /*   ---   GETTERS   ---   */
     node_type* raw_root_node() const {
         return this->root_node;
     }
@@ -308,7 +306,7 @@ class tree_base {
     }
 };
 
-// TODO: replace as soon as space ship operator (<=>) is available
+// TODO C++20 replace with the ship operator (<=>)
 // tree
 template <
     typename Node,

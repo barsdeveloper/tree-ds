@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <deque>
 
 #include <TreeDS/policy/policy_base.hpp>
 
@@ -10,8 +11,10 @@ template <typename NodePtr, typename NodeNavigator, typename Allocator>
 class leaves_impl final
         : public policy_base<leaves_impl<NodePtr, NodeNavigator, Allocator>, NodePtr, NodeNavigator, Allocator> {
 
+    using typename policy_base<leaves_impl, NodePtr, NodeNavigator, Allocator>::allocator_type;
+
     protected:
-    std::stack<NodePtr> ancestors {};
+    std::stack<NodePtr, std::deque<NodePtr, allocator_type>> ancestors {this->allocator};
 
     public:
     using policy_base<leaves_impl, NodePtr, NodeNavigator, Allocator>::policy_base;

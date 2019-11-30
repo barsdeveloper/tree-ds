@@ -96,13 +96,13 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     protected:
     constexpr static bool child_may_steal_target() {
         return Derived::info.shallow_matches_null
-            && matcher::foldl_children_types(
+            && matcher::foldl_children_types( // Count the children that do NOT match null
                    [](auto&& accumulated, auto&& element) {
                        using type = typename std::decay_t<decltype(element)>::type;
                        return accumulated + (type::info.matches_null ? 0u : 1u);
                    },
                    0u)
-            == 1u;
+            <= 1u; // If at most one child requires a node, then one of the children may steal the target of its parent
     }
 
     template <typename NodeAllocator>
@@ -178,7 +178,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
         constexpr matcher_info_t info = Derived::info;
         using node_ptr                = const allocator_value_type<NodeAllocator>*;
         // If it can and prefers to match nothing
-        if constexpr (info.matches_null && info.prefers_null) {
+        if constexpr (info.prefers_null) {
             return true;
         }
         Iterator begin = it;
@@ -229,7 +229,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
         typename RematchFunction    = detail::empty_t>
     bool search_node_sibling(
         NodeAllocator& allocator,
-        Iterator&& it,
+        Iterator& it,
         AckowledgeFunction&& ackowledge = detail::empty_t(),
         RematchFunction&& rematch       = detail::empty_t()) {
         using it_t = std::decay_t<Iterator>;
@@ -240,20 +240,20 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
             } else {
                 if constexpr (!is_empty<std::decay_t<RematchFunction>>) {
                     it_t search_start = begin;
-                    it                = search_start; // go back to where we started
+                    it                = search_start; // Go back to where we started
                     while (it && rematch(*this, it)) {
                         search_start = it;
                         if (!this->cast()->search_node_this(allocator, it, ackowledge)) {
-                            continue;
+                            continue; // Rematched it doesn't satisfy this matcher
                         }
                         if (this->cast()->get_next_sibling().search_node(allocator, it, ackowledge, rematch)) {
-                            return true;
+                            return true; // Rematched it satisfies the next sibling
                         }
                         it = search_start;
                     }
                 }
                 if (Derived::info.matches_null && !this->empty()) {
-                    it = it_t(it, this->get_node(allocator));
+                    it = it.other_node(this->get_node(allocator)); // This matched renonunces to its node
                     this->reset();
                     return this->cast()->get_next_sibling().search_node(allocator, it, ackowledge, rematch);
                 }

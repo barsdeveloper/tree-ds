@@ -43,8 +43,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
     template <typename, typename, typename>
     friend class tree;
 
-    public:
     /*   ---   TYPES   ---   */
+    public:
     DECLARE_TREEDS_TYPES(Node, Policy, Allocator)
     using super = tree_base<Node, Policy, Allocator>;
 
@@ -161,8 +161,8 @@ class tree : public tree_base<Node, Policy, Allocator> {
         clear();
     }
 
-    public:
     /*   ---   ASSIGNMENT   ---   */
+    public:
     // Copy assignment
     tree& operator=(const tree& other) {
         return this->operator=<Policy>(other);
@@ -271,7 +271,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return std::make_reverse_iterator(this->begin(policy));
     }
 
-    //   ---   GETTERS   ---
+    /*   ---   GETTERS   ---   */
     public:
     using super::root;
 
@@ -279,7 +279,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return iterator<policy::fixed>(*this, this->root_node, this->get_navigator());
     }
 
-    //   ---   MODIFIERS   ---
+    /*   ---   MODIFIERS   ---   */
     protected:
     unique_ptr_alloc<node_allocator_type> replace_node(
         node_type* replaced,
@@ -780,7 +780,7 @@ class tree : public tree_base<Node, Policy, Allocator> {
         return {this->replace_node(target, nullptr, 0, 0).release()};
     }
 
-    //  ---   COMPARISON   ---
+    /*  ---   COMPARISON   ---   */
     using super::operator==;
 };
 

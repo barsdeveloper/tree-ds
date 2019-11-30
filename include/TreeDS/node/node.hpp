@@ -15,13 +15,16 @@ namespace md {
 template <typename T, typename Node>
 class node {
 
+    /*   ---   TYPES   ---   */
     public:
     using value_type = T;
 
+    /*   ---   ATTRIBUTES   ---   */
     protected:
     T value;
     Node* parent = nullptr;
 
+    /*   ---   CONSTRUCTORS   ---   */
     protected:
     // Forward constructor: the arguments are forwarded directly to the constructor of the type T
     template <typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
@@ -51,7 +54,7 @@ class node {
     }
 
     public:
-    /*   ---   Getters   ---   */
+    /*   ---   GETTERS   ---   */
     const T& get_value() const {
         return value;
     }
@@ -66,19 +69,6 @@ class node {
 
     Node* get_parent() {
         return parent;
-    }
-
-    bool is_root() const {
-        return parent == nullptr;
-    }
-
-    bool has_children() const {
-        return static_cast<const Node*>(this)->get_first_child() != nullptr;
-    }
-
-    bool is_unique_child() const {
-        return static_cast<const Node*>(this)->is_first_child()
-            && static_cast<const Node*>(this)->is_last_child();
     }
 
     Node* get_prev_sibling() const {
@@ -121,6 +111,20 @@ class node {
         return index;
     }
 #endif
+
+    /*   ---   METHODS   ---   */
+    bool is_root() const {
+        return parent == nullptr;
+    }
+
+    bool has_children() const {
+        return static_cast<const Node*>(this)->get_first_child() != nullptr;
+    }
+
+    bool is_unique_child() const {
+        return static_cast<const Node*>(this)->is_first_child()
+            && static_cast<const Node*>(this)->is_last_child();
+    }
 };
 
 } // namespace md

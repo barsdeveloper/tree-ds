@@ -18,20 +18,25 @@ class opt_matcher : public matcher<
                         FirstChild,
                         NextSibling> {
 
+    /*   ---   PARAMETERS   ---   */
+    // It matches null only if all its children do so
+    static constexpr bool MATCHES_NULL = opt_matcher::foldl_children_types(
+        [](auto&& accumulator, auto&& element) {
+            using element_type = typename std::remove_reference_t<decltype(element)>::type;
+            return accumulator && element_type::info.matches_null;
+        },
+        true);
+
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
         // Matches null
-        opt_matcher::foldl_children_types(
-            [](auto&& accumulated, auto&& element) {
-                using element_type = typename std::decay_t<decltype(element)>::type;
-                return accumulated && element_type::info.matches_null;
-            },
-            true),
-        // It matches null if we consider just this node
+        MATCHES_NULL,
+        // Shallow matches null
         true,
-        // Reluctant behavior
-        Quantifier == quantifier::RELUCTANT,
+        // Prefers null
+        MATCHES_NULL && (Quantifier == quantifier::RELUCTANT),
+        // Possessive
         Quantifier == quantifier::POSSESSIVE};
 
     /*   ---   CONSTRUCTOR   ---   */
@@ -42,7 +47,8 @@ class opt_matcher : public matcher<
     bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
         if (!this->match_value(*it)) {
             if constexpr (opt_matcher::child_may_steal_target()) {
-                return this->search_node_child(allocator, it.other_policy(policy::fixed()));
+                auto fixed_it = it.other_policy(policy::fixed());
+                return this->search_node_child(allocator, fixed_it);
             } else {
                 return false;
             }
@@ -69,24 +75,19 @@ class opt_matcher : public matcher<
     template <typename NodeAllocator>
     unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
         unique_ptr_alloc<NodeAllocator> result;
-        if constexpr (!opt_matcher::info.possessive) {
-            if (this->did_child_steal_target(result, allocator)) {
-                return std::move(result);
-            }
+        if (this->did_child_steal_target(result, allocator)) {
+            return std::move(result);
         }
-        result            = this->clone_node(allocator);
-        auto attach_child = [&](auto& child) {
-            if (!child.empty()) {
-                result->assign_child_like(
-                    child.result(allocator),
-                    *child.get_node(allocator));
-            }
-        };
-        std::apply(
-            [&](auto&... children) {
-                (..., attach_child(children));
+        // Assign here because did_child_stea_target assignins result
+        result = this->clone_node(allocator);
+        this->foldl_children(
+            [&](bool, auto& child) {
+                if (!child.empty()) {
+                    result->assign_child_like(child.result(allocator), *child.get_node(allocator));
+                }
+                return true;
             },
-            this->get_children());
+            true);
         return std::move(result);
     }
 

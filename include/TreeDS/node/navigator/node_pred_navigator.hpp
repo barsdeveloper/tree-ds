@@ -19,7 +19,7 @@ class node_pred_navigator : public navigator_base<node_pred_navigator<NodePtr, P
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
-    std::optional<Predicate> predicate; // Not optional, just wrapped so to make it default constructible when lambda
+    std::optional<Predicate> predicate; // TODO: C++20, lambda will be default constructible, remove std::optional
 
     /*   ---   CONSTRUCTORS   ---   */
     public:

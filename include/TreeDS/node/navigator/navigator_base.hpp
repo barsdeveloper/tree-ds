@@ -40,7 +40,7 @@ class navigator_base {
         typename OtherNodeNavigator,
         typename = std::enable_if_t<std::is_convertible_v<typename OtherNodeNavigator::node_pointer, node_pointer>>>
     navigator_base(const OtherNodeNavigator& other) :
-            root(other.root) {
+            root(other.get_root()) {
     }
 
     /*   ---   ASSIGNMENT   ---   */
@@ -247,7 +247,7 @@ class navigator_base {
         return !this->cast()->is_root(node) && node == node->get_parent()->get_right_child();
     }
 
-    NodePtr get_root() {
+    NodePtr get_root() const {
         return this->root;
     }
 

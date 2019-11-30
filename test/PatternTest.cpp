@@ -1,7 +1,8 @@
 #include <QtTest/QtTest>
-#include <stdexcept>
-#include <string>
+#include <iostream>
 
+#define MD_PRINT_TREE_ADDRESS_DIGITS 4
+#define MD_PRINT_TREE_MAX_NODES 1000
 #include <TreeDS/match>
 #include <TreeDS/tree>
 
@@ -59,7 +60,7 @@ class PatternTest : public QObject {
     void test12();
     void test13();
 };
-
+#include <iostream>
 void PatternTest::test1() {
     pattern p(
         star()(
@@ -264,7 +265,7 @@ void PatternTest::test11() {
             star<quantifier::POSSESSIVE>('a')(
                 opt<quantifier::POSSESSIVE>('b')(
                     opt<quantifier::RELUCTANT>('b'),
-                    opt('b')(
+                    one('b')(
                         one('y')))))};
     QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
@@ -302,7 +303,7 @@ void PatternTest::test13() {
             star<quantifier::GREEDY>('a')(
                 one('a')))};
     QVERIFY(p.search(tree3));
-    print_tree(std::cout, tree3, {4, 100, true});
+    print_tree(std::cout, tree3, {4, 100, 4});
     std::cout << std::endl;
     p.assign_result(binary_char_result);
     QCOMPARE(

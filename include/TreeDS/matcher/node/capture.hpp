@@ -18,7 +18,7 @@ class capture_node : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {Captured::info};
+    static constexpr matcher_info_t info {Captured::info}; // Behaves like what it captures
 
     /*   ---   CONSTRUCTORS   ---   */
     public:

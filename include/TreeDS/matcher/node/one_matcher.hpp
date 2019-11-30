@@ -25,7 +25,7 @@ class one_matcher : public matcher<
         false,
         // Shallow matches null
         false,
-        // Reluctant
+        // Prefers null
         false,
         // Possessive
         true};
@@ -39,14 +39,14 @@ class one_matcher : public matcher<
         if (!this->match_value(*it)) {
             return false;
         }
-        using basic_navigator = node_navigator<typename Iterator::node_type*>;
+        using basic_navigator = node_navigator<decltype(it.get_raw_node())>;
         // Iterator that gives the children potential nodes to match
         auto target_it
             = it
                   .other_policy(policy::siblings())
                   .other_navigator(basic_navigator())
                   .go_first_child();
-        return this->search_node_child(allocator, std::move(target_it));
+        return this->search_node_child(allocator, target_it);
     }
 
     template <typename NodeAllocator>

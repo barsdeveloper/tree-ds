@@ -196,8 +196,6 @@ void IteratorTest::test2() {
     // Copy assignment (below).
     iterator_t it3;
     it3 = it1;
-    // Unmodifiable reference to a pointer.
-    const iterator_t& const_ref = it1;
 
     ++it2; // it2 == it1 + 1
     --it3; // it3 == it1 - 1
@@ -221,15 +219,12 @@ void IteratorTest::test2() {
     // Indirect method call (through iterator).
     QCOMPARE(it1->method(), "mutable");
     QCOMPARE(itc1->method(), "constant");
-    QCOMPARE(const_ref->method(), "constant");
     QCOMPARE((*it1).method(), "mutable");
     QCOMPARE((*itc1).method(), "constant");
-    QCOMPARE((*const_ref).method(), "constant");
 
     // Direct method call (thorugh iterator->node->value->method).
     QCOMPARE(it1.get_raw_node()->get_value().method(), "mutable");
     QCOMPARE(itc1.get_raw_node()->get_value().method(), "constant");
-    QCOMPARE(const_ref.get_raw_node()->get_value().method(), "constant");
 
     // Iterator equals constant itself.
     QVERIFY(it1 == itc1);

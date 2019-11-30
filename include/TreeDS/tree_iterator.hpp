@@ -111,6 +111,7 @@ class tree_iterator {
             policy(other.policy, current_node) {
     }
 
+    /*   ---   ASSIGNMENT   ---   */
     // Conversion copy assignment from iterator to const_iterator
     template <
         typename OtherTree,
@@ -122,16 +123,21 @@ class tree_iterator {
         return *this;
     }
 
+    /*   ---   FACTORY   ---   */
+    tree_iterator other_node(node_type* node) const {
+        return tree_iterator(*this, node);
+    }
+
     template <typename OtherPolicy>
     tree_iterator<Tree, OtherPolicy, NodeNavigator>
-    other_policy(OtherPolicy) {
+    other_policy(OtherPolicy) const {
         return tree_iterator<Tree, OtherPolicy, NodeNavigator>(
             OtherPolicy().get_instance(this->get_raw_node(), this->get_navigator(), this->policy.get_allocator()));
     }
 
     template <typename OtherNavigator>
     tree_iterator<Tree, Policy, OtherNavigator>
-    other_navigator(OtherNavigator&& navigator) {
+    other_navigator(OtherNavigator navigator) const {
         return tree_iterator<Tree, Policy, OtherNavigator>(
             Policy().get_instance(this->get_raw_node(), navigator, this->policy.get_allocator()));
     }
@@ -169,16 +175,16 @@ class tree_iterator {
         return this->policy.get_navigator();
     }
 
-    const node_type* get_raw_root() const {
+    node_type* get_raw_root() const {
         return this->get_navigator().get_root();
     }
 
-    const node_type* get_raw_node() const {
+    node_type* get_raw_node() const {
         return this->policy.get_current_node();
     }
 
-    node_type* get_raw_node() {
-        return this->policy.get_current_node();
+    Policy get_policy() const {
+        return Policy();
     }
 
     const actual_policy_type& get_raw_policy() const {

@@ -12,6 +12,7 @@
 #include <TreeDS/policy/breadth_first.hpp>
 #include <TreeDS/policy/leaves.hpp>
 #include <TreeDS/policy/pre_order.hpp>
+#include <TreeDS/tree_iterator_filter.hpp>
 
 namespace md {
 
@@ -26,20 +27,25 @@ class any_matcher : public matcher<
                         FirstChild,
                         NextSibling> {
 
+    /*   ---   PARAMETERS   ---   */
+    // It matches null only if all its children do so
+    static constexpr bool MATCHES_NULL = any_matcher::foldl_children_types(
+        [](auto&& accumulator, auto&& element) {
+            using element_type = typename std::remove_reference_t<decltype(element)>::type;
+            return accumulator && element_type::info.matches_null;
+        },
+        true);
+
     /*   ---   ATTRIBUTES   ---   */
     public:
     static constexpr matcher_info_t info {
-        // It matches null only if all its children do so
-        any_matcher::foldl_children_types(
-            [](auto&& accumulator, auto&& element) {
-                using element_type = typename std::remove_reference_t<decltype(element)>::type;
-                return accumulator && element_type::info.matches_null;
-            },
-            true),
-        // This node could match null
+        // Matches null
+        MATCHES_NULL,
+        // Shallow matches null
         true,
-        // It is reluctant if it has that quantifier
-        Quantifier == quantifier::RELUCTANT,
+        // Prefers null
+        MATCHES_NULL && (Quantifier == quantifier::RELUCTANT),
+        // Possessive
         Quantifier == quantifier::POSSESSIVE};
     const void* subtree_cut = nullptr;
 
@@ -63,13 +69,20 @@ class any_matcher : public matcher<
         using navigator_t = node_pred_navigator<node_ptr_t, decltype(predicate)>;
         navigator_t navigator(it.get_raw_node(), predicate);
         if constexpr (any_matcher::info.possessive) {
-            return ++tree_iterator<tree_t, policy::leaves, navigator_t>(
+            auto predicate = [this](auto& value) {
+                return !this->match_value(value);
+            };
+            tree_iterator<tree_t, policy::leaves, navigator_t> result(
                 policy::leaves()
                     .get_instance(static_cast<node_ptr_t>(nullptr), navigator, allocator)
                     .go_first());
+            return tree_iterator_filter(predicate, result);
         } else {
-            return ++tree_iterator<tree_t, policy::pre_order, navigator_t>(
-                policy::pre_order().get_instance(it.get_raw_node(), navigator, allocator));
+            tree_iterator<tree_t, policy::pre_order, navigator_t> result(
+                policy::pre_order()
+                    .get_instance(it.get_raw_node(), navigator, allocator)
+                    .increment());
+            return result;
         }
     }
 
@@ -232,6 +245,11 @@ class any_matcher : public matcher<
                 multi_ptr.assign_pointer(1, it->second.release());
                 --valid_targets;
                 return true;
+            }
+            auto parent_it = children_targets.find(multi_ptr.get_main_pointer()->get_parent());
+            if (parent_it != children_targets.end()) {
+                // We reached the child of a node that was matched by some children: discard because already mapped
+                return false;
             }
             return this->match_value(multi_ptr->get_value());
         };

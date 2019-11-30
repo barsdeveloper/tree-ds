@@ -9,7 +9,7 @@ namespace md::detail {
 template <
     typename ActualPolicy,
     typename NodePtr,
-    typename Navigator,
+    typename NodeNavigator,
     typename Allocator>
 class policy_base {
 
@@ -20,7 +20,7 @@ class policy_base {
     using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<NodePtr>;
 
     static_assert(
-        std::is_same_v<typename Navigator::node_pointer, NodePtr>,
+        std::is_same_v<typename NodeNavigator::node_pointer, NodePtr>,
         "Navigator must use the same NodePtr template parameter as NodePtr");
     static_assert(
         std::is_same_v<typename std::allocator_traits<Allocator>::value_type, NodePtr>,
@@ -28,7 +28,7 @@ class policy_base {
 
     protected:
     NodePtr current = nullptr;
-    Navigator navigator {};
+    NodeNavigator navigator {};
     allocator_type allocator {};
 
     public:
@@ -46,7 +46,7 @@ class policy_base {
         this->cast()->fix_navigator_root();
     }
 
-    policy_base(NodePtr current, const Navigator& navigator, const Allocator& allocator) :
+    policy_base(NodePtr current, const NodeNavigator& navigator, const Allocator& allocator) :
             current(current),
             navigator(navigator),
             allocator(allocator) {
@@ -60,7 +60,7 @@ class policy_base {
         typename OtherAllocator,
         typename = std::enable_if_t<is_same_template<OtherActualPolicy, ActualPolicy>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
-        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
+        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, NodeNavigator>>>
     policy_base(const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, OtherAllocator>& other) :
             policy_base(other.current, other.navigator, other.allocator) {
     }
@@ -72,7 +72,7 @@ class policy_base {
         typename OtherAllocator,
         typename = std::enable_if_t<is_same_template<ActualPolicy, OtherActualPolicy>>,
         typename = std::enable_if_t<std::is_convertible_v<OtherNodePtr, NodePtr>>,
-        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, Navigator>>>
+        typename = std::enable_if_t<std::is_convertible_v<OtherNavigator, NodeNavigator>>>
     policy_base(
         const policy_base<OtherActualPolicy, OtherNodePtr, OtherNavigator, OtherAllocator>& other,
         const NodePtr current) :
@@ -104,7 +104,7 @@ class policy_base {
         return this->current;
     }
 
-    Navigator get_navigator() const {
+    NodeNavigator get_navigator() const {
         return this->navigator;
     }
 
