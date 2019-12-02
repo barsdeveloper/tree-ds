@@ -129,6 +129,9 @@ constexpr bool is_binary_node_pointer<
 template <std::size_t Index>
 struct const_index {};
 
+template <char... Name>
+struct const_name {};
+
 template <typename T>
 struct type_value {
     using type = T;
@@ -333,7 +336,7 @@ void code_like_print(std::ostream& stream, const T& c) {
 #endif
 
 #ifndef MD_PRINT_TREE_INDENTATION
-#define MD_PRINT_TREE_INDENTATION 4
+#define MD_PRINT_TREE_INDENTATION 8
 #endif
 
 #ifndef MD_PRINT_TREE_ADDRESS_DIGITS

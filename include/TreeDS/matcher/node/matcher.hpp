@@ -21,7 +21,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     friend class matcher;
 
     /*   ---   CONSTANTS   ---   */
-    static constexpr bool IS_CAPTURE = is_same_template<ValueMatcher, capture_name<>>;
+    static constexpr bool IS_CAPTURE = is_same_template<ValueMatcher, const_name<>>;
 
     /*   ---   TYPES   ---   */
     public:
@@ -37,7 +37,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     static_assert(
         !(
             // This capture has a (non empty) name
-            detail::is_capture_name<ValueMatcher>
+            detail::is_const_name<ValueMatcher>
             // There exists another capture among children with the same name
             && detail::is_valid_name<ValueMatcher, typename detail::matcher_traits<matcher>::children_captures>),
         "Named captures must have unique names.");
@@ -70,7 +70,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     }
 
     constexpr auto get_this_capture() {
-        if constexpr (is_same_template<ValueMatcher, capture_name<>>) {
+        if constexpr (is_same_template<ValueMatcher, const_name<>>) {
             return std::tie(*this);
         } else {
             return std::make_tuple();
@@ -294,20 +294,20 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     }
 
     template <std::size_t Index, typename NodeAllocator>
-    unique_ptr_alloc<NodeAllocator> marked_result(capture_index<Index>, NodeAllocator& allocator) {
+    unique_ptr_alloc<NodeAllocator> marked_result(const_index<Index>, NodeAllocator& allocator) {
         static_assert(Index - 1 < std::tuple_size_v<captures_t>, "There is no capture with the index requested.");
         return std::get<Index - 1>(this->captures).result(allocator);
     }
 
     template <char... Name, typename NodeAllocator>
-    unique_ptr_alloc<NodeAllocator> marked_result(capture_name<Name...>, NodeAllocator& allocator) {
+    unique_ptr_alloc<NodeAllocator> marked_result(const_name<Name...>, NodeAllocator& allocator) {
         static_assert(
             sizeof...(Name) > 0,
-            "Capture's name must be not empty. For example capture_name<'a'> is OK, while capture_name<> is not.");
+            "Capture's name must be not empty. For example const_name<'a'> is OK, while const_name<> is not.");
         static_assert(
-            detail::is_valid_name<capture_name<Name...>, captures_t>,
+            detail::is_valid_name<const_name<Name...>, captures_t>,
             "There is no capture with the name requested.");
-        constexpr std::size_t index = detail::index_of_capture<capture_name<Name...>, captures_t>;
+        constexpr std::size_t index = detail::index_of_capture<const_name<Name...>, captures_t>;
         return std::get<index>(this->captures).result(allocator);
     }
 

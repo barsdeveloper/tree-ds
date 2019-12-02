@@ -21,28 +21,34 @@ void StructNodeTest::smallTrees() {
     auto emptyNode = n();
     QCOMPARE(emptyNode.subtree_size(), 0);
     QCOMPARE(emptyNode.subtree_arity(), 0);
+    QCOMPARE(emptyNode.get_level(), 0);
     QCOMPARE(emptyNode.get_index(), 0);
 
     auto singleNode = n(24);
     QCOMPARE(singleNode.get_value(), 24);
     QCOMPARE(singleNode.subtree_size(), 1);
     QCOMPARE(singleNode.subtree_arity(), 0);
+    QCOMPARE(singleNode.get_level(), 0);
     QCOMPARE(singleNode.get_index(), 0);
 
     auto leftChild = n(11)(n(57));
     QCOMPARE(leftChild.subtree_size(), 2);
     QCOMPARE(leftChild.subtree_arity(), 1);
     QCOMPARE(leftChild.get_value(), 11);
-    QCOMPARE(leftChild.get_child(const_index<0>()).get_value(), 57);
+    QCOMPARE(leftChild.get_level(), 0);
     QCOMPARE(leftChild.get_index(), 0);
+    QCOMPARE(leftChild.get_child(const_index<0>()).get_value(), 57);
+    QCOMPARE(leftChild.get_child(const_index<0>()).get_level(), 1);
     QCOMPARE(leftChild.get_child(const_index<0>()).get_index(), 0);
 
     auto rightChild = n(97)(n(), n(33));
     QCOMPARE(rightChild.subtree_size(), 2);
     QCOMPARE(rightChild.subtree_arity(), 1);
     QCOMPARE(rightChild.get_value(), 97);
-    QCOMPARE(rightChild.get_child(const_index<1>()).get_value(), 33);
+    QCOMPARE(rightChild.get_level(), 0);
     QCOMPARE(rightChild.get_index(), 0);
+    QCOMPARE(rightChild.get_child(const_index<1>()).get_value(), 33);
+    QCOMPARE(rightChild.get_child(const_index<1>()).get_level(), 1);
     QCOMPARE(rightChild.get_child(const_index<1>()).get_index(), 1);
 
     auto twoChildren = n(65)(n(82), n(21));
@@ -50,8 +56,10 @@ void StructNodeTest::smallTrees() {
     QCOMPARE(twoChildren.subtree_arity(), 2);
     QCOMPARE(twoChildren.get_value(), 65);
     QCOMPARE(twoChildren.get_child(const_index<0>()).get_value(), 82);
-    QCOMPARE(twoChildren.get_child(const_index<1>()).get_value(), 21);
+    QCOMPARE(twoChildren.get_child(const_index<0>()).get_level(), 1);
     QCOMPARE(twoChildren.get_child(const_index<0>()).get_index(), 0);
+    QCOMPARE(twoChildren.get_child(const_index<1>()).get_value(), 21);
+    QCOMPARE(twoChildren.get_child(const_index<1>()).get_level(), 1);
     QCOMPARE(twoChildren.get_child(const_index<1>()).get_index(), 1);
 
     auto threeChildren = n(45)(n(39), n(71), n(18));
@@ -59,10 +67,13 @@ void StructNodeTest::smallTrees() {
     QCOMPARE(threeChildren.subtree_arity(), 3);
     QCOMPARE(threeChildren.get_value(), 45);
     QCOMPARE(threeChildren.get_child(const_index<0>()).get_value(), 39);
-    QCOMPARE(threeChildren.get_child(const_index<1>()).get_value(), 71);
-    QCOMPARE(threeChildren.get_child(const_index<2>()).get_value(), 18);
+    QCOMPARE(threeChildren.get_child(const_index<0>()).get_level(), 1);
     QCOMPARE(threeChildren.get_child(const_index<0>()).get_index(), 0);
+    QCOMPARE(threeChildren.get_child(const_index<1>()).get_value(), 71);
+    QCOMPARE(threeChildren.get_child(const_index<1>()).get_level(), 1);
     QCOMPARE(threeChildren.get_child(const_index<1>()).get_index(), 1);
+    QCOMPARE(threeChildren.get_child(const_index<2>()).get_value(), 18);
+    QCOMPARE(threeChildren.get_child(const_index<2>()).get_level(), 1);
     QCOMPARE(threeChildren.get_child(const_index<2>()).get_index(), 2);
 
     auto fourChildren = n(26)(n(20), n(41), n(15), n(76));
@@ -70,12 +81,16 @@ void StructNodeTest::smallTrees() {
     QCOMPARE(fourChildren.subtree_arity(), 4);
     QCOMPARE(fourChildren.get_value(), 26);
     QCOMPARE(fourChildren.get_child(const_index<0>()).get_value(), 20);
-    QCOMPARE(fourChildren.get_child(const_index<1>()).get_value(), 41);
-    QCOMPARE(fourChildren.get_child(const_index<2>()).get_value(), 15);
-    QCOMPARE(fourChildren.get_child(const_index<3>()).get_value(), 76);
+    QCOMPARE(fourChildren.get_child(const_index<0>()).get_level(), 1);
     QCOMPARE(fourChildren.get_child(const_index<0>()).get_index(), 0);
+    QCOMPARE(fourChildren.get_child(const_index<1>()).get_value(), 41);
+    QCOMPARE(fourChildren.get_child(const_index<1>()).get_level(), 1);
     QCOMPARE(fourChildren.get_child(const_index<1>()).get_index(), 1);
+    QCOMPARE(fourChildren.get_child(const_index<2>()).get_value(), 15);
+    QCOMPARE(fourChildren.get_child(const_index<2>()).get_level(), 1);
     QCOMPARE(fourChildren.get_child(const_index<2>()).get_index(), 2);
+    QCOMPARE(fourChildren.get_child(const_index<3>()).get_value(), 76);
+    QCOMPARE(fourChildren.get_child(const_index<3>()).get_level(), 1);
     QCOMPARE(fourChildren.get_child(const_index<3>()).get_index(), 3);
 
     // Remember that calling the operator() discard the previous children, that will be replaced by the arguments.
@@ -95,11 +110,18 @@ void StructNodeTest::smallTrees() {
     QCOMPARE(composedTree.get_value(), 45);
     QCOMPARE(composedTree.get_child(const_index<0>()).get_value(), 97);
     QCOMPARE(
-        composedTree.get_child(const_index<0>()).get_child(const_index<0>()).get_value(),
+        composedTree
+            .get_child(const_index<0>())
+            .get_child(const_index<0>())
+            .get_value(),
         65);
     QCOMPARE(composedTree.get_child(const_index<0>()).get_value(), 97);
     QCOMPARE(
-        composedTree.get_child(const_index<2>()).get_child(const_index<3>()).get_child(const_index<1>()).get_value(),
+        composedTree
+            .get_child(const_index<2>())
+            .get_child(const_index<3>())
+            .get_child(const_index<1>())
+            .get_value(),
         41);
     QCOMPARE(composedTree.get_child(const_index<1>()).get_value(), 26);
     QCOMPARE(composedTree.get_child(const_index<2>()).get_value(), 24);
@@ -145,11 +167,18 @@ void StructNodeTest::bigTree1() {
     QCOMPARE(
         tree.get_child(const_index<0>()).get_child(const_index<7>()).get_child(const_index<2>()).get_value(),
         98235);
+    QCOMPARE(
+        tree.get_child(const_index<0>()).get_child(const_index<7>()).get_child(const_index<2>()).get_level(),
+        3);
+    QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<6>()).get_level(), 2);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<6>()).get_index(), 6);
+    QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<4>()).get_level(), 2);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<4>()).get_index(), 4);
+    QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<14>()).get_level(), 2);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<14>()).get_index(), 14);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<7>()).subtree_size(), 4);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<7>()).subtree_arity(), 3);
+    QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<7>()).get_level(), 2);
     QCOMPARE(tree.get_child(const_index<0>()).get_child(const_index<7>()).get_index(), 7);
 }
 

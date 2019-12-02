@@ -69,7 +69,7 @@ class pattern {
     }
 
     template <std::size_t Index, typename Node, typename Policy, typename Allocator>
-    void assign_mark(capture_index<Index> index, tree<Node, Policy, Allocator>& tree) {
+    void assign_mark(const_index<Index> index, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes.");
@@ -78,7 +78,7 @@ class pattern {
     }
 
     template <char... Name, typename Node, typename Policy, typename Allocator>
-    void assign_mark(capture_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
+    void assign_mark(const_name<Name...> name, tree<Node, Policy, Allocator>& tree) {
         if (this->node_type != typeid(tree.raw_root_node())) {
             throw std::invalid_argument(
                 "Tried to assign the matched result to a tree having a different type of nodes.");

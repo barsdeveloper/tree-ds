@@ -21,15 +21,15 @@ template <
     typename ValueMatcher,
     typename FirstChild  = detail::empty_t,
     typename NextSibling = detail::empty_t>
-class any_matcher : public matcher<
-                        any_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
-                        ValueMatcher,
-                        FirstChild,
-                        NextSibling> {
+class multi_matcher : public matcher<
+                          multi_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
+                          ValueMatcher,
+                          FirstChild,
+                          NextSibling> {
 
     /*   ---   PARAMETERS   ---   */
     // It matches null only if all its children do so
-    static constexpr bool MATCHES_NULL = any_matcher::foldl_children_types(
+    static constexpr bool MATCHES_NULL = multi_matcher::foldl_children_types(
         [](auto&& accumulator, auto&& element) {
             using element_type = typename std::remove_reference_t<decltype(element)>::type;
             return accumulator && element_type::info.matches_null;
@@ -50,7 +50,7 @@ class any_matcher : public matcher<
     const void* subtree_cut = nullptr;
 
     /*   ---   CONSTRUCTORS   ---   */
-    using matcher<any_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
+    using matcher<multi_matcher, ValueMatcher, FirstChild, NextSibling>::matcher;
 
     /*   ---   METHODS   ---   */
     private:
@@ -60,7 +60,7 @@ class any_matcher : public matcher<
         using node_ptr_t = decltype(it.get_raw_node());
         auto predicate   = [this](node_ptr_t node_ptr) {
             // Parent always present (because we start matching from the child of node)
-            if constexpr (any_matcher::info.possessive) {
+            if constexpr (multi_matcher::info.possessive) {
                 return this->match_value(node_ptr->get_parent()->get_value());
             } else {
                 return node_ptr->get_parent() != this->subtree_cut && this->match_value(node_ptr->get_parent()->get_value());
@@ -68,7 +68,7 @@ class any_matcher : public matcher<
         };
         using navigator_t = node_pred_navigator<node_ptr_t, decltype(predicate)>;
         navigator_t navigator(it.get_raw_node(), predicate);
-        if constexpr (any_matcher::info.possessive) {
+        if constexpr (multi_matcher::info.possessive) {
             auto predicate = [this](auto& value) {
                 return !this->match_value(value);
             };
@@ -91,7 +91,7 @@ class any_matcher : public matcher<
         return [&](auto& it, auto& child) -> bool {
             using node_t    = allocator_value_type<NodeAllocator>;
             node_t* current = it.get_current_node();
-            if constexpr (any_matcher::info.possessive) {
+            if constexpr (multi_matcher::info.possessive) {
                 if (current && this->match_value(current->get_value())) {
                     return false;
                 }
@@ -106,9 +106,9 @@ class any_matcher : public matcher<
 
     template <typename NodeAllocator>
     auto get_backtrack_funcion(NodeAllocator& allocator) {
-        if constexpr (any_matcher::info.possessive) {
+        if constexpr (multi_matcher::info.possessive) {
             /*
-             * Possessive any_matcher matches any node it can then tries to match its children just on leaf nodes. It
+             * Possessive multi_matcher matches any node it can then tries to match its children just on leaf nodes. It
              * cannot rematch in case of children bad match (a match that leaves the other children without a match)
              * because the leaves constitutes a linear data structure.
              */
@@ -154,14 +154,14 @@ class any_matcher : public matcher<
     void no_children_set_result(NodeAllocator allocator, unique_ptr_alloc<NodeAllocator>& result) {
         switch (Quantifier) {
         case quantifier::RELUCTANT:
-            // Reluctant any_matcher without children matches nothing
+            // Reluctant multi_matcher without children matches nothing
             result = nullptr;
             break;
         case quantifier::GREEDY:
         case quantifier::POSSESSIVE:
-            // Greedy and possessive any_matcher without children matches everithing they can
+            // Greedy and possessive multi_matcher without children matches everithing they can
             result = this->clone_node(allocator);
-            any_matcher::keep_assigning_children(
+            multi_matcher::keep_assigning_children(
                 *result,
                 *this->get_node(allocator),
                 allocator,
@@ -171,7 +171,7 @@ class any_matcher : public matcher<
             break;
         case quantifier::DEFAULT:
         default:
-            // Default any_matcher without children matches just a single node
+            // Default multi_matcher without children matches just a single node
             result = this->clone_node(allocator);
         }
     }
@@ -189,13 +189,13 @@ class any_matcher : public matcher<
         cloned_nodes[this->get_node(allocator)] = result.get();
         auto attach_child                       = [&](auto& child) {
             std::pair<node_t*, unique_ptr_alloc<NodeAllocator>> child_head(
-                child.get_node(allocator),    // child target
-                child.clone_node(allocator)); // cloned target
+                child.get_node(allocator), // child target
+                child.result(allocator));  // cloned target
             auto it = cloned_nodes.find(child_head.first->get_parent());
             while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
                 cloned_nodes[child_head.first] = child_head.second.get();
                 child_head                     = {
-                    child_head.first->get_parent(),
+                    child_head.first->get_parent(), // reference node goes to parent
                     child_head.second.release()->allocate_assign_parent(allocator, *child_head.first)};
                 it = cloned_nodes.find(child_head.first->get_parent());
             }
@@ -265,7 +265,7 @@ class any_matcher : public matcher<
     bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
         if (!this->match_value(*it)) {
             // If this matcher does not accepth the node, there is still one possibility: a single child can match it
-            if constexpr (any_matcher::child_may_steal_target()) {
+            if constexpr (multi_matcher::child_may_steal_target()) {
                 return this->search_node_child(allocator, it.other_policy(policy::fixed()));
             } else {
                 return false;
@@ -278,7 +278,7 @@ class any_matcher : public matcher<
         };
         auto do_backtrack = this->get_backtrack_funcion(allocator);
         bool result       = this->search_node_child(allocator, target_it, do_acknowledge, do_backtrack);
-        if constexpr (!any_matcher::info.possessive && any_matcher::child_may_steal_target()) {
+        if constexpr (!multi_matcher::info.possessive && multi_matcher::child_may_steal_target()) {
             // Every other match failed, we try the last possibility: one of the children matches this node
             if (!result) {
                 return this->search_node_child(allocator, it.other_policy(policy::fixed()));
@@ -297,7 +297,7 @@ class any_matcher : public matcher<
             true);
         if (all_children_empty) {
             this->no_children_set_result(allocator, result);
-        } else if constexpr (any_matcher::children() == 0) {
+        } else if constexpr (multi_matcher::children() == 0) {
             this->no_children_set_result(allocator, result);
         } else {
             // Has children
@@ -314,26 +314,26 @@ class any_matcher : public matcher<
     }
 
     template <typename Child>
-    constexpr any_matcher<Quantifier, ValueMatcher, std::remove_reference_t<Child>, NextSibling>
+    constexpr multi_matcher<Quantifier, ValueMatcher, std::remove_reference_t<Child>, NextSibling>
     with_first_child(Child&& child) const {
         return {this->value, child, this->next_sibling};
     }
 
     template <typename Sibling>
-    constexpr any_matcher<Quantifier, ValueMatcher, FirstChild, std::remove_reference_t<Sibling>>
+    constexpr multi_matcher<Quantifier, ValueMatcher, FirstChild, std::remove_reference_t<Sibling>>
     with_next_sibling(Sibling&& sibling) const {
         return {this->value, this->first_child, sibling};
     }
 };
 
 template <quantifier Quantifier = quantifier::DEFAULT, typename ValueMatcher>
-any_matcher<Quantifier, ValueMatcher, detail::empty_t>
+multi_matcher<Quantifier, ValueMatcher, detail::empty_t>
 star(const ValueMatcher& value_matcher) {
     return {value_matcher, detail::empty_t(), detail::empty_t()};
 }
 
 template <quantifier Quantifier = quantifier::DEFAULT>
-any_matcher<Quantifier, true_matcher, detail::empty_t>
+multi_matcher<Quantifier, true_matcher, detail::empty_t>
 star() {
     return {true_matcher(), detail::empty_t(), detail::empty_t()};
 }

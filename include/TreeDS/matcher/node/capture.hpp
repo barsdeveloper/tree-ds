@@ -79,16 +79,16 @@ class capture_node : public matcher<
 };
 
 template <typename Captured>
-capture_node<capture_name<>, Captured, detail::empty_t> cpt(Captured&& capture) {
-    return capture_node<capture_name<>, std::decay_t<Captured>, detail::empty_t>(
-        capture_name<>(),
+capture_node<const_name<>, Captured, detail::empty_t> cpt(Captured&& capture) {
+    return capture_node<const_name<>, std::decay_t<Captured>, detail::empty_t>(
+        const_name<>(),
         std::move(capture),
         detail::empty_t());
 }
 
 template <typename Name, typename Captured>
 capture_node<std::decay_t<Name>, std::decay_t<Captured>, detail::empty_t> cpt(Name&&, Captured&& capture) {
-    static_assert(is_same_template<std::decay_t<Name>, capture_name<>>, "Argument name must be a proper capture_name type.");
+    static_assert(is_same_template<std::decay_t<Name>, const_name<>>, "Argument name must be a proper const_name type.");
     return capture_node<std::decay_t<Name>, std::decay_t<Captured>, detail::empty_t>(
         std::decay_t<Name>(),
         std::move(capture),

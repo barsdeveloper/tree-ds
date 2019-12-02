@@ -70,16 +70,16 @@ void PatternSimpleTest::construction() {
         one()(
             cpt(star()(
                 star()(
-                    cpt(capture_name<'a', 'n', ' ', 'a'>(), one('a'))),
+                    cpt(const_name<'a', 'n', ' ', 'a'>(), one('a'))),
                 cpt(one('b')(
                     cpt(star())))))));
     QCOMPARE(p6.mark_count(), 4);
 
     pattern p7(
         cpt(cpt(cpt(
-            capture_name<'a'>(),
+            const_name<'a'>(),
             star(string("string"))(
-                cpt(capture_name<'t'>(), cpt(one())),
+                cpt(const_name<'t'>(), cpt(one())),
                 cpt(one(string("b"))))))));
     QCOMPARE(p7.mark_count(), 6);
 }
@@ -127,15 +127,15 @@ void PatternSimpleTest::test3() {
 void PatternSimpleTest::test4() {
     pattern p {
         cpt(one(1)(
-            cpt(capture_name<'b'>(), one(2))))};
+            cpt(const_name<'b'>(), one(2))))};
     QVERIFY(p.search(tree1));
     p.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
-    p.assign_mark(capture_index<2>(), result);
+    p.assign_mark(const_index<2>(), result);
     QCOMPARE(result, n(2));
-    p.assign_mark(capture_index<1>(), result);
+    p.assign_mark(const_index<1>(), result);
     QCOMPARE(result, n(1)(n(2)));
-    p.assign_mark(capture_name<'b'>(), result);
+    p.assign_mark(const_name<'b'>(), result);
     QCOMPARE(result, n(2));
 }
 
@@ -157,7 +157,7 @@ void PatternSimpleTest::test6() {
     pattern p {
         one(1)(
             one(2),
-            cpt(capture_name<'t'>(), star<quantifier::RELUCTANT>()))};
+            cpt(const_name<'t'>(), star<quantifier::RELUCTANT>()))};
     QVERIFY(p.search(tree1));
     p.assign_result(result);
     QCOMPARE(result, n(1)(n(2)));
@@ -172,7 +172,7 @@ void PatternSimpleTest::test7() {
         one(1)(
             one(2),
             cpt(
-                capture_name<'a'>(),
+                const_name<'a'>(),
                 star<quantifier::RELUCTANT>()(
                     one(3))))};
     QVERIFY(p.search(tree1));

@@ -34,12 +34,6 @@ enum class quantifier {
     POSSESSIVE
 };
 
-template <std::size_t Index>
-struct capture_index {};
-
-template <char... Name>
-struct capture_name {};
-
 namespace detail {
 
     template <typename T>
@@ -71,11 +65,11 @@ namespace detail {
 
     /*   ---   METAPROGRAMMING VARIABLES   ---   */
     template <typename T>
-    constexpr bool is_capture_name = is_same_template<T, capture_name<>> && !std::is_same_v<T, capture_name<>>;
+    constexpr bool is_const_name = is_same_template<T, const_name<>> && !std::is_same_v<T, const_name<>>;
 
     /*
-     * This following variables are used to get the index of the matcher having a specific capture_name<> from captures
-     * tuple. The correct way to use it is to always refer to index_of_capture<capture_name<...>, captures_t>. Let's see
+     * This following variables are used to get the index of the matcher having a specific const_name<> from captures
+     * tuple. The correct way to use it is to always refer to index_of_capture<const_name<...>, captures_t>. Let's see
      * it in action using an example.
      *
      * Examples (types are unrelated, just to keep notation simple and explain the logic behind):

@@ -33,6 +33,7 @@ class struct_node_base {
     value_t value;            // Value hold by this node
     FirstChild first_child;   // First child
     NextSibling next_sibling; // Next sibling
+    std::size_t level = 0;    // The level of this node in the tree (root is 0)
     std::size_t index = 0;    // The index of this node as a child
 
     /*   ---   CONSTRUCTORS   ---   */
@@ -43,6 +44,7 @@ class struct_node_base {
             next_sibling(next_sibling) {
         if constexpr (struct_node_base::has_first_child()) {
             this->first_child.assign_indexes();
+            this->first_child.set_level(this->level + 1);
         }
     }
 
@@ -110,7 +112,7 @@ class struct_node_base {
         }
     }
 
-    void assign_indexes(std::size_t index = 0) {
+    constexpr void assign_indexes(std::size_t index = 0) {
         this->index = index;
         if constexpr (struct_node_base::has_next_sibling()) {
             this->next_sibling.assign_indexes(index + 1);
@@ -121,8 +123,19 @@ class struct_node_base {
     const Derived* cast() const {
         return static_cast<const Derived*>(this);
     }
+
     Derived* cast() {
         return static_cast<Derived*>(this);
+    }
+
+    constexpr void set_level(std::size_t level) {
+        this->level = level;
+        if constexpr (struct_node_base::has_next_sibling()) {
+            this->next_sibling.set_level(level);
+        }
+        if constexpr (struct_node_base::has_first_child()) {
+            this->first_child.set_level(level + 1);
+        }
     }
 
     public:
@@ -231,6 +244,11 @@ class struct_node_base {
             },
             static_cast<std::size_t>(0u));
     }
+
+    constexpr std::size_t get_level() const {
+        return this->level;
+    }
+
     constexpr std::size_t get_index() const {
         return this->index;
     }
@@ -246,7 +264,7 @@ class struct_node_base {
                     detail::empty_t(),
                     nodes...));
         } else {
-            return n(this->value);
+            return this->cast()->with_first_child(detail::empty_t());
         }
     }
 

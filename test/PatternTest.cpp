@@ -60,7 +60,6 @@ class PatternTest : public QObject {
     void test12();
     void test13();
 };
-#include <iostream>
 void PatternTest::test1() {
     pattern p(
         star()(
@@ -107,14 +106,14 @@ void PatternTest::test2() {
 void PatternTest::test3() {
     pattern p(
         star()(
-            cpt(capture_name<'P'>(),
+            cpt(const_name<'P'>(),
                 star('a')(
                     one('a')(
                         one('a'),
                         one('a')))),
-            cpt(capture_name<'b'>(),
+            cpt(const_name<'b'>(),
                 star('b')(
-                    cpt(capture_name<'y'>(),
+                    cpt(const_name<'y'>(),
                         one('y'))))));
     QVERIFY(p.search(tree3));
     p.assign_result(binary_char_result);
@@ -132,7 +131,7 @@ void PatternTest::test3() {
                     n('b')(
                         n('y')))),
             n('a')));
-    p.assign_mark(capture_name<'P'>(), binary_char_result);
+    p.assign_mark(const_name<'P'>(), binary_char_result);
     QCOMPARE(
         binary_char_result,
         n('a')(
@@ -140,7 +139,7 @@ void PatternTest::test3() {
             n('a')(
                 n('a'),
                 n('a'))));
-    p.assign_mark(capture_name<'y'>(), binary_char_result);
+    p.assign_mark(const_name<'y'>(), binary_char_result);
     QCOMPARE(binary_char_result, n('y'));
 }
 
@@ -303,8 +302,6 @@ void PatternTest::test13() {
             star<quantifier::GREEDY>('a')(
                 one('a')))};
     QVERIFY(p.search(tree3));
-    print_tree(std::cout, tree3, {4, 100, 4});
-    std::cout << std::endl;
     p.assign_result(binary_char_result);
     QCOMPARE(
         binary_char_result,
