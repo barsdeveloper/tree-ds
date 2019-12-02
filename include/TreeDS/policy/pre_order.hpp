@@ -61,7 +61,7 @@ class pre_order_impl final
         return this->navigator.get_highest_right_leaf();
     }
 
-    // Used by any_matcher, please ignore
+    // Used by multi_matcher, please ignore
     /**
      * @brief Go in depth by traversing first children until a ramification is found.
      * @return the first child {@b after} of the ramification's node
