@@ -305,4 +305,15 @@ class tree_iterator {
     }
 };
 
+// Conversion constructor from iterator to const_iterator
+template <typename Tree, typename Policy, typename NodeNavigator>
+tree_iterator(const tree_iterator<Tree, Policy, NodeNavigator>& other)
+    ->tree_iterator<Tree, Policy, NodeNavigator>;
+
+template <typename Tree, typename Policy, typename NodeNavigator>
+tree_iterator(
+    const tree_iterator<Tree, Policy, NodeNavigator>& other,
+    typename tree_iterator<Tree, Policy, NodeNavigator>::node_type* current_node)
+    ->tree_iterator<Tree, Policy, NodeNavigator>;
+
 } // namespace md
