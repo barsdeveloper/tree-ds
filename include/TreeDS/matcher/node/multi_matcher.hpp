@@ -69,7 +69,7 @@ class multi_matcher : public matcher<
         using navigator_t = node_pred_navigator<node_ptr_t, decltype(predicate)>;
         navigator_t navigator(it.get_raw_node(), predicate);
         if constexpr (multi_matcher::info.possessive) {
-            auto predicate = [this](auto& value) {
+            auto predicate = [this](typename Iterator::value_type& value) {
                 return !this->match_value(value);
             };
             tree_iterator<tree_t, policy::leaves, navigator_t> result(

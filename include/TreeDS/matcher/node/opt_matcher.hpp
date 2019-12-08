@@ -55,10 +55,14 @@ class opt_matcher : public matcher<
         }
         using basic_navigator = node_navigator<typename Iterator::node_type*>;
         auto target_it
-            = it
-                  .other_policy(policy::siblings())
+            = tree_iterator<
+                  // Even though we have template argument deduction, clang has a bug that fails to infer them
+                  typename Iterator::tree_type,
+                  typename Iterator::policy_type,
+                  typename Iterator::navigator_type>(it)
                   .other_navigator(basic_navigator())
-                  .go_first_child();
+                  .go_first_child()
+                  .other_policy(policy::siblings());
         // Match children of the pattern
         bool result = this->search_node_child(allocator, std::move(target_it));
         if constexpr (

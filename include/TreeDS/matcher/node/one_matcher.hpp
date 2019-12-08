@@ -8,6 +8,7 @@
 #include <TreeDS/matcher/pattern.hpp>
 #include <TreeDS/matcher/value/true_matcher.hpp>
 #include <TreeDS/policy/siblings.hpp>
+#include <TreeDS/tree_iterator.hpp>
 
 namespace md {
 
@@ -41,11 +42,15 @@ class one_matcher : public matcher<
         }
         using basic_navigator = node_navigator<decltype(it.get_raw_node())>;
         // Iterator that gives the children potential nodes to match
-        auto target_it
-            = it
-                  .other_policy(policy::siblings())
+        tree_iterator target_it
+            = tree_iterator<
+                  // Even though we have template argument deduction, clang has a bug that fails to infer them
+                  typename Iterator::tree_type,
+                  typename Iterator::policy_type,
+                  typename Iterator::navigator_type>(it)
                   .other_navigator(basic_navigator())
-                  .go_first_child();
+                  .go_first_child()
+                  .other_policy(policy::siblings());
         return this->search_node_child(allocator, target_it);
     }
 
