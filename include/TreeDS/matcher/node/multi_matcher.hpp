@@ -21,11 +21,12 @@ template <
     typename ValueMatcher,
     typename FirstChild  = detail::empty_t,
     typename NextSibling = detail::empty_t>
-class multi_matcher : public matcher<
-                          multi_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
-                          ValueMatcher,
-                          FirstChild,
-                          NextSibling> {
+class multi_matcher
+        : public matcher<
+              multi_matcher<Quantifier, ValueMatcher, FirstChild, NextSibling>,
+              ValueMatcher,
+              FirstChild,
+              NextSibling> {
 
     /*   ---   PARAMETERS   ---   */
     // It matches null only if all its children do so
@@ -38,7 +39,7 @@ class multi_matcher : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {
+    static constexpr matcher_info_t info{
         // Matches null
         MATCHES_NULL,
         // Shallow matches null
@@ -123,7 +124,7 @@ class multi_matcher : public matcher<
                 using node_ptr_t = decltype(it.get_raw_node());
                 // From the target of this matcher, advance in depth as to leave the next matcher with an unseen target
                 auto policy = policy::pre_order()
-                                  .get_instance(static_cast<node_ptr_t>(matcher.get_node(allocator)), it.get_navigator(), allocator)
+                                  .get_instance(static_cast<node_ptr_t>(matcher.get_matched_node(allocator)), it.get_navigator(), allocator)
                                   .go_depth_first_ramification();
                 it                = it_t(policy);
                 this->subtree_cut = nullptr;
@@ -160,10 +161,10 @@ class multi_matcher : public matcher<
         case quantifier::GREEDY:
         case quantifier::POSSESSIVE:
             // Greedy and possessive multi_matcher without children matches everithing they can
-            result = this->clone_node(allocator);
+            result = this->clone_matched_node(allocator);
             multi_matcher::keep_assigning_children(
                 *result,
-                *this->get_node(allocator),
+                *this->get_matched_node(allocator),
                 allocator,
                 [this](const allocator_value_type<NodeAllocator>& check) {
                     return this->match_value(check.get_value());
@@ -172,7 +173,7 @@ class multi_matcher : public matcher<
         case quantifier::DEFAULT:
         default:
             // Default multi_matcher without children matches just a single node
-            result = this->clone_node(allocator);
+            result = this->clone_matched_node(allocator);
         }
     }
 
@@ -180,17 +181,17 @@ class multi_matcher : public matcher<
     void children_reluctant_set_result(NodeAllocator allocator, unique_ptr_alloc<NodeAllocator>& result) {
         using node_t = allocator_value_type<NodeAllocator>;
         unique_ptr_alloc<NodeAllocator> candidate;
-        if (this->did_child_steal_target(candidate, allocator)) {
+        if (this->did_child_steal_node(candidate, allocator)) {
             result = std::move(candidate);
             return;
         }
-        result = this->clone_node(allocator);
+        result = this->clone_matched_node(allocator);
         std::unordered_map<node_t*, node_t*> cloned_nodes;
-        cloned_nodes[this->get_node(allocator)] = result.get();
-        auto attach_child                       = [&](auto& child) {
+        cloned_nodes[this->get_matched_node(allocator)] = result.get();
+        auto attach_child                               = [&](auto& child) {
             std::pair<node_t*, unique_ptr_alloc<NodeAllocator>> child_head(
-                child.get_node(allocator), // child target
-                child.result(allocator));  // cloned target
+                child.get_matched_node(allocator), // child target
+                child.result(allocator));          // cloned target
             auto it = cloned_nodes.find(child_head.first->get_parent());
             while (it == cloned_nodes.end()) { // while parent does not exist in cloned_nodes
                 cloned_nodes[child_head.first] = child_head.second.get();
@@ -214,24 +215,24 @@ class multi_matcher : public matcher<
         using node_t = allocator_value_type<NodeAllocator>;
         // If a children stole the target
         unique_ptr_alloc<NodeAllocator> candidate;
-        if (this->did_child_steal_target(candidate, allocator)) {
+        if (this->did_child_steal_node(candidate, allocator)) {
             result = std::move(candidate);
             return;
         }
-        result = this->clone_node(allocator);
+        result = this->clone_matched_node(allocator);
         std::unordered_map<node_t*, unique_ptr_alloc<NodeAllocator>> children_targets;
         children_targets.reserve(this->children());
         int valid_targets = this->foldl_children(
             [&](unsigned accumulated, auto& child) {
                 if (!child.empty()) {
-                    children_targets[child.get_node(allocator)] = child.result(allocator);
+                    children_targets[child.get_matched_node(allocator)] = child.result(allocator);
                     ++accumulated;
                 }
                 return accumulated;
             },
             0);
         using multi_ptr_t = multiple_node_pointer<node_t*, node_t*>;
-        multi_ptr_t roots(this->get_node(allocator), result.get());
+        multi_ptr_t roots(this->get_matched_node(allocator), result.get());
         // The iterator will use this predicate to traverse the tree
         // !IMPORTANT make multi_ptr a reference because we may need to assign the pointer
         auto check_target = [&](multi_ptr_t& multi_ptr) {
@@ -265,7 +266,7 @@ class multi_matcher : public matcher<
     bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
         if (!this->match_value(*it)) {
             // If this matcher does not accepth the node, there is still one possibility: a single child can match it
-            if constexpr (multi_matcher::child_may_steal_target()) {
+            if constexpr (multi_matcher::child_may_steal_node()) {
                 return this->search_node_child(allocator, it.other_policy(policy::fixed()));
             } else {
                 return false;
@@ -278,7 +279,7 @@ class multi_matcher : public matcher<
         };
         auto do_backtrack = this->get_backtrack_funcion(allocator);
         bool result       = this->search_node_child(allocator, target_it, do_acknowledge, do_backtrack);
-        if constexpr (!multi_matcher::info.possessive && multi_matcher::child_may_steal_target()) {
+        if constexpr (!multi_matcher::info.possessive && multi_matcher::child_may_steal_node()) {
             // Every other match failed, we try the last possibility: one of the children matches this node
             if (!result) {
                 return this->search_node_child(allocator, it.other_policy(policy::fixed()));

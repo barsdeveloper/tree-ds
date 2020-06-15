@@ -18,7 +18,7 @@ class capture_node : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {Captured::info}; // Behaves like what it captures
+    static constexpr matcher_info_t info{Captured::info}; // Behaves like what it captures
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -37,7 +37,7 @@ class capture_node : public matcher<
         AckowledgeFunction&& ackowledge = detail::empty_t(),
         RematchFunction&& rematch       = detail::empty_t()) {
         if (this->get_first_child().search_node(allocator, it, ackowledge, rematch)) {
-            this->target_node = this->get_first_child().get_node(allocator);
+            this->matched_node = this->get_first_child().get_matched_node(allocator);
             return true;
         }
         return false;

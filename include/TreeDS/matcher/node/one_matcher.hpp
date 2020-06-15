@@ -21,7 +21,7 @@ class one_matcher : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {
+    static constexpr matcher_info_t info{
         // Matches null
         false,
         // Shallow matches null
@@ -56,13 +56,13 @@ class one_matcher : public matcher<
 
     template <typename NodeAllocator>
     unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
-        unique_ptr_alloc<NodeAllocator> node = this->clone_node(allocator);
+        unique_ptr_alloc<NodeAllocator> node = this->clone_matched_node(allocator);
         this->foldl_children(
             [&](bool, auto& child) {
                 if (!child.empty()) {
                     node->assign_child_like(
                         child.result(allocator),
-                        *child.get_node(allocator));
+                        *child.get_matched_node(allocator));
                 }
                 return true;
             },

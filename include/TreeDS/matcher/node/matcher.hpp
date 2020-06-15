@@ -44,10 +44,10 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
 
     /*   ---   ATTRIBUTES   ---   */
     protected:
-    const void* target_node = nullptr;
-    std::size_t steps       = 0u;
-    captures_t captures     = this->get_following_captures();
-    std::array<const void*, matcher::children()> child_match_attempt_begin {};
+    const void* matched_node = nullptr;
+    std::size_t steps        = 0u;
+    captures_t captures      = this->get_following_captures();
+    std::array<const void*, matcher::children()> child_match_attempt_begin{};
 
     /*   ---   CONSTRUCTORS   ---   */
     public:
@@ -60,7 +60,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
      */
     matcher(const matcher& other) :
             struct_node_base<Derived, ValueMatcher, FirstChild, NextSibling>(other),
-            target_node(other.target_node) {
+            matched_node(other.matched_node) {
     }
 
     /*   ---   METHODS   ---   */
@@ -94,7 +94,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     }
 
     protected:
-    constexpr static bool child_may_steal_target() {
+    constexpr static bool child_may_steal_node() {
         return Derived::info.shallow_matches_null
             && matcher::foldl_children_types( // Count the children that do NOT match null
                    [](auto&& accumulated, auto&& element) {
@@ -106,12 +106,12 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     }
 
     template <typename NodeAllocator>
-    bool did_child_steal_target(unique_ptr_alloc<NodeAllocator>& result, NodeAllocator& allocator) {
-        if constexpr (matcher::child_may_steal_target()) {
+    bool did_child_steal_node(unique_ptr_alloc<NodeAllocator>& result, NodeAllocator& allocator) {
+        if constexpr (matcher::child_may_steal_node()) {
             unique_ptr_alloc<NodeAllocator> ptr;
             if (this->foldl_children(
                     [&](bool accumulated, auto& child) {
-                        if (child.get_node(allocator) == this->get_node(allocator)) {
+                        if (child.get_matched_node(allocator) == this->get_matched_node(allocator)) {
                             ptr = child.result(allocator);
                             return true;
                         }
@@ -138,11 +138,11 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
 
     public:
     bool empty() const {
-        return this->target_node == nullptr;
+        return this->matched_node == nullptr;
     }
 
     void reset() {
-        this->target_node = nullptr;
+        this->matched_node = nullptr;
         if constexpr (matcher::has_first_child()) {
             this->first_child.reset();
         }
@@ -157,13 +157,13 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
     }
 
     template <typename NodeAllocator>
-    allocator_value_type<NodeAllocator>* get_node(NodeAllocator&) const {
-        return static_cast<allocator_value_type<NodeAllocator>*>(const_cast<void*>(this->target_node));
+    allocator_value_type<NodeAllocator>* get_matched_node(NodeAllocator&) const {
+        return static_cast<allocator_value_type<NodeAllocator>*>(const_cast<void*>(this->matched_node));
     }
 
     template <typename NodeAllocator>
-    unique_ptr_alloc<NodeAllocator> clone_node(NodeAllocator& allocator) const {
-        return allocate(allocator, this->get_node(allocator)->get_value());
+    unique_ptr_alloc<NodeAllocator> clone_matched_node(NodeAllocator& allocator) const {
+        return allocate(allocator, this->get_matched_node(allocator)->get_value());
     }
 
     template <
@@ -187,7 +187,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
             ++this->steps;
             node_ptr candidate = it.get_raw_node(); // save current node because it may be modified by search_node_impl
             if (this->cast()->search_node_impl(allocator, it)) {
-                this->target_node = candidate;
+                this->matched_node = candidate;
                 if constexpr (!is_empty<AckowledgeFunction>) {
                     ackowledge(candidate);
                 }
@@ -253,7 +253,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
                     }
                 }
                 if (Derived::info.matches_null && !this->empty()) {
-                    it = it.other_node(this->get_node(allocator)); // This matched renonunces to its node
+                    it = it.other_node(this->get_matched_node(allocator)); // This matched renonunces to its node
                     this->reset();
                     return this->cast()->get_next_sibling().search_node(allocator, it, ackowledge, rematch);
                 }
@@ -287,7 +287,7 @@ class matcher : public struct_node_base<Derived, ValueMatcher, FirstChild, NextS
 
     template <typename NodeAllocator>
     unique_ptr_alloc<NodeAllocator> result(NodeAllocator& allocator) {
-        if (!this->target_node) {
+        if (!this->matched_node) {
             return nullptr;
         }
         return this->cast()->result_impl(allocator);

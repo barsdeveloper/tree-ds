@@ -29,7 +29,7 @@ class opt_matcher : public matcher<
 
     /*   ---   ATTRIBUTES   ---   */
     public:
-    static constexpr matcher_info_t info {
+    static constexpr matcher_info_t info{
         // Matches null
         MATCHES_NULL,
         // Shallow matches null
@@ -46,7 +46,7 @@ class opt_matcher : public matcher<
     template <typename NodeAllocator, typename Iterator>
     bool search_node_impl(NodeAllocator& allocator, Iterator& it) {
         if (!this->match_value(*it)) {
-            if constexpr (opt_matcher::child_may_steal_target()) {
+            if constexpr (opt_matcher::child_may_steal_node()) {
                 auto fixed_it = it.other_policy(policy::fixed());
                 return this->search_node_child(allocator, fixed_it);
             } else {
@@ -67,7 +67,7 @@ class opt_matcher : public matcher<
         bool result = this->search_node_child(allocator, std::move(target_it));
         if constexpr (
             !opt_matcher::info.possessive
-            && opt_matcher::child_may_steal_target()) {
+            && opt_matcher::child_may_steal_node()) {
             // Every other match failed, we try the last possibility: one of the children matches this node
             if (!result) {
                 return this->search_node_child(allocator, it.other_policy(policy::fixed()));
@@ -79,15 +79,15 @@ class opt_matcher : public matcher<
     template <typename NodeAllocator>
     unique_ptr_alloc<NodeAllocator> result_impl(NodeAllocator& allocator) {
         unique_ptr_alloc<NodeAllocator> result;
-        if (this->did_child_steal_target(result, allocator)) {
+        if (this->did_child_steal_node(result, allocator)) {
             return std::move(result);
         }
         // Assign here because did_child_stea_target assignins result
-        result = this->clone_node(allocator);
+        result = this->clone_matched_node(allocator);
         this->foldl_children(
             [&](bool, auto& child) {
                 if (!child.empty()) {
-                    result->assign_child_like(child.result(allocator), *child.get_node(allocator));
+                    result->assign_child_like(child.result(allocator), *child.get_matched_node(allocator));
                 }
                 return true;
             },
